@@ -19,7 +19,9 @@ export * from "./feedback/feedback-thread";
 // `feedbackPageHref` and `feedbackPageUrl` went whole: nothing read them.
 // `FEEDBACK_SWIPE_ACTIONS` is back since 0.60.1: keksdose's swipe settings take the
 // feedback list's ids from it, as they take `TRANSLATION_REVIEW_SWIPE_ACTIONS` (0.60 added
-// `postpone`, and an app copy of the list would miss the next id).
+// `postpone`, and an app copy of the list would miss the next id). Deprecated again in 0.66
+// (refactor audit 2026-11-22, API-3): 0.61 moved those settings into the kit
+// (`createSwipeSettingsStore`, `FEEDBACK_SWIPE_SURFACE`), and no app reads the list now.
 export {
   DEFAULT_ATTACHMENT_ACCEPT,
   DEFAULT_MAX_ATTACHMENT_BYTES,
@@ -56,6 +58,7 @@ export {
 } from "./feedback/feedback-status-undo";
 export {
   DEFAULT_FEEDBACK_SWIPE,
+  /** @deprecated 0.66 — `createSwipeSettingsStore` with `FEEDBACK_SWIPE_SURFACE`; removed in 0.67 */
   FEEDBACK_SWIPE_ACTIONS,
   feedbackSwipePlan,
   feedbackSwipeOmitShown,
@@ -136,6 +139,9 @@ export {
   // 0.57 (keksdose dev #663): `inbox.bulk`, the admin's selection and bulk edit (§13.6).
   type FeedbackInboxBulk,
 } from "./feedback/feedback-inbox-page";
+// 0.66 (refactor audit 2026-11-22, FLW-2): the page's `update` leaves a bulk patch's error to
+// the bar's one summary (§13.6).
+export { isFeedbackBulkPatch } from "./feedback/feedback-inbox-bulk";
 // 0.61: the feedback pages' frame (Marcel 2026-11-12) — keksdose's padding and header
 // around the inbox and the public page, which every app wrote itself. Named: the hook a
 // kit page reads the frame's header with stays the kit's.

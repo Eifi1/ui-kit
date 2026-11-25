@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { Checkbox } from "../components/checkbox";
-import { readSessionStored, readStored, removeStored, writeSessionStored, writeStored } from "../lib/safe-storage";
+import { isSharedComputer, setSharedComputer, type SharedComputerStorage } from "./shared-computer-store";
 import { DEFAULT_SHARED_COMPUTER_LABELS } from "./shared-computer-labels";
 
 /**
@@ -59,26 +59,9 @@ export interface SharedComputerLabels {
 // Defined in ./shared-computer-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_SHARED_COMPUTER_LABELS };
 
-const KEY = "eifi1-shared-computer";
-
-/** Where the choice is held: `"session"` (this tab, the default) or `"local"` (as long as
- *  a session kept in `localStorage`, until `setSharedComputer(false)`). */
-export type SharedComputerStorage = "session" | "local";
-
-/** Whether this session was signed in as on a shared computer, the choice held in either
- *  place. `false` when storage is unavailable. */
-export function isSharedComputer(): boolean {
-  return readSessionStored(KEY) === "1" || readStored(KEY) === "1";
-}
-
-/** Records the choice in `options.storage` (default `"session"`), and only there; `false`
- *  forgets it in both places. */
-export function setSharedComputer(on: boolean, options: { storage?: SharedComputerStorage } = {}): void {
-  const local = options.storage === "local";
-  writeSessionStored(KEY, on && !local ? "1" : null);
-  if (on && local) writeStored(KEY, "1");
-  else removeStored(KEY);
-}
+// The storage half lives in ./shared-computer-store, without the checkbox (refactor audit
+// 2026-11-22, MOD-1); re-exported, so every name stays where it was.
+export { isSharedComputer, setSharedComputer, type SharedComputerStorage };
 
 export interface SharedComputerChoiceProps {
   /** Controlled. Left out, the box starts from {@link isSharedComputer}. */

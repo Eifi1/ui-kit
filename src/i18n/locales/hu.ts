@@ -624,6 +624,18 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       taken: (count) => `${n(count)} fénykép elkészült.`,
       done: (count) => `${n(count)} fénykép használata`,
     },
+    // 0.66: AttachButton (hu wants a native read, as the draft says). "Melléklet
+    // hozzáadása" is the feedback field's attachmentAdd.
+    attach: {
+      trigger: "Csatolás",
+      title: "Melléklet hozzáadása",
+      camera: "Kamera",
+      photos: "Fotók",
+      files: "Fájlok",
+      screenshot: "Képernyőkép",
+      close: "Bezárás",
+      anotherPage: "Újabb oldal",
+    },
     wizard: {
       done: "Kész",
       cancel: "Mégse",
@@ -1563,7 +1575,6 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       choose: "Válasszon egy fiókot…",
       chooseFirst: "Válassza ki, ki kapja meg a munkát",
       confirm: "Továbbadás",
-      customer: "ügyfél",
       deactivated: "inaktivált",
       self: "ugyanaz a fiók",
       unavailable: (account, reason) => `${account} (${reason})`,
@@ -2108,6 +2119,12 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         backTo: (role) => `Vissza: ${role}`,
         billingOff: "A számlázás helyben ki van kapcsolva: a csomagok semmin nem változtatnak",
       },
+    },
+    // 0.66: TopBarNav — the page links' landmark (no word for "navigation": a screen
+    // reader adds the role) and the menu button they fold into.
+    topBarNav: {
+      navigation: "Oldalak",
+      menu: "Menü",
     },
     // 0.45.0 — docs/local-first-harmonization.md §1.6 (`@eifi1/ui-kit/offline`): keksdose's
     // reviewed words (nav.logout_queued_*, pwa.*) where it has the language.

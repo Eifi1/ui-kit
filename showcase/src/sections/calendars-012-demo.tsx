@@ -102,7 +102,7 @@ export function MonthStepperDemo() {
           month grid; its text is its name and it is {code("aria-live")}, so pressing ‹ or › (focus stays on the arrow)
           still says where the arrow went. Today jumps to the current month and is disabled when that is outside the
           bounds; the arrows refuse at {code("min")}/{code("max")} — {code("aria-disabled")}, so the press that reaches
-          a bound leaves the focus on the arrow (0.52). The second is German, set in an {code("<h3>")} (
+          a bound leaves the focus on the arrow. The second is German, set in an {code("<h3>")} (
           {code("headingLevel={3}")}) without Today; the third has {code("headingLevel={false}")} — no heading element,
           for a page that already has one — and sits right-to-left with the arrows mirrored. It shares its value with
           the first.

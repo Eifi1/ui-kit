@@ -160,6 +160,16 @@ export interface TooltipProps extends ComponentPropsWithoutRef<"span"> {
    * one that activates nothing (a disabled control, plain text) toggles the bubble.
    */
   tap?: TooltipTap;
+  /**
+   * Keep the wrapper while the label is empty (0.66, refactor audit 2026-11-22 INP-4): the
+   * same `<span>`, with no bubble, no description and no Escape layer, so a label that
+   * comes and goes does not move the child to another place in the tree — React would
+   * remount it, and a focused field would lose the focus to `<body>`. Without it an empty
+   * label renders the child alone, which costs the layout nothing. The kit's fields'
+   * lock frame passes it; pass a `className` (`contents`) that keeps the empty wrapper
+   * out of the layout if it should be.
+   */
+  keepFrame?: boolean;
   children: ReactNode;
   /**
    * The trigger WRAPPER — the `<span>` the rest of the props go to, around the caller's
@@ -173,7 +183,7 @@ export interface TooltipProps extends ComponentPropsWithoutRef<"span"> {
 
 /** What each variant below takes: the resolved `side` and `tap`, and every span attribute
  *  the caller handed {@link Tooltip}, forwarded to that variant's own wrapper. */
-type TooltipVariantProps = Omit<TooltipProps, "side" | "portal" | "lazy" | "tap" | "block"> & {
+type TooltipVariantProps = Omit<TooltipProps, "side" | "portal" | "lazy" | "tap" | "block" | "keepFrame"> & {
   side: TooltipSide;
   tap: TooltipTap;
 };
@@ -402,6 +412,7 @@ export function Tooltip({
   redact = false,
   tap = "auto",
   block = false,
+  keepFrame = false,
   children,
   ...rest
 }: TooltipProps) {
@@ -409,8 +420,9 @@ export function Tooltip({
   // layout nothing on the branch where it does not apply. `...rest` goes with the
   // wrapper on this branch, which is the documented limit of the pass-through: there is
   // no element left to put an attribute on. `block`'s line stays, with `className`: it
-  // is layout.
-  if (isEmptyLabel(label)) {
+  // is layout. `keepFrame` keeps the variant below, which draws no bubble for an empty
+  // label, so the child stays where it was (INP-4).
+  if (isEmptyLabel(label) && !keepFrame) {
     return block ? <span className={cn("block", className)}>{children}</span> : <>{children}</>;
   }
   // `className` is the outer box's: the wrapper's, or with `block` the line's.
@@ -587,6 +599,10 @@ function useTooltipTrigger(
   tap: TooltipTap,
   passed: PointerHandlers,
   onArm: (el: HTMLElement) => void,
+  /** False for an empty label kept for its wrapper (`keepFrame`): nothing is ever up, so
+   *  no Escape layer and no outside-press listener — an Escape in the field still
+   *  reaches the dialog round it. */
+  active = true,
 ) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -598,7 +614,7 @@ function useTooltipTrigger(
   // bubble closes it (at pointerdown) and must not open it again at pointerup.
   const press = useRef<{ wasOpen: boolean } | null>(null);
   useEffect(trackInput, []);
-  const open = (hovered || focused || tapped) && !dismissed;
+  const open = active && (hovered || focused || tapped) && !dismissed;
   const close = () => {
     setHovered(false);
     setFocused(false);
@@ -719,23 +735,43 @@ function InPlaceTooltip({
   const { triggerRef, setTrigger } = useTriggerRef(ref);
   const [clipped, setClipped] = useState(false);
   const [dir, setDir] = useState<Direction>("ltr");
+  // An empty label kept for its wrapper (`keepFrame`): no bubble, nothing to describe,
+  // nothing ever up — and no clipping walk on mount for the many fields that are unlocked.
+  const empty = isEmptyLabel(label);
   // The reading direction on every request (the clamp keeps the start edge of a bubble
   // too wide for the room); the clipping check too, for a container that began to scroll
   // after mount.
-  const { open, dismissed, handlers } = useTooltipTrigger(triggerRef, tap, rest, (el) => {
-    setDir(dirOf(el));
-    if (detect) setClipped(hasClippingAncestor(el));
-  });
+  const { open, dismissed, handlers } = useTooltipTrigger(
+    triggerRef,
+    tap,
+    rest,
+    (el) => {
+      setDir(dirOf(el));
+      if (detect) setClipped(hasClippingAncestor(el));
+    },
+    !empty,
+  );
   // keksdose G7: slide an open in-place bubble back onto the screen. See "The in-place
   // bubble is clamped" on {@link Tooltip}.
   const bubbleRef = useRef<HTMLSpanElement | null>(null);
   const { shift, measuring } = useViewportClamp(bubbleRef, open && !clipped, side, label, dir);
   // At mount, before the first paint: the in-place bubble inside a scroller is the
-  // phantom-scroll bug whether or not anyone opens it.
+  // phantom-scroll bug whether or not anyone opens it. A kept frame's label arriving is
+  // its mount, as far as the bubble is concerned.
   useLayoutEffect(() => {
-    if (detect) setClipped(hasClippingAncestor(triggerRef.current));
+    if (detect && !empty) setClipped(hasClippingAncestor(triggerRef.current));
     // `triggerRef` is the same object for the component's life (useTriggerRef's useRef).
-  }, [detect, triggerRef]);
+  }, [detect, empty, triggerRef]);
+  if (empty) {
+    return (
+      // The child in the same slot as below (the first of two), so the label arriving
+      // or going re-renders it rather than mounting it anew.
+      <span {...rest} ref={setTrigger} className={cn("relative inline-flex", className)} {...handlers}>
+        {children}
+        {null}
+      </span>
+    );
+  }
   return (
     // No role for this span: its handlers track whether the bubble is up and activate
     // nothing; the caller's child is the interactive element, keeps its own handlers,
@@ -1082,7 +1118,8 @@ function PortalTooltip({ label, side, className, redact, tap, children, ref, ...
   // Escape closes it outright, since this variant's bubble only exists while it is
   // shown. The next mouseenter/focus brings it back, which is the behaviour WCAG
   // 1.4.13 asks for: dismissible now, still available when you ask again.
-  const { open, handlers } = useTooltipTrigger(triggerRef, tap, rest, (el) => setDir(dirOf(el)));
+  // An empty label kept for its wrapper (`keepFrame`) is never up.
+  const { open, handlers } = useTooltipTrigger(triggerRef, tap, rest, (el) => setDir(dirOf(el)), !isEmptyLabel(label));
 
   return (
     <>

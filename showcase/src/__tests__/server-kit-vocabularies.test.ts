@@ -26,6 +26,42 @@ import type {
   TranslationVerdict,
 } from "../../../src/lib/translation-review";
 import type { SyncPageCursor, SyncRefusalBody, SyncRequestBody, SyncWireChange } from "../../../src/sync/wire";
+import type {
+  AccountAdminActionPage,
+  AccountAdminActionRow,
+  AccountAdminUser,
+  AccountDeletionResult,
+  AccountDeletionTerms,
+  AccountEmailChange,
+  AccountEmailConfirmed,
+  AccountEmailVerification,
+  AccountInvitation,
+  AccountInvitationAccepted,
+  AccountInvitationCheck,
+  AccountInvitationDraft,
+  AccountMe,
+  AccountPasskey,
+  AccountPasskeyOptions,
+  AccountPasswordReset,
+  AccountProfilePatch,
+  AccountRosterPage,
+  AccountRosterQuery,
+  AccountSessionInfo,
+  AccountTwoFactorEnabled,
+  AccountTwoFactorSetup,
+  AccountTwoFactorStatus,
+} from "../../../src/accounts/accounts-api";
+import { ACCOUNT_TEAM_ERROR_CODES } from "../../../src/accounts/account-teams-api";
+import type {
+  AccountAdminTeam,
+  AccountAdminTeams,
+  AccountTeam,
+  AccountTeamInvitation,
+  AccountTeamInvited,
+  AccountTeamMember,
+  AccountTeamMemberDraft,
+  AccountTeamRole,
+} from "../../../src/accounts/account-teams-api";
 
 /**
  * KIT-15 (round 0.49): the vocabularies and wire shapes written twice — in this package's
@@ -69,8 +105,15 @@ function constantStrings(module: string, name: string): string[] {
   return [...value.matchAll(/"([^"]*)"/g)].map((m) => m[1]);
 }
 
-/** Every key of `T`, listed in an object literal the compiler checks both ways. */
-function keysOf<T>(record: { [K in keyof Required<T>]: true }): string[] {
+/** `T`'s declared keys, without an index signature's `string` (an app's fields beside). */
+type DeclaredKeys<T> = keyof {
+  [K in keyof T as string extends K ? never : number extends K ? never : K]: true;
+};
+
+/** Every declared key of `T`, listed in an object literal the compiler checks both ways. A
+ *  type that also takes an app's fields (`[field: string]: unknown`) is held to its declared
+ *  keys too: through `keyof` alone it would take any list (0.66, API-2). */
+function keysOf<T>(record: { [K in DeclaredKeys<T>]-?: true }): string[] {
   return Object.keys(record);
 }
 
@@ -366,5 +409,235 @@ describe("server-kit's vocabularies, as this package writes them", () => {
       knowledge: true,
     }).filter((k) => k !== "pk");
     expect(sorted(change)).toEqual(sorted(fieldNames("sync", "SyncChange")));
+  });
+
+  // 14. src/accounts/accounts-api.ts, account-teams-api.ts ↔ auth, user_admin, teams (0.66;
+  // refactor audit 2026-11-22, API-2). 0.63–0.64 wrote the account layer's 30 wire shapes by
+  // hand from server-kit's models, held to them by doc comments only; one had drifted already
+  // (`AccountInvitationAccepted` had no `group`, read through its index signature).
+  describe("/accounts: the account layer's wire shapes", () => {
+    /** An answer: the kit's keys are the model's fields, both ways — `extras` are the kit's
+     *  own (server-derived, or an app's), listed so a new one has to be placed. */
+    const same = (module: string, model: string, keys: readonly string[], extras: readonly string[] = []) =>
+      expect(sorted(keys.filter((key) => !extras.includes(key))), `${module}.${model}`).toEqual(
+        sorted(fieldNames(module, model)),
+      );
+    /** A body or a query the kit sends: only fields the model takes (it may send fewer). */
+    const sent = (module: string, model: string, keys: readonly string[]) =>
+      expectSubset(keys, fieldNames(module, model), `${module}.${model}`);
+
+    it("the account's own answers are auth's models", () => {
+      // `display_name` and `name_incomplete` are derived on the server, outside the model's
+      // fields; `is_demo` is an app's (AccountUser, for a demo session).
+      same(
+        "auth",
+        "UserResponse",
+        keysOf<AccountMe>({
+          id: true,
+          email: true,
+          first_name: true,
+          last_name: true,
+          display_name: true,
+          locale: true,
+          role: true,
+          is_active: true,
+          email_verified: true,
+          totp_enabled: true,
+          created_at: true,
+          name_incomplete: true,
+          demo_expires_at: true,
+          text_size: true,
+          contrast: true,
+          device_timezone: true,
+          is_demo: true,
+        }),
+        ["display_name", "name_incomplete", "is_demo"],
+      );
+      same(
+        "auth",
+        "SessionInfo",
+        keysOf<AccountSessionInfo>({
+          id: true,
+          device: true,
+          ip_address: true,
+          started_at: true,
+          last_active: true,
+          expires_at: true,
+          shared_device: true,
+          current: true,
+        }),
+      );
+      same(
+        "auth",
+        "PasskeyResponse",
+        keysOf<AccountPasskey>({ id: true, name: true, created_at: true, last_used_at: true }),
+      );
+      same("auth", "PasskeyOptions", keysOf<AccountPasskeyOptions>({ options: true, challenge_token: true }));
+      same("auth", "TwoFactorStatus", keysOf<AccountTwoFactorStatus>({ enabled: true, backup_codes_left: true }));
+      same("auth", "TwoFactorSetup", keysOf<AccountTwoFactorSetup>({ secret: true, otpauth_url: true }));
+      same("auth", "TwoFactorEnabled", keysOf<AccountTwoFactorEnabled>({ backup_codes: true }));
+      same("auth", "DeletionTerms", keysOf<AccountDeletionTerms>({ mode: true, days: true }));
+      same("auth", "DeletionResult", keysOf<AccountDeletionResult>({ deletion_scheduled_at: true, mail_sent: true }));
+      same(
+        "auth",
+        "EmailChangeState",
+        keysOf<AccountEmailChange>({ email: true, pending_email: true, pending_expires_at: true, sent: true }),
+      );
+      same(
+        "auth",
+        "EmailChangeConfirmed",
+        keysOf<AccountEmailConfirmed>({ email: true, email_verified: true, invitations_attached: true }),
+      );
+      same("auth", "EmailVerificationStatus", keysOf<AccountEmailVerification>({ email: true, email_verified: true }));
+      same("auth", "PasswordResetState", keysOf<AccountPasswordReset>({ email: true }));
+      // The three below also take an app's fields beside (an index signature); `keysOf` holds
+      // them to their declared keys.
+      same(
+        "auth",
+        "InvitationCheck",
+        keysOf<AccountInvitationCheck>({ email: true, expires_at: true, account_exists: true, role: true }),
+      );
+      same("auth", "InvitationAccepted", keysOf<AccountInvitationAccepted>({ email: true, role: true, group: true }));
+      same(
+        "auth",
+        "InvitationGroup",
+        keysOf<NonNullable<AccountInvitationAccepted["group"]>>({ id: true, name: true }),
+      );
+      sent(
+        "auth",
+        "ProfileUpdate",
+        keysOf<AccountProfilePatch>({
+          first_name: true,
+          last_name: true,
+          locale: true,
+          text_size: true,
+          contrast: true,
+          device_timezone: true,
+        }),
+      );
+    });
+
+    it("the admin's are user_admin's", () => {
+      same(
+        "user_admin",
+        "InvitationRow",
+        keysOf<AccountInvitation>({
+          id: true,
+          email: true,
+          role: true,
+          scope: true,
+          note: true,
+          locale: true,
+          invited_by: true,
+          created_at: true,
+          expires_at: true,
+          status: true,
+          link: true,
+        }),
+      );
+      sent(
+        "user_admin",
+        "InvitationCreate",
+        keysOf<AccountInvitationDraft>({ email: true, role: true, scope: true, note: true, locale: true }),
+      );
+      // The roster's row: `levels` is an app's (keksdose's `to_rows`), `display_name` and
+      // `roles` the kit's roster row's; the model's appearance fields the kit does not read.
+      sent(
+        "user_admin",
+        "AdminUserRow",
+        keysOf<AccountAdminUser>({
+          id: true,
+          email: true,
+          first_name: true,
+          last_name: true,
+          role: true,
+          locale: true,
+          is_active: true,
+          translation_review_locales: true,
+          translation_review_areas: true,
+          totp_enabled: true,
+          levels: true,
+          extra: true,
+          display_name: true,
+          roles: true,
+          created_at: true,
+          last_login_at: true,
+          email_verified: true,
+          password_change_required_at: true,
+          deletion_scheduled_at: true,
+          deletion_requested_at: true,
+        }).filter((key) => !["levels", "display_name", "roles"].includes(key)),
+      );
+      same(
+        "user_admin",
+        "UserListResponse",
+        keysOf<AccountRosterPage>({ users: true, total: true, mail_backend: true, summary: true, levels: true }),
+      );
+      same(
+        "user_admin",
+        "UserListQuery",
+        keysOf<AccountRosterQuery>({ limit: true, offset: true, sort: true, q: true, role: true, state: true }),
+      );
+      same(
+        "user_admin",
+        "AdminActionRow",
+        keysOf<AccountAdminActionRow>({
+          id: true,
+          at: true,
+          action: true,
+          actor_id: true,
+          target_user_id: true,
+          target_email: true,
+          detail: true,
+          actor: true,
+          target: true,
+          target_group_id: true,
+          target_group: true,
+          company_id: true,
+        }),
+      );
+      same("user_admin", "AdminActionPage", keysOf<AccountAdminActionPage>({ actions: true, total: true }));
+    });
+
+    it("the teams' are teams', with its codes and roles", () => {
+      const team = {
+        id: true,
+        name: true,
+        version: true,
+        created_at: true,
+        my_role: true,
+        members: true,
+        invitations: true,
+        invited: true,
+      } as const;
+      same("teams", "TeamOut", keysOf<AccountTeam>(team));
+      same("teams", "AdminTeamOut", keysOf<AccountAdminTeam>({ ...team, grant_count: true }));
+      same("teams", "AdminTeamsResponse", keysOf<AccountAdminTeams>({ teams: true, levels: true }));
+      same(
+        "teams",
+        "TeamMemberOut",
+        keysOf<AccountTeamMember>({
+          user_id: true,
+          first_name: true,
+          last_name: true,
+          display_name: true,
+          email: true,
+          role: true,
+          is_active: true,
+        }),
+      );
+      same(
+        "teams",
+        "TeamInvitationOut",
+        keysOf<AccountTeamInvitation>({ id: true, email: true, role: true, status: true, expires_at: true }),
+      );
+      same("teams", "TeamInvited", keysOf<AccountTeamInvited>({ email: true, sent: true, link: true }));
+      // A manager's add sends no role (the manager adds members); the admin's adds it.
+      sent("teams", "TeamMemberIn", keysOf<AccountTeamMemberDraft>({ email: true, locale: true }));
+      expect(sorted(ACCOUNT_TEAM_ERROR_CODES)).toEqual(sorted(enumValues("teams", "TeamErrorCode")));
+      expect(sorted(membersOf<AccountTeamRole>({ member: true, manager: true }))).toEqual(
+        sorted(enumValues("teams", "TeamRole")),
+      );
+    });
   });
 });

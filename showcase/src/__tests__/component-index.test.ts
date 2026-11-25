@@ -218,7 +218,7 @@ const NOT_SHOWN: Record<string, string> = {
   useInvitationsAdmin: ACCOUNTS,
   useAdminRoster: ACCOUNTS,
   useAdminUserActions: ACCOUNTS,
-  useAdminActions: ACCOUNTS,
+  useAdminActionLog: ACCOUNTS,
   useAdminAttention: ACCOUNTS,
   useAdminMail: ACCOUNTS,
   useMailTest: ACCOUNTS,
@@ -315,7 +315,6 @@ const NOT_SHOWN: Record<string, string> = {
   missingRoles: OWED,
   readTextFile: OWED,
   roleOfColumn: OWED,
-  uuid5: OWED,
   withAllPlurals: OWED,
   filterTranslationRows: OWED,
   groupTranslationRows: OWED,
@@ -334,16 +333,20 @@ const NOT_SHOWN: Record<string, string> = {
 };
 
 /**
- * Hooks and helpers deprecated in src (a `@deprecated` JSDoc on the declaration): on their
- * way out, so they need no page (decision 4 of the refactor plan, 0.52).
+ * Hooks and helpers deprecated in src (a `@deprecated` JSDoc on the declaration, or on its
+ * specifier in an entry's `export { … }` list, CONTRIBUTING rule 4): on their way out, so
+ * they need no page (decision 4 of the refactor plan, 0.52).
  */
 const DEPRECATED = (function scan(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name);
     if (statSync(path).isDirectory()) return name === "__tests__" || name === "test" ? [] : scan(path);
     if (!/\.tsx?$/.test(name)) return [];
+    const source = readFileSync(path, "utf8");
     return [
-      ...readFileSync(path, "utf8").matchAll(
+      // A specifier: the tag, then the name and its comma (0.66, API-3's focus helpers).
+      ...source.matchAll(/\/\*\*(?:(?!\*\/)[\s\S])*?@deprecated(?:(?!\*\/)[\s\S])*\*\/\s*([A-Za-z_$][\w$]*),/g),
+      ...source.matchAll(
         /\/\*\*(?:(?!\*\/)[\s\S])*?@deprecated(?:(?!\*\/)[\s\S])*\*\/\s*export\s+(?:declare\s+)?(?:async\s+)?(?:function\*?|const|let)\s+([A-Za-z_$][\w$]*)/g,
       ),
     ].map((m) => m[1]);

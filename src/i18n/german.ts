@@ -646,6 +646,17 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       taken: (count) => (count === 1 ? "1 Foto aufgenommen." : `${n(count)} Fotos aufgenommen.`),
       done: (count) => (count === 1 ? "1 Foto übernehmen" : `${n(count)} Fotos übernehmen`),
     },
+    // 0.66: AttachButton. "Anhang hinzufügen" is the feedback field's attachmentAdd.
+    attach: {
+      trigger: "Anhängen",
+      title: "Anhang hinzufügen",
+      camera: "Kamera",
+      photos: "Fotos",
+      files: "Dateien",
+      screenshot: "Screenshot",
+      close: "Schließen",
+      anotherPage: "Weitere Seite",
+    },
     wizard: {
       done: "Fertig",
       cancel: "Abbrechen",
@@ -1060,7 +1071,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
             // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
             standardEntries: {
               recentData: (hours) =>
-                `Kürzlich geladene Daten, damit Seiten auch ohne Verbindung öffnen; was älter als ${hours} Stunden ist, verwendet die App nicht mehr und entfernt es, sobald sie wieder geöffnet wird. Davon bleibt nichts, wenn Sie sich mit «Dies ist ein gemeinsam genutzter Computer» anmelden`,
+                `Kürzlich geladene Daten, damit Seiten auch ohne Verbindung öffnen; was älter als ${hours === 1 ? "1 Stunde" : `${hours} Stunden`} ist, verwendet die App nicht mehr und entfernt es, sobald sie wieder geöffnet wird. Davon bleibt nichts, wenn Sie sich mit «Dies ist ein gemeinsam genutzter Computer» anmelden`,
               sharedComputer:
                 "Ob Sie bei der Anmeldung «Dies ist ein gemeinsam genutzter Computer» gewählt haben, zusammen mit dem Tab gespeichert",
               // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.
@@ -1610,7 +1621,6 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       choose: "Konto wählen…",
       chooseFirst: "Wählen Sie, wer die Arbeit erhält",
       confirm: "Übergeben",
-      customer: "Kundenkonto",
       deactivated: "deaktiviert",
       self: "dasselbe Konto",
       unavailable: (account, reason) => `${account} (${reason})`,
@@ -2178,6 +2188,12 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         backTo: (role) => `Zurück zu ${role}`,
         billingOff: "Die Abrechnung ist lokal aus: Tarife ändern nichts",
       },
+    },
+    // 0.66: TopBarNav — the page links' landmark (no word for "navigation": a screen
+    // reader adds the role) and the menu button they fold into.
+    topBarNav: {
+      navigation: "Seiten",
+      menu: "Menü",
     },
     // 0.45.0 — docs/local-first-harmonization.md §1.6 (`@eifi1/ui-kit/offline`): keksdose's
     // reviewed words (nav.logout_queued_*, pwa.*) where it has the language.

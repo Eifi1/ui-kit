@@ -405,7 +405,16 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // and never exported until now.
   // 0.65 (+1, keksdose's budget page, dev #679): `SortStrip`, DataTable's phone sort row
   // for any list; `TableHeaderCell` gains `sort` (a prop, not a name).
-  ["@eifi1/ui-kit", barrel, 1032],
+  // 0.66 (+1, Staunlabor's public pages): `StatStrip`, a quiet row of StatTiles.
+  // 0.66 (+2, Staunlabor's public site, via `/shell`): `TopBarNav`, TopBar's page links, and
+  // its words, `DEFAULT_TOP_BAR_NAV_LABELS`.
+  // 0.66 (+3, the AttachButton draft, Marcel 2026-11-16): `AttachButton`,
+  // `DEFAULT_ATTACH_LABELS` and `attachDropzoneProps` — one way in for attachments.
+  // 0.66 (+1, here and in /feedback; refactor audit 2026-11-22, FLW-2): `isFeedbackBulkPatch`,
+  // a bulk patch's error left to the bar's one summary (feedback §13.6).
+  // 0.66 (+1, Staunlabor's exhibit pages, Marcel 2026-11-24): `PAGE_CONTENTS_BAR_TARGET`,
+  // the scroll margin of the headings PageContents' new `variant="bar"` jumps to.
+  ["@eifi1/ui-kit", barrel, 1040],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -440,7 +449,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.61: `useFeedbackComments` (+1 here and in the barrel).
   // 0.61: `useFeedbackPublicPage`, `FeedbackPublicPage` — the public page assembled once
   // (§14) (+2 here and in the barrel).
-  ["@eifi1/ui-kit/feedback", feedback, 99],
+  // 0.66: `isFeedbackBulkPatch` (+1 here and in the barrel).
+  ["@eifi1/ui-kit/feedback", feedback, 100],
   // 0.53 (−3, breaking): what 0.52 deprecated — `SEARCH_TIER_POINTS`, `matchEntries`,
   // `normalizeSearchText` (API-4).
   ["@eifi1/ui-kit/search", search, 6],
@@ -462,7 +472,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `RoleSwitcher` (MOD-5).
   // 0.55 (+2): `HeldChangesBanner`, `DEFAULT_HELD_CHANGES_BANNER_LABELS` (§2.6.1, see the barrel).
   // 0.60 (−1, breaking): `PaletteMenu`, deprecated in 0.59 (see the barrel).
-  ["@eifi1/ui-kit/shell", shell, 50],
+  // 0.66 (+2): `TopBarNav`, `DEFAULT_TOP_BAR_NAV_LABELS` (see the barrel).
+  ["@eifi1/ui-kit/shell", shell, 52],
   // 0.43.0 (+9): the tours page (see the barrel).
   // 0.43.0 (+3): `resetTourProgress`, `doneCount`, `earnedPoints` (build review, see the barrel).
   // 0.44.0 (+1): `completeTour` (§9.2, see the barrel).
@@ -505,7 +516,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // and `feedbackCommentsQueryKey`, keksdose's TanStack-backed comment thread.
   // 0.62 (+1, Marcel 2026-11-12: a shared-computer sign-in has a short life):
   // `useSharedComputerIdleSignOut`.
-  ["@eifi1/ui-kit/offline", offline, 22],
+  // 0.66 (+2, refactor audit 2026-11-22, DUP-4): `randomUuid` and `uuid5Sync`, the ids that
+  // work over plain http (keksdose's and kastlan's copies).
+  ["@eifi1/ui-kit/offline", offline, 24],
   // 0.63 (docs/auth-harmonization.md §12.9): the account layer's frontend half, its first
   // part the session — `createAccountsClient`, `accountStorageEntries`. Standalone: an API of
   // its own, whose later rounds bring TanStack Query hooks the barrel must not reach.
@@ -536,7 +549,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.64 (+9, server-kit 0.32's opt-in teams): `accountTeamsApi`, `ACCOUNT_TEAM_ERROR_CODES`,
   // the hooks `useMyTeams`, `useTeamActions`, `useAdminTeams`, `useAdminTeamActions`, the parts
   // `AccountTeamsSection`, `AccountTeamsPage` and their words, `DEFAULT_ACCOUNT_TEAMS_LABELS`.
-  ["@eifi1/ui-kit/accounts", accounts, 63],
+  // 0.66 (+1, refactor audit 2026-11-22, API-5): `useAdminActionLog`, the log's query under its
+  // own name; `useAdminActions` stays one minor, deprecated.
+  ["@eifi1/ui-kit/accounts", accounts, 64],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
   // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the
@@ -544,7 +559,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.46.1 (+3, kastlan N4/N5): `rowByPk`, `SYNC_DB_PK_INDEX` (the opt-in `[entity+pk]` index)
   // and the leaf `uuid5`.
   // 0.53 (−2, breaking): what 0.52 deprecated — `SYNC_DB_STORES`, `DEFAULT_SYNC_BACKOFF_MS` (API-4).
-  ["@eifi1/ui-kit/sync", sync, 15],
+  // 0.66 (+2, DUP-4): the leaf `randomUuid` and `uuid5Sync`, as `/offline`.
+  ["@eifi1/ui-kit/sync", sync, 17],
   // 0.46.0: `createFakeSyncTransport`, the scripted `/sync` server for an app's tests.
   ["@eifi1/ui-kit/sync/testing", syncTesting, 1],
   // 0.46.0 (docs/notifications-harmonization.md §10.6 rule 5): the service worker's entry —
@@ -558,7 +574,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // lines and keksdose on 2, and nothing counted it. The local-calendar ISO helpers.
   // 0.55 (+4, keksdose's 0.51 adoption N2): `setToday`, `todayOverride`, `subscribeToday`,
   // `currentDate` — one "today" the dev clock moves and every helper here reads.
-  ["@eifi1/ui-kit/dates", dates, 24],
+  // 0.66 (+6, refactor audit 2026-11-22, DUP-4): counting from a GIVEN day — `monthStartOf`,
+  // `addMonthsIso`, `monthsBetweenIso`, `weekStartOf`, `daysBetweenIso`, `isoWeekNumber`.
+  ["@eifi1/ui-kit/dates", dates, 30],
   // 0.35: `CURRENCIES` and `CURRENCY_COUNTRIES` as plain data an app's build tooling
   // imports in Node (keksdose's flag subset read them out of a dist/ file 0.34 moved). A
   // slice of the barrel, not standalone in the sense below: both names are the barrel's

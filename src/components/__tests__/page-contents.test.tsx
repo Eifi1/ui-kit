@@ -1,5 +1,6 @@
 import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
-import { PageContents, PageContentsLayout, useScrollSpy } from "../page-contents";
+import { PAGE_CONTENTS_BAR_TARGET, PageContents, PageContentsLayout, useScrollSpy } from "../page-contents";
+import type { ReactElement } from "react";
 import { UiKitProvider } from "../../i18n/kit-labels";
 
 const ITEMS = [
@@ -65,6 +66,113 @@ describe("PageContents", () => {
   it("renders nothing for no entries", () => {
     const { container } = render(<PageContents items={[]} />);
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe('PageContents variant="bar" (0.66, Staunlabor)', () => {
+  // The headings the bar jumps to, in the document the way a page has them.
+  function page(ui: ReactElement) {
+    const result = render(
+      <>
+        {ui}
+        <h2 id="one">One</h2>
+        <h2 id="two">Two</h2>
+        <h2 id="three">Three</h2>
+      </>,
+    );
+    const scrolls: Array<{ id: string; options: unknown }> = [];
+    for (const id of ["one", "two", "three"]) {
+      const el = document.getElementById(id)!;
+      el.scrollIntoView = (options?: unknown) => scrolls.push({ id, options });
+    }
+    return { ...result, scrolls };
+  }
+  const reduced = (on: boolean) => {
+    window.matchMedia = ((query: string) => ({
+      matches: on && query.includes("reduce"),
+      media: query,
+      addEventListener() {},
+      removeEventListener() {},
+    })) as unknown as typeof window.matchMedia;
+  };
+  const original = window.matchMedia;
+  afterEach(() => {
+    window.matchMedia = original;
+  });
+
+  it("is a named landmark with one row of entries, sticky, and no visible title", () => {
+    render(<PageContents items={ITEMS} variant="bar" activeId="two" />);
+    const nav = screen.getByRole("navigation", { name: "On this page" });
+    expect(nav.className).toMatch(/\bsticky\b/);
+    expect(nav.className).toContain("print:hidden");
+    expect(nav).not.toHaveTextContent("On this page");
+    expect(nav.querySelector("ul")!.className).toContain("overflow-x-auto");
+    expect(screen.getByRole("link", { name: "Two" })).toHaveAttribute("aria-current", "location");
+    // One row: a level-2 entry is not indented.
+    expect(screen.getByRole("link", { name: "Three" }).className).not.toContain("ps-6");
+  });
+
+  it("an app's className sets where it sticks (top-14 under a TopBar)", () => {
+    render(<PageContents items={ITEMS} variant="bar" className="top-14" />);
+    const nav = screen.getByRole("navigation");
+    expect(nav.className).toContain("top-14");
+    expect(nav.className).not.toMatch(/\btop-0\b/);
+  });
+
+  it("a click scrolls to the heading and focuses it, without a history entry", () => {
+    reduced(false);
+    const { scrolls } = page(<PageContents items={ITEMS} variant="bar" />);
+    const link = screen.getByRole("link", { name: "Two" });
+    const click = new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 });
+    link.dispatchEvent(click);
+    expect(click.defaultPrevented).toBe(true);
+    expect(scrolls).toEqual([{ id: "two", options: { behavior: "smooth", block: "start" } }]);
+    const heading = document.getElementById("two")!;
+    expect(heading).toHaveAttribute("tabindex", "-1");
+    expect(document.activeElement).toBe(heading);
+    // The href stays, for a new tab and for copying.
+    expect(link).toHaveAttribute("href", "#two");
+  });
+
+  it("moves at once for a reader who asked for less motion", () => {
+    reduced(true);
+    const { scrolls } = page(<PageContents items={ITEMS} variant="bar" />);
+    fireEvent.click(screen.getByRole("link", { name: "Three" }));
+    expect(scrolls).toEqual([{ id: "three", options: { behavior: "auto", block: "start" } }]);
+  });
+
+  it("leaves a modified click to the browser (new tab, new window)", () => {
+    const { scrolls } = page(<PageContents items={ITEMS} variant="bar" />);
+    for (const mod of [{ ctrlKey: true }, { metaKey: true }, { shiftKey: true }, { altKey: true }]) {
+      const click = new MouseEvent("click", { bubbles: true, cancelable: true, button: 0, ...mod });
+      screen.getByRole("link", { name: "Two" }).dispatchEvent(click);
+      expect(click.defaultPrevented).toBe(false);
+    }
+    expect(scrolls).toEqual([]);
+  });
+
+  it("leaves the jump to an app that took the click in onClickCapture", () => {
+    const { scrolls } = page(<PageContents items={ITEMS} variant="bar" onClickCapture={(e) => e.preventDefault()} />);
+    fireEvent.click(screen.getByRole("link", { name: "Two" }));
+    expect(scrolls).toEqual([]);
+  });
+
+  it("brings the current entry into the middle of a row wider than the screen", () => {
+    const { rerender } = render(<PageContents items={ITEMS} variant="bar" activeId="one" />);
+    const row = screen.getByRole("navigation").querySelector("ul")!;
+    const calls: unknown[] = [];
+    Object.defineProperty(row, "scrollWidth", { configurable: true, value: 600 });
+    Object.defineProperty(row, "clientWidth", { configurable: true, value: 300 });
+    row.scrollTo = ((options: unknown) => calls.push(options)) as typeof row.scrollTo;
+    const entry = row.querySelector<HTMLElement>('[data-entry="three"]')!;
+    Object.defineProperty(entry, "offsetLeft", { configurable: true, value: 400 });
+    Object.defineProperty(entry, "offsetWidth", { configurable: true, value: 100 });
+    rerender(<PageContents items={ITEMS} variant="bar" activeId="three" />);
+    expect(calls).toEqual([expect.objectContaining({ left: 300 })]);
+  });
+
+  it("exports the scroll margin a target carries under a TopBar and the bar", () => {
+    expect(PAGE_CONTENTS_BAR_TARGET).toBe("scroll-mt-32");
   });
 });
 

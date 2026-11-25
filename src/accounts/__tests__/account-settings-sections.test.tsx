@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Toaster } from "../../components/toast";
+import { UiKitProvider } from "../../i18n/kit-labels";
 import { fakeFetch, fakeHttp, tokens } from "../../test/fake-axios";
 import type { Answer, Cfg } from "../../test/fake-axios";
 import { fill } from "../../test/fill";
@@ -88,6 +89,16 @@ describe("AccountProfileSection", () => {
     await user.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => expect(record()!.user.first_name).toBe("Augusta"));
     expect(calls[0]).toEqual({ route: "patch /auth/me", data: { first_name: "Augusta", last_name: "Lovelace" } });
+  });
+
+  it("says since when through the app's date preference, the kit's day ladder (DUP-2)", () => {
+    const preference = vi.fn((iso: string) => `day ${iso}`);
+    mount(
+      <UiKitProvider formatDate={preference}>
+        <AccountProfileSection />
+      </UiKitProvider>,
+    );
+    expect(screen.getByText(/day 2026-10-01/)).toBeInTheDocument();
   });
 });
 

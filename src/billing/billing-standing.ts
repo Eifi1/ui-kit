@@ -1,4 +1,6 @@
+import { calendarDayNumber } from "../lib/calendar-day";
 import { toDate } from "../lib/format";
+import { isBareIsoDay } from "../lib/iso-day";
 import type { DateInput } from "../lib/format";
 import type { SubscriptionStatus } from "./billing-labels";
 import type { BillingPortalAccess } from "./billing-overview";
@@ -60,21 +62,21 @@ export function isBillingReadOnly(standing: BillingStanding, now: number | Date 
   return at !== null && at.getTime() <= instant;
 }
 
-const DAY = 86_400_000;
-
 /**
- * Whole calendar days from `now` to `endsAt`, in the device's time zone — 0 on the day
- * itself (and after it), 1 the day before — or `null` for no readable date. The count a
- * trial or grant banner says ("ends tomorrow", "ends in 5 days"), from the day a reader
- * lives in rather than from 24-hour blocks: a trial ending at 01:00 tomorrow ends
- * "tomorrow", not "today".
+ * Whole calendar days from `now` to `endsAt` — 0 on the day itself (and after it), 1 the
+ * day before — or `null` for no readable date. The count a trial or grant banner says
+ * ("ends tomorrow", "ends in 5 days"), from the day a reader lives in rather than from
+ * 24-hour blocks: a trial ending at 01:00 tomorrow ends "tomorrow", not "today".
+ *
+ * In `timeZone` (0.66: pass the provider's, `useKitTimeZone()`, as the kit's own dates
+ * print in it), else the device's — the kit's one day count (`calendarDayNumber`,
+ * refactor audit 2026-11-22, DUP-2), so a banner and a "yesterday" beside it agree.
  */
-export function billingDaysLeft(endsAt: DateInput, now: number | Date = Date.now()): number | null {
+export function billingDaysLeft(endsAt: DateInput, now: number | Date = Date.now(), timeZone?: string): number | null {
   const end = toDate(endsAt);
   if (!end) return null;
   const from = typeof now === "number" ? new Date(now) : now;
-  const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime();
-  const fromDay = new Date(from.getFullYear(), from.getMonth(), from.getDate()).getTime();
-  // `round`, not `floor`: a day across a DST change is 23 or 25 hours long.
-  return Math.max(0, Math.round((endDay - fromDay) / DAY));
+  // A bare "YYYY-MM-DD" is the day it names wherever it is read (formatDate's rule).
+  const endDay = calendarDayNumber(end, isBareIsoDay(endsAt) ? undefined : timeZone);
+  return Math.max(0, endDay - calendarDayNumber(from, timeZone));
 }

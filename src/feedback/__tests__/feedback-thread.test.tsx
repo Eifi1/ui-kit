@@ -131,6 +131,16 @@ describe("ChatComposer", () => {
     expect(box).toHaveValue("");
   });
 
+  it("sends on the kit's one submit chord only: not Ctrl+Shift+Enter, not mid-composition (DUP-7)", () => {
+    const onSend = vi.fn();
+    render(<ChatComposer onSend={onSend} />);
+    const box = screen.getByRole("textbox", { name: "Write a comment" });
+    fireEvent.change(box, { target: { value: "hi" } });
+    fireEvent.keyDown(box, { key: "Enter", ctrlKey: true, shiftKey: true });
+    fireEvent.keyDown(box, { key: "Enter", ctrlKey: true, isComposing: true });
+    expect(onSend).not.toHaveBeenCalled();
+  });
+
   it("keeps text typed while the send was in flight, and everything on a rejection", async () => {
     let resolve!: () => void;
     const onSend = vi.fn(() => new Promise<void>((r) => (resolve = r)));

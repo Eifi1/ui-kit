@@ -76,6 +76,19 @@ describe("LineItems", () => {
     expect(screen.getByRole("textbox", { name: "Account, row 3" })).toHaveFocus();
   });
 
+  // Refactor audit 2026-11-22, DUP-7: the kit's one submit chord, not a hand copy that
+  // fired on Ctrl+Shift+Enter, on every key repeat (a row per repeat) and on an IME Enter.
+  it("adds nothing on Ctrl+Shift+Enter, a key repeat or an IME Enter", () => {
+    render(<Lines />);
+    const field = screen.getByRole("textbox", { name: "Account, row 1" });
+    field.focus();
+    fireEvent.keyDown(field, { key: "Enter", ctrlKey: true, shiftKey: true });
+    fireEvent.keyDown(field, { key: "Enter", metaKey: true, altKey: true });
+    fireEvent.keyDown(field, { key: "Enter", ctrlKey: true, repeat: true });
+    fireEvent.keyDown(field, { key: "Enter", ctrlKey: true, isComposing: true });
+    expect(rows()).toHaveLength(2);
+  });
+
   it("removes a row and moves focus to the row that took its place", async () => {
     render(<Lines initial={[blank(), blank(), blank()]} />);
     await userEvent.click(screen.getByRole("button", { name: "Remove row 2" }));

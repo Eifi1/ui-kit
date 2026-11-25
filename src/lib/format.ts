@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { useKitLocale, useKitTimeZone } from "../i18n/kit-labels";
 import { parseIsoDate } from "./dates";
-import { dateFormatter } from "./intl-cache";
+import { calendarDayNumber } from "./calendar-day";
+import { dateFormatter, relativeFormatter } from "./intl-cache";
 import { isBareIsoDay } from "./iso-day";
 import { formatWithMinus, type MinusStyle } from "./minus";
 import { roundHalfAway } from "./round";
@@ -419,35 +420,6 @@ const RELATIVE_STEPS: Array<[number, Intl.RelativeTimeFormatUnit, number]> = [
 ];
 
 /**
- * `d`'s calendar day in `timeZone` (left out: the device's), as a whole number of days:
- * that day's UTC midnight over a day's length. Two of them subtract to whole calendar
- * days — a 23- or 25-hour DST day still counts one.
- */
-function dayNumber(d: Date, timeZone: string | undefined): number {
-  if (!timeZone) return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / DAY;
-  // `en-US`: Gregorian, Latin digits — the parts are read back as numbers.
-  const fields: Intl.DateTimeFormatOptions = { timeZone, year: "numeric", month: "numeric", day: "numeric" };
-  const parts = dateFormatter("en-US", fields).formatToParts(d);
-  const part = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((p) => p.type === type)?.value);
-  return Date.UTC(part("year"), part("month") - 1, part("day")) / DAY;
-}
-
-const relativeFormatters = new Map<string, Intl.RelativeTimeFormat>();
-function relativeFormatter(
-  locale: string | undefined,
-  numeric: Intl.RelativeTimeFormatNumeric,
-  style: Intl.RelativeTimeFormatStyle,
-): Intl.RelativeTimeFormat {
-  const key = `${locale ?? ""}|${numeric}|${style}`;
-  let f = relativeFormatters.get(key);
-  if (!f) {
-    f = new Intl.RelativeTimeFormat(locale, { numeric, style });
-    relativeFormatters.set(key, f);
-  }
-  return f;
-}
-
-/**
  * How long ago (or until) `value` is, in `locale`'s words, through
  * `Intl.RelativeTimeFormat`: "3 hours ago", "vor 3 Stunden", "il y a 3 heures",
  * "in 2 days", and under 45 seconds "now". The unit is picked by size — seconds,
@@ -474,7 +446,8 @@ export function formatRelativeTime(value: DateInput, options: FormatRelativeTime
     // in; a bare "YYYY-MM-DD" is the day it names wherever it is read, as in formatDate.
     // Still the same day (22 hours and more since just after midnight): in hours.
     const bareDay = isBareIsoDay(value);
-    const days = dayNumber(d, bareDay ? undefined : options.timeZone) - dayNumber(now, options.timeZone);
+    const days =
+      calendarDayNumber(d, bareDay ? undefined : options.timeZone) - calendarDayNumber(now, options.timeZone);
     return days === 0 ? rtf.format(Math.round(diff / HOUR), "hour") : rtf.format(days, "day");
   }
   // Under 45 seconds is "now" rather than "12 seconds ago": a feed that ticks through

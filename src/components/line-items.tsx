@@ -4,6 +4,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
 import { focusQuietly } from "../lib/quiet-focus";
+import { isSubmitChord } from "../hooks/use-hotkey";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { Button } from "./button";
 import { IconButton } from "./icon-button";
@@ -344,7 +345,9 @@ export function LineItems<T>({
   };
 
   const onRowKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && canAdd) {
+    // The kit's one submit chord (use-hotkey `isSubmitChord`, DUP-7): not Ctrl+Shift+Enter,
+    // not a repeat — holding the keys added a row per repeat — and not an IME Enter.
+    if (isSubmitChord(e) && canAdd) {
       e.preventDefault();
       add();
     }

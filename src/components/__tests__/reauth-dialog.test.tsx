@@ -110,7 +110,7 @@ describe("ReauthDialog", () => {
     await user.type(field, "pw{Enter}");
     expect(field).toHaveAttribute("readonly");
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Add passkey" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Add passkey" })).toHaveAttribute("aria-disabled", "true");
     await user.keyboard("{Escape}");
     expect(onClose).not.toHaveBeenCalled();
     await act(async () => resolve());
@@ -136,7 +136,7 @@ describe("ReauthDialog", () => {
     await user.type(await screen.findByLabelText("Current password"), "pw{Enter}");
     expect(onSubmit).toHaveBeenCalledWith("pw");
     rerender(<ReauthDialog onSubmit={onSubmit} onClose={onClose} busy />);
-    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Continue" })).toHaveAttribute("aria-disabled", "true");
     expect(onClose).not.toHaveBeenCalled();
   });
 });

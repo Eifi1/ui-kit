@@ -254,8 +254,14 @@ function ReauthActions({
         type="submit"
         form={formId}
         variant={danger ? "danger" : "default"}
-        disabled={!canSubmit || busy}
+        // Busy, held rather than `disabled`: the press (or the Enter in the field, which
+        // presses it) left the focus here, and a native `disabled` would drop it to
+        // <body> — out of the dialog's trap — for the whole check (INP-1, refactor audit
+        // 2026-11-22). The form's `submit` refuses a second one.
+        disabled={!canSubmit && !busy}
+        aria-disabled={busy || undefined}
         aria-busy={busy || undefined}
+        className={busy ? "cursor-progress opacity-50" : undefined}
       >
         {busy && <Spinner label={null} className="h-4 w-4" />}
         {submitLabel}

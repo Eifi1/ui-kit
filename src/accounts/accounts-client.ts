@@ -17,8 +17,8 @@ import {
   type SessionRenewal,
 } from "../lib/session-refresh";
 import { dropPushSubscription } from "../notifications/use-push-device";
-import { isSharedComputer } from "../offline/shared-computer";
-import { createAccountsApi, type AccountsApi } from "./accounts-api";
+import { isSharedComputer } from "../offline/shared-computer-store";
+import { createAccountsApi, type AccountMe, type AccountsApi } from "./accounts-api";
 import { passkeyAssertion } from "./passkey-ceremony";
 import { readSessionStored, writeSessionStored } from "../lib/safe-storage";
 import { createSessionStore, type AccountSession, type AccountUser, type SharedSessionPlace } from "./session-store";
@@ -246,8 +246,18 @@ export interface AccountsClientOptions<U extends AccountUser = AccountUser> {
   fetch?: typeof fetch;
 }
 
-/** What {@link createAccountsClient} answers. */
-export interface AccountsClient<U extends AccountUser = AccountUser> {
+/**
+ * What {@link createAccountsClient} answers.
+ *
+ * `U`, the signed-in user, defaults to `AccountMe` (`GET /auth/me`'s core) since 0.66, as
+ * `useAccountsClient`, `useCurrentUser` and `AccountsApi` always did (refactor audit
+ * 2026-11-22, API-5); it was `AccountUser` (`{ id, is_demo }`) here alone, so the same client
+ * read two types by door. `AccountMe` extends `AccountUser`, so a client typed either way
+ * still fits `AccountsProvider`. `useAccountsClient<U>()` asserts `U` (an unchecked cast from
+ * the context's client): an app with its own user type names it at both doors,
+ * `createAccountsClient<User>` and `useAccountsClient<User>()`.
+ */
+export interface AccountsClient<U extends AccountUser = AccountMe> {
   /** The routes of server-kit's `auth_router` and the admin's invitations, typed, on `http`
    *  (`accountsApi`, §12.9). They keep nothing: what an answer changes is the caller's. */
   api: AccountsApi<U>;
@@ -425,7 +435,7 @@ interface Renewal<U> extends SessionRenewal {
  * The session is read from the storage at once, so a reload starts signed in with no
  * rehydration to wait for.
  */
-export function createAccountsClient<U extends AccountUser = AccountUser>(
+export function createAccountsClient<U extends AccountUser = AccountMe>(
   options: AccountsClientOptions<U>,
 ): AccountsClient<U> {
   const { http, signInPath = "/login", homePath = "/" } = options;
@@ -523,7 +533,10 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
     isDemo,
     // Another host's 401 is about that host, never this session: it refreshes nothing and is
     // never replayed, so the renewed token cannot go out to it either.
-    isSignedOutStep: (url) => !forApi(url) || isSignedOutStep(url),
+    // Another host's 401 is no step of this session's: refreshed for nothing, and replayed
+    // with the renewed token stamped on (FLW-4). Judged by the request's own base URL too,
+    // as the bearer is: a relative url under another host's baseURL is that host's.
+    isSignedOutStep: (url, config) => !forApi(url, config?.baseURL) || isSignedOutStep(url),
     onEnded: ({ demo }) => {
       // The sign-out's own revoke found the session over: the sign-out ends it, once.
       if (signingOut) return;

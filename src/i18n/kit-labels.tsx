@@ -43,6 +43,7 @@ import type { IconPickerLabels } from "../components/icon-picker";
 import type { DialogFrameLabels } from "../components/dialog-frame";
 import type { FilePickerLabels } from "../components/file-button";
 import type { CameraLabels } from "../components/camera-labels";
+import type { AttachLabels } from "../components/attach-button-labels";
 import type { MeasuredGridLabels } from "../components/measured-grid";
 import type { FeedbackAttachmentFieldLabels } from "../feedback/feedback-attachment";
 import type { FeedbackDialogTextLabels } from "../feedback/feedback-dialog";
@@ -121,6 +122,7 @@ import type { NotificationsLabels } from "../notifications/notifications-labels"
 import type { AdminAreaLabels } from "../admin/admin-area-labels";
 import type { MailTestCardLabels } from "../admin/mail-test-card";
 import type { TopBarPartsLabels } from "../shell/top-bar-parts-labels";
+import type { TopBarNavLabels } from "../shell/top-bar-nav-labels";
 import type { SignOutPendingDialogLabels } from "../offline/sign-out-pending-dialog";
 import type { PwaUpdatePromptLabels } from "../offline/pwa-update-prompt";
 import type { SharedComputerLabels } from "../offline/shared-computer";
@@ -361,6 +363,9 @@ export interface UiKitLabels {
   /** 0.55: `CameraButton` and `CameraCapture` — the camera where there is one, the photo
    *  picker where there is none (kastlan reuse audit 2026-11-02, proposal 8). */
   camera: CameraLabels;
+  /** 0.66: `AttachButton` — one way in for attachments: camera, photos, files and a
+   *  screenshot behind one paperclip. The viewfinder's words stay `camera`'s. */
+  attach: AttachLabels;
   measuredGrid: MeasuredGridLabels;
   feedbackAttachment: FeedbackAttachmentFieldLabels;
   /** 0.12.0: `FeedbackDialog`'s own strings; `FeedbackThread` / `ChatComposer` (the
@@ -516,6 +521,8 @@ export interface UiKitLabels {
   /** 0.42.0: the top bar's shared parts — `TourMenu`, `SyncStatusIndicator`, `DevMenu`
    *  (0.42's `DevSwitchers`; docs/top-bar-harmonization.md §3.1, §2.7.1). */
   topBarParts: TopBarPartsLabels;
+  /** 0.66: `TopBarNav` — the page links' landmark and the menu they fold into. */
+  topBarNav: TopBarNavLabels;
   /** 0.45.0: "Send a test mail to me" (docs/admin-harmonization.md §9.2.4). */
   mailTestCard: MailTestCardLabels;
   /** 0.45.0: the sign-out question while changes wait to sync (`@eifi1/ui-kit/offline`,
@@ -531,9 +538,14 @@ export interface UiKitLabels {
   /** 0.55: a field's "suggested from" caption — the default when the app names no source,
    *  and the button that clears the suggestion (keksdose dev #638). */
   fieldSuggestion: FieldSuggestionLabels;
-  /** 0.55: "What you agreed to has changed — agree again?" — the chrome of
-   *  `ConsentAgainNotice` (Agree, Not now, the two disclosures, before and now); the
-   *  subject's words are the app's. */
+  /**
+   * 0.55: "What you agreed to has changed — agree again?" — the chrome of
+   * `ConsentAgainNotice` (Agree, Not now, the two disclosures, before and now); the
+   * subject's words are the app's. Not legal wording.
+   *
+   * @deprecated 0.66 — none: drop the namespace from an app's own labels, with
+   * `ConsentAgainNotice`; removed in 0.67
+   */
   consentAgain: ConsentAgainLabels;
   /** 0.55: `ReleaseNotes` — a release's heading and its sections' headings by key. */
   releaseNotes: ReleaseNotesLabels;

@@ -15,9 +15,9 @@ import type { Dictionary } from "./types";
  * The runtime behind the top bar's language menu.
  *
  * There is no i18n library here and there is not going to be one: the kit's contract is
- * that a consuming app owns its strings and hands them in as props, so the showcase has
- * to demonstrate exactly that — a dictionary in context, a hook to read it, and label
- * bundles threaded into the components. That is the whole runtime. Anything larger would
+ * that it renders only labels and ships seven catalogues while the app picks the language,
+ * so the showcase demonstrates exactly that — a dictionary in context, a hook to read it,
+ * and the kit's catalogue handed to one provider. That is the whole runtime. Anything larger would
  * be demonstrating the library instead of the contract.
  *
  * Written as `.ts`, not `.tsx`, so the provider is built with `createElement` rather than
@@ -42,7 +42,7 @@ export const LOCALES: Dictionary[] = [en, de, fr, it, es, hu, zh];
  *
  * They are the seven languages the consuming apps are shipped in or planned for. English
  * comes first because it is the reference every other dictionary is written against
- * (en.ts is a transcription of the kit's own defaults); the rest follow in the order the
+ * (en.ts hands the provider the kit's own English, `uiKitLabelsEn("en-GB")`); the rest follow in the order the
  * apps take them on. German is the one the apps actually ship today, and the longest of
  * the seven, so it is the locale that breaks a layout first.
  */

@@ -1,8 +1,21 @@
-import { cloneElement, createContext, isValidElement, useContext, useId } from "react";
-import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode } from "react";
+import {
+  cloneElement,
+  createContext,
+  isValidElement,
+  useCallback,
+  useContext,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode, Ref, RefCallback } from "react";
 import { HelpCircle } from "lucide-react";
 import { cn } from "../lib/cn";
+import { assignRef } from "../lib/refs";
+import { firstTabStop } from "../lib/focus-left";
 import { hasContent } from "../lib/presence";
+import { focusQuietly } from "../lib/quiet-focus";
 import { plainText } from "../lib/plain-text";
 import { DEFAULT_COMMON_LABELS, useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useInlineFacts } from "../hooks/use-large-text";
@@ -286,7 +299,15 @@ export function FieldSuggestion({ from, onClear, field, labels: labelsProp }: Fi
           <span aria-hidden="true"> · </span>
           <button
             type="button"
-            onClick={onClear}
+            onClick={(e) => {
+              // Into the field first: the app's `onClear` stops passing the caption, so
+              // this button leaves the page in the commit it was pressed in and a
+              // keyboard Clear dropped the focus to <body> (INP-2, refactor audit
+              // 2026-11-22). Quietly, so a picker that opens on focus stays shut.
+              const control = describedControl(e.currentTarget);
+              if (control) focusQuietly(control);
+              onClear();
+            }}
             aria-label={labels.clearName(field)}
             // A text button in the caption's own type, underlined as the kit's secondary
             // TextLink is; the focus outline follows a wrapped line.
@@ -301,6 +322,25 @@ export function FieldSuggestion({ from, onClear, field, labels: labelsProp }: Fi
       )}
     </span>
   );
+}
+
+/**
+ * The control a suggestion's caption describes: the nearest element round the button that
+ * carries an id some control's `aria-describedby` names — the kit field's caption, or the
+ * `<p id>` an app draws outside a kit field (keksdose's split editor). A group described
+ * as a whole (ToggleGroup, CheckboxGroup) gives its first tab stop. One rule for both, so
+ * no field has to hand its control down.
+ */
+function describedControl(button: HTMLElement): HTMLElement | null {
+  const root = button.getRootNode() as Document | ShadowRoot;
+  const described = Array.from(root.querySelectorAll<HTMLElement>("[aria-describedby]"));
+  for (let at = button.parentElement; at; at = at.parentElement) {
+    if (!at.id) continue;
+    const id = at.id;
+    const control = described.find((el) => el.getAttribute("aria-describedby")!.split(/\s+/).includes(id));
+    if (control) return firstTabStop(control);
+  }
+  return null;
 }
 
 /** Whether a `hint` is a {@link FieldSuggestion} — a caption under the field at every
@@ -577,6 +617,9 @@ export interface LockReason {
   locked: boolean;
   /** The id of the reason's hidden copy, for the control's `aria-describedby`. */
   reasonId: string;
+  /** {@link LockFrame} keeps its frame: the control takes a write lock's `commit`, or has
+   *  been locked once in this mount. A control that can never lock stays bare. */
+  framed?: boolean;
 }
 
 /**
@@ -587,7 +630,11 @@ export interface LockReason {
 export function useLockReason(commit: CommitScope | undefined, disabledReason: ReactNode): LockReason {
   const reason = useCommitReason(commit, disabledReason);
   const reasonId = useId();
-  return { reason, locked: hasContent(reason), reasonId };
+  const locked = hasContent(reason);
+  // Once locked, framed for good (INP-4): a lock lifting must not remount the field either.
+  const [wasLocked, setWasLocked] = useState(false);
+  if (locked && !wasLocked) setWasLocked(true);
+  return { reason, locked, reasonId, framed: commit !== undefined || locked || wasLocked };
 }
 
 /** {@link useRefusal}'s answer: the lock's, and whether the button refuses at all. */
@@ -706,19 +753,175 @@ export function LockFrame({
   className,
   children,
 }: {
-  /** The field's lock (`useLockReason`): framed only while `locked`. */
-  lock: Pick<LockReason, "locked" | "reason" | "reasonId">;
+  /** The field's lock (`useLockReason`): in LockedReason's box while `locked`; in an
+   *  invisible frame while unlocked if it is `framed`; bare otherwise. */
+  lock: Pick<LockReason, "locked" | "reason" | "reasonId" | "framed">;
   /** Where the reason shows — the field's `disabledReasonDisplay`. Default `"auto"`. */
   display?: DisabledReasonDisplay;
   /** The frame's classes, after `block`. */
   className?: string;
   children: ReactNode;
 }) {
-  if (!lock.locked) return <>{children}</>;
+  // ONE tree in every state (refactor audit 2026-11-22, INP-4). Bare while unlocked and in
+  // LockedReason's frame while locked, a lock arriving or lifting moved the field to
+  // another place in the tree, and React remounted it: a field that held the focus lost
+  // it to <body>, with its caret — keksdose's add-item field when another member's Done
+  // arrives by sync, kastlan's offline lock on every connection drop. So a field a lock can
+  // reach (`framed`: it takes `commit`, or was locked once) keeps one frame: the Tooltip's wrapper (`keepFrame`, an empty label while there is no
+  // bubble to show), `contents` while unlocked so the layout does not see it, and
+  // LockedReason's box while locked — the same classes, the line or the hidden copy after
+  // the field. The cost: every such field asks the text size and the pointer for the form
+  // it would take, where only a locked one did.
+  const locked = lock.locked;
+  const framed = locked || lock.framed;
+  // A field with no `commit` is bare until its first lock (its own `disabledReason`), and
+  // that first lock is the one remount left: the frame arrives around it. Note where the
+  // focus is while the old control is still in the document — this render, before the
+  // commit — and hand it, with the caret, to the new control after.
+  const [wasFramed, setWasFramed] = useState(framed);
+  const [moved, setMoved] = useState<FocusSnapshot | null>(null);
+  if (framed && !wasFramed) {
+    setWasFramed(true);
+    setMoved(focusSnapshot());
+  }
+  const frame = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    if (moved) restoreFocus(moved, frame.current);
+  }, [moved]);
+  // A field that can never lock (no `commit`, never locked) keeps the bare tree apps were
+  // promised — "an Input that never passes `error` is still a bare <input>", its className
+  // on the field: only a field a lock can reach pays for the frame.
+  if (!framed) return children;
   return (
-    <LockedReason lock={lock} display={display} className={cn("block", className)}>
+    <FramedLock lock={lock} display={display} className={className} frameRef={frame}>
       {children}
-    </LockedReason>
+    </FramedLock>
+  );
+}
+
+/**
+ * The ref for a control drawn bare while unlocked and in {@link LockedReason} while locked
+ * (Button, IconButton, Chip): the flip remounts it, so a control that held the focus hands
+ * it to its new self rather than to <body> — the showcase's "Lock saving" switch under a
+ * focused Save, in real Chromium (0.66 browser probe, 2026-11-23). The focus is noted in
+ * the render that flips, while the old control is still in the document.
+ */
+export function useLockFocusHandover<T extends HTMLElement>(locked: boolean, ref?: Ref<T>): RefCallback<T> {
+  const [was, setWas] = useState(locked);
+  const [moved, setMoved] = useState<FocusSnapshot | null>(null);
+  if (locked !== was) {
+    setWas(locked);
+    setMoved(focusSnapshot());
+  }
+  const current = useRef<T | null>(null);
+  const previous = useRef<T | null>(null);
+  const own = useCallback(
+    (node: T | null) => {
+      if (node) current.current = node;
+      else if (current.current) {
+        previous.current = current.current;
+        current.current = null;
+      }
+      assignRef(ref, node);
+    },
+    [ref],
+  );
+  useLayoutEffect(() => {
+    if (moved && moved.node === previous.current) handOver(moved, current.current);
+  }, [moved]);
+  return own;
+}
+
+/** The focused control at a field's first lock: the node, its id, its caret, and the
+ *  elements it sat in. */
+interface FocusSnapshot {
+  node: HTMLElement;
+  id: string;
+  selection: readonly [number, number] | null;
+  ancestors: readonly Element[];
+}
+
+function focusSnapshot(): FocusSnapshot | null {
+  if (typeof document === "undefined") return null;
+  const node = document.activeElement;
+  if (!(node instanceof HTMLElement) || node === document.body) return null;
+  const ancestors: Element[] = [];
+  for (let up = node.parentElement; up; up = up.parentElement) ancestors.push(up);
+  const text = node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement ? node : null;
+  const start = text?.selectionStart;
+  const end = text?.selectionEnd;
+  const selection = typeof start === "number" && typeof end === "number" ? ([start, end] as const) : null;
+  return { node, id: node.id, selection, ancestors };
+}
+
+/** The old control left the document with the focus: the field's new control takes it
+ *  back, quietly, so a picker that opens on focus stays shut — the one with the old id
+ *  (the field above LockFrame keeps its `useId`), else the frame's first tab stop when the
+ *  frame sits where the old control sat (DatePicker's trigger has no id). Focus that moved
+ *  on by itself is left where it is. */
+function restoreFocus(moved: FocusSnapshot, frame: HTMLElement | null) {
+  const byId = moved.id ? document.getElementById(moved.id) : null;
+  const here = frame?.parentElement ? moved.ancestors.includes(frame.parentElement) : false;
+  handOver(moved, byId ?? (frame && here ? firstTabStop(frame) : null));
+}
+
+/** The focus, and the caret, from a control that left the document to `next` — only while
+ *  nothing else took the focus since. */
+function handOver({ node, selection }: FocusSnapshot, next: HTMLElement | null) {
+  if (node.isConnected || !next || next === node) return;
+  const active = document.activeElement;
+  if (active && active !== document.body) return;
+  focusQuietly(next, { preventScroll: true });
+  if (selection && (next instanceof HTMLInputElement || next instanceof HTMLTextAreaElement)) {
+    try {
+      next.setSelectionRange(selection[0], selection[1]);
+    } catch {
+      // A type without a caret (number, date): the focus is what matters.
+    }
+  }
+}
+
+function FramedLock({
+  lock,
+  display,
+  className,
+  frameRef,
+  children,
+}: {
+  lock: Pick<LockReason, "locked" | "reason" | "reasonId">;
+  display?: DisabledReasonDisplay;
+  className?: string;
+  /** The frame's element, for LockFrame's focus hand-over at a first lock. */
+  frameRef?: Ref<HTMLSpanElement>;
+  children: ReactNode;
+}) {
+  const line = useDisabledReasonLine(display);
+  const locked = lock.locked;
+  return (
+    <Tooltip
+      ref={frameRef}
+      keepFrame
+      label={locked && !line ? lock.reason : null}
+      data-lock-frame={locked ? "" : undefined}
+      data-slot={locked && line ? "disabled-reason" : undefined}
+      className={locked ? cn("block", line && "max-w-full", className) : "contents"}
+    >
+      {/* A fragment, so the Tooltip does not clone its bubble's id into the description —
+          the hidden copy is it (see LockedReason). */}
+      <>
+        {children}
+        {locked &&
+          (line ? (
+            <span id={lock.reasonId} className={DISABLED_REASON_LINE_CLASS}>
+              {lock.reason}
+            </span>
+          ) : (
+            <span id={lock.reasonId} hidden>
+              {lock.reason}
+            </span>
+          ))}
+      </>
+    </Tooltip>
   );
 }
 

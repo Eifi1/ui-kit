@@ -1,10 +1,9 @@
-import { createPortal } from "react-dom";
 import { Delete } from "lucide-react";
 import { useMemo } from "react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
-import { useDismissLayer } from "../hooks/use-dismiss";
+import { BottomSheet } from "./bottom-sheet";
 import { evaluateExpression, formatResult, sanitizeLive } from "../lib/calc";
 import { DEFAULT_CALCULATOR_LABELS, useKitLabels, type CalculatorLabels } from "../i18n/kit-labels";
 
@@ -184,7 +183,9 @@ export function NumberPadSheet({
   // Escape to the pad and the next to the dialog (Wave 2, DUP-1). It used to be the
   // other way round, written down here as the limit: the dialog's own handler stopped
   // the key before a document listener saw it, and the press closed the dialog.
-  useDismissLayer(true, onDone);
+  //
+  // All three (no lock, no trap, the Escape layer) are the shared frame's `modal={false}`
+  // (BottomSheet, 0.66, whose modal kind is AttachButton's chooser).
 
   const result = evaluateExpression(value);
   const preview = result !== null && formatResult(result) !== value.trim() ? `= ${formatResult(result)}` : "";
@@ -200,19 +201,19 @@ export function NumberPadSheet({
     if (result !== null) (onResult ?? onChange)(formatResult(result));
   };
 
-  const sheet = (
-    <div
+  return (
+    // The frame is a kit layer and the bottom layer a docked tour card stays clear of
+    // (0.50, docs/tours-harmonization.md §11.6), portalled and padded for the home
+    // indicator.
+    <BottomSheet
+      modal={false}
+      onClose={onDone}
       role="group"
       aria-label={text.panel}
-      // A kit layer, and the bottom layer a docked tour card stays clear of (0.50,
-      // docs/tours-harmonization.md §11.6).
-      data-kit-layer=""
-      data-tour-obstruction=""
       // Keep the host input focused when tapping the pad: preventDefault on
       // pointerdown blocks the focus/blur, while the buttons' click still fires.
       onPointerDown={(e) => e.preventDefault()}
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-subtle bg-surface px-2 pt-2 shadow-[0_-4px_24px_rgba(0,0,0,0.12)]"
-      style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      className="px-2 pt-2 shadow-[0_-4px_24px_rgba(0,0,0,0.12)]"
     >
       {/* Header display: which field + the running expression and live result, so
           the value stays visible even when the sheet covers the field. */}
@@ -278,8 +279,6 @@ export function NumberPadSheet({
           {text.done}
         </button>
       </div>
-    </div>
+    </BottomSheet>
   );
-
-  return createPortal(sheet, document.body);
 }

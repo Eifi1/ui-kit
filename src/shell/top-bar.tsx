@@ -11,16 +11,20 @@ import { cn } from "../lib/cn";
  */
 export interface TopBarProps extends ComponentPropsWithRef<"header"> {
   brand: ReactNode;
+  /** The site's page links, between the brand and the actions — a `TopBarNav` (0.66). The
+   *  slot takes the room the two leave, and the actions stay at the end. */
+  nav?: ReactNode;
   actions?: ReactNode;
   className?: string;
 }
 
 /**
  * The sticky app header frame: a `brand` slot on the left and an `actions` slot
- * on the right (theme/palette/language controls, account menu, etc.). Domain-free
+ * on the right (theme/palette/language controls, account menu, etc.), and between them,
+ * for a site with pages of its own, a `nav` slot (0.66, `TopBarNav`). Domain-free
  * — each app composes its own actions from the shared controls plus its own menus.
  */
-export function TopBar({ brand, actions, className, ...rest }: TopBarProps) {
+export function TopBar({ brand, nav, actions, className, ...rest }: TopBarProps) {
   return (
     <header
       {...rest}
@@ -34,6 +38,7 @@ export function TopBar({ brand, actions, className, ...rest }: TopBarProps) {
       )}
     >
       <div className="flex min-w-0 items-center gap-2">{brand}</div>
+      {nav != null && nav !== false && <div className="flex min-w-0 flex-1 items-center">{nav}</div>}
       <div className="flex items-center gap-1">{actions}</div>
     </header>
   );

@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from "react";
+import { isSubmitChord } from "../hooks/use-hotkey";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { Button } from "../components/button";
@@ -416,7 +417,7 @@ export function FeedbackNoteEditor({
       ref={root}
       className="space-y-2"
       onKeyDown={(event) => {
-        if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && canSubmit) {
+        if (canSubmit && isSubmitChord(event)) {
           event.preventDefault();
           submit();
         }

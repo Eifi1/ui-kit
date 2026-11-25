@@ -213,7 +213,7 @@ export function SessionRefresh034Demo() {
         <div className="flex flex-wrap gap-2">
           <Button
             variant="secondary"
-            disabled={running}
+            refused={running}
             onClick={() => {
               setRunning(true);
               void send().finally(() => setRunning(false));

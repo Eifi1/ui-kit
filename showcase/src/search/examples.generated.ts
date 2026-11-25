@@ -266,6 +266,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "All or nothing — onPick",
     "FileButton — showFileName",
     "FileButton, FileDropzone — commit",
+    "AttachButton — a sheet on a phone, a menu on a desktop",
+    "AttachButton — one way in opens it directly",
+    "AttachButton — layout=\"inline\" in a FileDropzone",
+    "FeedbackAttachmentField — picker=\"sheet\"",
   ],
   "media": [
     "ImageGrid — actions, captions and a PDF tile",
@@ -528,6 +532,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "DataTable — the whole surface",
     "Controlled filters and selection callbacks",
     "A short table — paginated={false}, labels, noRowLink, empty",
+    "Naming the table — aria-labelledby, caption, aria-label",
     "density",
     "A report table — firstSort, sortCycle, chrome, frame={false}, keyboard rows",
     "Column cellProps and headProps",
@@ -637,6 +642,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "projection as a list: Committed and Projected",
     "truncateLabel",
     "Interactive and loading",
+    "StatStrip — a quiet row of figures",
     "sensitive, descriptionSensitive, footerSensitive",
     "Sparkline — tones, scale and stroke",
     "StatTile — number formatting and remaining tones",
@@ -742,6 +748,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "AppShell — the contracts",
     "TopBarActionMenu — an account menu",
     "TopBarBrand — logo and name, the name hidden on a phone",
+    "TopBarNav — the page links between the brand and the actions",
     "TopBarActionMenu — iconBadge",
     "TopBarActionMenu — a link in the header that closes the menu",
     "TopBarActionMenu — group headings",
@@ -967,6 +974,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   "helpers": [
     "@eifi1/ui-kit/dates — the helpers",
     "dateRangePresets()",
+    "From a given day",
     "One today: setToday",
     "CURRENCIES, CurrencyFlag and getCurrency",
     "lib/calc — the evaluator",
@@ -1008,6 +1016,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   "sync": [
     "createSyncEngine — a Dexie copy in this browser, a pretend server in memory",
     "The wiring — a handover copy",
+    "Ids on plain http — randomUuid and uuid5Sync",
   ],
   "release-notes": [
     "ReleaseNotes — one release, on the kit's parser",
@@ -1290,6 +1299,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "FileInputs",
     "Files016Demo",
     "FileLock022Demo",
+    "AttachDemo",
   ],
   "media": [
     "MediaDemo",

@@ -163,6 +163,35 @@ describe("HoverMenu keyboard", () => {
     }
   });
 
+  it("stays open after a tap, through the mouseleave a phone emulates after it (0.66 probe)", () => {
+    // A tap is pointerdown(touch), then the mouse events the browser emulates: mouseenter,
+    // the click, and — once the panel renders — a mouseleave. Real Chromium at 390 px closed
+    // TopBarNav's menu 140 ms after the tap that opened it.
+    vi.useFakeTimers();
+    try {
+      render(<Menu />);
+      const wrapper = trigger().parentElement!;
+      fireEvent.pointerDown(trigger(), { pointerType: "touch" });
+      fireEvent.mouseEnter(wrapper);
+      fireEvent.click(trigger());
+      fireEvent.mouseLeave(wrapper);
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+      // A real mouse afterwards hovers as before: it leaves, the menu closes.
+      fireEvent.pointerMove(wrapper, { pointerType: "mouse" });
+      fireEvent.mouseEnter(wrapper);
+      fireEvent.mouseLeave(wrapper);
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("closes when Tab leaves the menu", () => {
     render(<Menu />);
     keyboardOpen();

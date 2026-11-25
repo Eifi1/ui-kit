@@ -7,6 +7,7 @@ import { useDropdown } from "./dropdown";
 import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
 import { isImeEnter } from "../lib/ime";
 import { isQuietFocus } from "../lib/quiet-focus";
+import { returnFocusQuietly } from "../lib/focus-left";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import {
@@ -27,6 +28,7 @@ import {
   LABEL_IN_ROW,
   LockFrame,
   mergeDescribedBy,
+  mergeRefs,
   StaticLabelRow,
   useFieldError,
   useFieldHint,
@@ -249,6 +251,14 @@ export function Combobox(props: ComboboxProps) {
   // Similar to the account select that already appears as full screen." The
   // anchored list stays for pointer devices, where it is the better shape.
   const sheetInputRef = useRef<HTMLInputElement | null>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  // The field itself, for the focus the sheet hands back; the caller's `ref` still gets it.
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const setInput = useMemo(() => mergeRefs(inputRef, ref), [ref]);
+  // A pick from the sheet, or a close without one, would leave the focus on <body>: the
+  // sheet does not give it back, because a plain focus on this field re-opens it. A quiet
+  // one does not (refactor audit 2026-11-22, INP-3). In the handler that closes.
+  const backToField = () => returnFocusQuietly(inputRef.current, sheetRef.current);
   // The box the portalled list hangs off — the inner wrapper, which hugs the input,
   // not the outer one (a grid item that can be taller than the field).
   const fieldRef = useRef<HTMLDivElement>(null);
@@ -335,6 +345,7 @@ export function Combobox(props: ComboboxProps) {
   const take = (v: string) => {
     if (locked) return;
     onChange(v);
+    backToField();
     setOpen(false);
     setActive(-1);
     // What is in the field is now an ANSWER, not a query — so reopening offers the
@@ -453,7 +464,7 @@ export function Combobox(props: ComboboxProps) {
               `peer`, so it is dimmed by hand above). */
           <div ref={fieldRef} className={cn("relative", inert && "cursor-not-allowed opacity-50")}>
             <input
-              ref={ref}
+              ref={setInput}
               id={fieldId}
               value={value}
               placeholder={placeholder}
@@ -585,8 +596,12 @@ export function Combobox(props: ComboboxProps) {
       {!isPhone && statusRegion}
       {isPhone && (
         <PickerSheet
+          ref={sheetRef}
           open={open && !inert}
-          onClose={() => setOpen(false)}
+          onClose={() => {
+            backToField();
+            setOpen(false);
+          }}
           title={sheetTitle ?? label}
           // The sheet's input IS the field: this is a free-text control, so what is
           // typed here is the value (a brand-new payee is just a name nothing

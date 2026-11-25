@@ -2,9 +2,12 @@ import { useEffect, useId, useImperativeHandle, useLayoutEffect, useRef, useStat
 import type { ReactNode, Ref, RefObject } from "react";
 import { ImageIcon, ImageOff, Paperclip, Send } from "lucide-react";
 import { cn } from "../lib/cn";
+import { calendarDayIso, calendarDayNumber } from "../lib/calendar-day";
 import { formatDate, formatRelativeTime } from "../lib/format";
+import { relativeFormatter } from "../lib/intl-cache";
 import { upperFirst } from "../lib/text-case";
 import { hasContent } from "../lib/presence";
+import { isSubmitChord } from "../hooks/use-hotkey";
 import { Button } from "../components/button";
 import { EmptyState } from "../components/empty-state";
 import { Spinner } from "../components/spinner";
@@ -14,7 +17,7 @@ import { Skeleton } from "../components/skeleton";
 import { Tooltip } from "../components/tooltip";
 import { useWriteLock } from "../components/write-lock";
 import type { CommitScope } from "../components/write-lock";
-import { useKitFileLabels, useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
+import { useKitFileLabels, useKitLabels, useKitLocale, useKitTimeZone, type LabelOverride } from "../i18n/kit-labels";
 import { FeedbackAttachmentField } from "./feedback-attachment";
 import type { FeedbackAttachmentFieldSingleProps } from "./feedback-attachment";
 import type { FeedbackNoteAttachment } from "./feedback-inbox";
@@ -176,9 +179,10 @@ export interface FeedbackThreadProps {
   timeFormat?: "relative" | "clock";
   /**
    * A centred day line before the first row and wherever the next row is on another
-   * calendar day (the device's zone): "Today", "Yesterday", else the date — keksdose
-   * G4. "Today" / "Yesterday" are `Intl.RelativeTimeFormat`'s own words in the kit
-   * locale, so there is no label to translate. Default false.
+   * calendar day (the provider's `timeZone`, else the device's): "Today", "Yesterday",
+   * else the date in its long form, "Monday 17 November" — keksdose G4. "Today" /
+   * "Yesterday" are `Intl.RelativeTimeFormat`'s own words in the kit locale, so there
+   * is no label to translate. Default false.
    */
   daySeparators?: boolean;
   /** "Now" for the relative times and the day lines — pin it in tests and stories.
@@ -205,6 +209,9 @@ export function FeedbackThread({
 }: FeedbackThreadProps) {
   const labels = useKitLabels("feedbackThread", DEFAULT_FEEDBACK_THREAD_LABELS, labelsProp);
   const locale = useKitLocale(localeProp);
+  // The provider's zone for every time, tooltip and day line (refactor audit 2026-11-22,
+  // DUP-2): the thread printed and counted the device's, beside the kit's other dates.
+  const timeZone = useKitTimeZone();
   const file = useKitFileLabels();
   const priv = redact ? "" : undefined;
   const clock = useMinuteClock(now === undefined);
@@ -224,7 +231,7 @@ export function FeedbackThread({
   const days: (number | null)[] = [];
   for (const message of messages) {
     const date = toDate(message.createdAt);
-    days.push(date ? dayNumber(date) : (days.at(-1) ?? null));
+    days.push(date ? calendarDayNumber(date, timeZone) : (days.at(-1) ?? null));
   }
 
   return (
@@ -234,13 +241,16 @@ export function FeedbackThread({
         const time = date && (
           // The kit's Tooltip, not a native title: one tooltip look app-wide
           // (keksdose F0 / dev#523).
-          <Tooltip label={new Intl.DateTimeFormat(locale, { dateStyle: "full", timeStyle: "short" }).format(date)}>
+          // Through the formatter cache: a formatter built per message per render was
+          // dev#632's cost.
+          <Tooltip label={formatDate(date, { dateStyle: "full", timeStyle: "short" }, { locale, timeZone })}>
             <time dateTime={date.toISOString()} className="tabular-nums">
               {timeFormat === "clock"
-                ? formatDate(date, "time", { locale })
+                ? formatDate(date, "time", { locale, timeZone })
                 : formatRelativeTime(date, {
                     now: reference,
                     locale,
+                    timeZone,
                     // Past the kit's day steps it is a date: "2 weeks ago" makes
                     // the reader do arithmetic the date already did.
                     absoluteAfterDays: 6.5,
@@ -249,11 +259,13 @@ export function FeedbackThread({
           </Tooltip>
         );
         const rows: ReactNode[] = [];
-        const day = date && dayNumber(date);
+        const day = date && calendarDayNumber(date, timeZone);
         // Against the last row WITH a readable date: an unparseable one neither starts
         // a day nor hides the next change.
         if (daySeparators && date && day !== days[index - 1]) {
-          rows.push(<DaySeparator key={`day-${message.id}`} date={date} now={reference} locale={locale} />);
+          rows.push(
+            <DaySeparator key={`day-${message.id}`} date={date} now={reference} locale={locale} timeZone={timeZone} />,
+          );
         }
         if (message.kind === "event") {
           // A list item like the rest, so "Reopened" is read in its place, but not an
@@ -413,31 +425,36 @@ function useMinuteClock(active: boolean): number {
   return time;
 }
 
-/** The local calendar day as one number (20260926), for "same day?" and keys. */
-function dayNumber(date: Date): number {
-  return date.getFullYear() * 10_000 + (date.getMonth() + 1) * 100 + date.getDate();
-}
-
 /**
  * The day line of `daySeparators` (keksdose G4): "Today" / "Yesterday" from
  * `Intl.RelativeTimeFormat` (`numeric: "auto"`) — the locale's own words, capitalised
  * for a line that stands alone ("heute" → "Heute"; a script without case is left as
  * is) — else the weekday and date, with the year only when it is not this one.
  *
- * Counted in calendar days, not 24-hour spans: 23:50 yesterday is "Yesterday" at
- * 00:10 today.
+ * Counted in calendar days of the provider's `timeZone` (else the device's), not 24-hour
+ * spans: 23:50 yesterday is "Yesterday" at 00:10 today. The long form stays a chat's own,
+ * not the app's date preference (refactor audit 2026-11-22, decision 6): "Monday 17
+ * November" says which day in words, where "Mo., 17.11.2026" is a column's.
  */
-function DaySeparator({ date, now, locale }: { date: Date; now: number; locale: string | undefined }) {
-  const today = new Date(now);
-  const days = Math.round(
-    (Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) -
-      Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())) /
-      86_400_000,
-  );
+function DaySeparator({
+  date,
+  now,
+  locale,
+  timeZone,
+}: {
+  date: Date;
+  now: number;
+  locale: string | undefined;
+  timeZone: string | undefined;
+}) {
+  const dayNumber = calendarDayNumber(date, timeZone);
+  const todayNumber = calendarDayNumber(new Date(now), timeZone);
+  const days = dayNumber - todayNumber;
+  const day = calendarDayIso(dayNumber);
+  const today = calendarDayIso(todayNumber);
   let label: string;
   if (days === 0 || days === -1) {
-    const word = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(days + 0, "day");
-    label = upperFirst(word, locale);
+    label = upperFirst(relativeFormatter(locale).format(days + 0, "day"), locale);
   } else {
     label = formatDate(
       date,
@@ -445,18 +462,15 @@ function DaySeparator({ date, now, locale }: { date: Date; now: number; locale: 
         weekday: "long",
         day: "numeric",
         month: "long",
-        ...(date.getFullYear() === today.getFullYear() ? null : { year: "numeric" }),
+        ...(day.slice(0, 4) === today.slice(0, 4) ? null : { year: "numeric" }),
       },
-      { locale },
+      { locale, timeZone },
     );
   }
-  const y = String(date.getFullYear()).padStart(4, "0");
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
   return (
     <li data-day-separator="" className="flex items-center gap-3 py-1 text-xs text-muted">
       <span aria-hidden className="h-px flex-1 bg-[var(--border)]" />
-      <time dateTime={`${y}-${m}-${d}`} className="font-medium">
+      <time dateTime={day} className="font-medium">
         {label}
       </time>
       <span aria-hidden className="h-px flex-1 bg-[var(--border)]" />
@@ -826,7 +840,7 @@ export function ChatComposer({
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={(event) => {
           if (event.key !== "Enter") return;
-          const mod = event.ctrlKey || event.metaKey;
+          const mod = isSubmitChord(event);
           // Under "enter": plain Enter sends, Shift+Enter falls through to the
           // textarea's new line, and an Enter that ends an IME composition is the
           // IME's (keyCode 229 is how Safari reports it after the composition ended).

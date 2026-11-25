@@ -17,6 +17,7 @@ import { SectionLabel, Caption } from "../components/text";
 import { RowActions } from "../components/row-actions";
 import { Button } from "../components/button";
 import { Input } from "../components/input";
+import { isEmailShape } from "../lib/email-shape";
 import { Select } from "../components/select";
 import { Spinner } from "../components/spinner";
 import { COMMIT_EXCEPT_BILLING, useWriteLock } from "../components/write-lock";
@@ -25,6 +26,7 @@ import { hasContent } from "../lib/presence";
 import type { AdminPerson, MaybePromise } from "./admin-parts";
 import { RoleSelect } from "./role-select";
 import { DEFAULT_INVITATIONS_LABELS } from "./invitations-panel-labels";
+import { InviteAddressField } from "./invite-address-field";
 
 /**
  * Who is invited, and the form that invites (docs/user-admin-harmonization.md §5; auth
@@ -209,9 +211,6 @@ export interface InvitationsPanelProps<R extends string = string> {
   labels?: LabelOverride<InvitationsLabels>;
 }
 
-// Shape only — whether the address may be invited is the server's question.
-const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 const ALL_CODES: readonly KitLanguageCode[] = KIT_LANGUAGES.map((language) => language.code);
 
 /** A failed run, told apart from an answer of `undefined`. */
@@ -293,7 +292,7 @@ export function InvitationsPanel<R extends string = string>({
     event.preventDefault();
     // Enter in a field is a commit too — the button's lock does not see it.
     if (!onInvite || busy || lock.locked || address === "") return;
-    if (!EMAIL_SHAPE.test(address)) {
+    if (!isEmailShape(address)) {
       setInvalid(true);
       return;
     }
@@ -329,20 +328,15 @@ export function InvitationsPanel<R extends string = string>({
       {canInvite && (
         <form noValidate onSubmit={submit} className="@container space-y-2">
           <div className="grid grid-cols-1 gap-2 @md:grid-cols-2">
-            <Input
+            <InviteAddressField
               label={labels.email}
-              type="email"
-              inputMode="email"
-              autoComplete="off"
-              autoCapitalize="none"
-              spellCheck={false}
               required
               value={email}
-              error={invalid ? labels.invalidEmail : undefined}
-              data-private
-              onChange={(event) => {
+              invalid={invalid}
+              invalidText={labels.invalidEmail}
+              onChange={(next) => {
                 setInvalid(false);
-                setEmail(event.target.value);
+                setEmail(next);
               }}
             />
             {choosesRole && (

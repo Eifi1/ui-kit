@@ -628,6 +628,17 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       taken: (count) => `${n(count)} ${plural(count, "foto hecha", "fotos hechas")}.`,
       done: (count) => `Usar ${n(count)} ${plural(count, "foto", "fotos")}`,
     },
+    // 0.66: AttachButton (es wants a native read, as the draft says).
+    attach: {
+      trigger: "Adjuntar",
+      title: "Añadir archivo adjunto",
+      camera: "Cámara",
+      photos: "Fotos",
+      files: "Archivos",
+      screenshot: "Captura de pantalla",
+      close: "Cerrar",
+      anotherPage: "Otra página",
+    },
     wizard: {
       done: "Listo",
       cancel: "Cancelar",
@@ -1033,7 +1044,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
             // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
             standardEntries: {
               recentData: (hours) =>
-                `Los datos cargados recientemente, para que las páginas se abran también sin conexión; lo que tenga más de ${hours} horas la app ya no lo usa y lo elimina la próxima vez que se abra. No se conserva nada de ello si inicia sesión con «Este es un ordenador compartido»`,
+                `Los datos cargados recientemente, para que las páginas se abran también sin conexión; lo que tenga más de ${hours === 1 ? "1 hora" : `${hours} horas`} la app ya no lo usa y lo elimina la próxima vez que se abra. No se conserva nada de ello si inicia sesión con «Este es un ordenador compartido»`,
               sharedComputer:
                 "Si eligió «Este es un ordenador compartido» al iniciar sesión, guardado junto con la pestaña",
               // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.
@@ -1564,7 +1575,6 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       choose: "Elija una cuenta…",
       chooseFirst: "Elija quién recibe el trabajo",
       confirm: "Traspasar",
-      customer: "cliente",
       deactivated: "desactivada",
       self: "la misma cuenta",
       unavailable: (account, reason) => `${account} (${reason})`,
@@ -2102,6 +2112,12 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         backTo: (role) => `Volver a ${role}`,
         billingOff: "La facturación está desactivada en local: los planes no cambian nada",
       },
+    },
+    // 0.66: TopBarNav — the page links' landmark (no word for "navigation": a screen
+    // reader adds the role) and the menu button they fold into.
+    topBarNav: {
+      navigation: "Páginas",
+      menu: "Menú",
     },
     // 0.45.0 — docs/local-first-harmonization.md §1.6 (`@eifi1/ui-kit/offline`): keksdose's
     // reviewed words (nav.logout_queued_*, pwa.*) where it has the language.

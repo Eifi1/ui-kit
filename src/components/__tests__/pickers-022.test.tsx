@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { layoutRoot } from "../../test/layout-root";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { Star } from "lucide-react";
 import { SwatchPicker } from "../swatch-picker";
@@ -245,7 +246,7 @@ describe("DatePicker / DateRangePicker hint and error (keksdose K4)", () => {
 
   it("adds nothing without the props", () => {
     const { container } = render(<DatePicker value="" onChange={vi.fn()} className="w-40" />);
-    expect((container.firstElementChild as HTMLElement).className).toContain("w-40");
+    expect(layoutRoot(container)!.className).toContain("w-40");
   });
 });
 
@@ -274,7 +275,7 @@ describe("MonthPicker error, hint and size=sm (keksdose K4, K13)", () => {
     expect(trigger.className).toContain("h-9");
     expect(trigger.className).toContain("w-auto");
     expect(trigger.className).toContain("py-0");
-    expect((container.firstElementChild as HTMLElement).className).toContain("w-fit");
+    expect(layoutRoot(container)!.className).toContain("w-fit");
   });
 
   it("sm is ignored with a label — the floating label needs the tall box", () => {

@@ -27,6 +27,7 @@ import type { WriteLock } from "./write-lock";
 import type { CardProps } from "./card";
 import type { DisabledReasonDisplay } from "./field-parts";
 import { DEFAULT_SHARE_CARD_LABELS } from "./share-card-labels";
+import { isEmailShape } from "../lib/email-shape";
 
 /**
  * Who holds one record, and the owner's every way of changing that — Kurvenschmiede's
@@ -200,10 +201,6 @@ export interface SharePanelProps {
   labels?: LabelOverride<ShareCardLabels>;
 }
 
-// Shape only. Whether the address exists, is allowed, or is the sharer's own is the
-// app's question — the field must never become a way to probe for accounts.
-const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 /** The kit's {@link RoleChip}, so a role looks the same here as in the admin roster,
  *  with the role's description in a tooltip. */
 function ShareRoleChip({ role }: { role: ShareRole | undefined }) {
@@ -343,7 +340,7 @@ export function SharePanel({
     // Enter in the field is a commit too — the button's lock does not see it.
     if (!onAdd || busy || lock.locked) return;
     if (empty && !addWithoutEmail) return;
-    if (!target && address !== "" && !EMAIL_SHAPE.test(address)) {
+    if (!target && address !== "" && !isEmailShape(address)) {
       setInvalid(true);
       return;
     }

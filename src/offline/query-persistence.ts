@@ -7,9 +7,9 @@ import { listenOn, postOnce } from "../lib/broadcast";
  * (docs/local-first-harmonization.md §1.5 D4, D5, D7; §1.6). keksdose's
  * shared/state/query-client.ts is the canon: an IndexedDB persister, a deny-list, the
  * plain-JSON guard on write (`shouldDehydrateQuery`) and its twin on restore that keeps
- * paused mutations. On top: a key per account (and company), a scrub list that removes
- * secret fields from payloads that are otherwise wanted offline, and `removeStale` for
- * another account's leftovers.
+ * paused mutations (here only with `persistMutations`, off by default since 0.66). On top: a
+ * key per account (and company), a scrub list that removes secret fields from payloads that
+ * are otherwise wanted offline, and `removeStale` for another account's leftovers.
  *
  * The only module of the kit that imports the persister and idb-keyval: both are optional
  * peers of `@eifi1/ui-kit/offline` and never reached from the main barrel
@@ -26,12 +26,20 @@ export type ScrubField = string | RegExp;
  * Removed from every query's data, at any depth, before it is persisted (D4, D7): bank
  * account numbers and the handover protocol's signatures. A page restored offline shows
  * such a field as missing ("Needs a connection").
+ *
+ * And, since 0.66, the password fields (refactor audit 2026-11-22, FLW-3): a paused mutation
+ * whose variables carry one is never written, for an app's own forms beside the kit's
+ * credential hooks (which say `meta: { persist: false }`). Exact names, not `/password/`:
+ * that would also take `password_change_required_at` out of a restored account.
  */
 export const DEFAULT_SCRUB_FIELDS: readonly ScrubField[] = Object.freeze([
   "iban",
   "qr_iban",
   "default_qr_iban",
   /^signature_/,
+  "password",
+  "current_password",
+  "new_password",
 ]);
 
 /** The storage the persister writes to. The default is IndexedDB through idb-keyval. */
@@ -75,11 +83,17 @@ export interface QueryPersistenceOptions {
   /** Default 1000 ms, as keksdose. */
   throttleTime?: number;
   /**
-   * 0.46 (kastlan K1): whether paused mutations are written with the cache. Default `true`
-   * (keksdose: an offline write waits in TanStack's queue and is sent after a reload).
-   * `false` keeps every mutation off the disk, and drops any an older build wrote on
-   * restore — for an app that queues offline writes in its own outbox (kastlan's Dexie
-   * outbox), instead of overriding `dehydrateOptions` by hand.
+   * 0.46 (kastlan K1): whether paused mutations are written with the cache. `true`: an offline
+   * write waits in TanStack's queue and is sent after a reload. `false` keeps every mutation
+   * off the disk, and drops any an older build wrote on restore — for an app that queues
+   * offline writes in its own outbox (kastlan's Dexie outbox), instead of overriding
+   * `dehydrateOptions` by hand.
+   *
+   * Default `false` since 0.66 (refactor audit 2026-11-22, FLW-3; `true` before): a paused
+   * write queue on the disk holds what the person typed, and every adopter had turned it off
+   * (kastlan, Kurvenschmiede) or persisted nothing. Even with `true`, a mutation whose
+   * `meta.persist` is `false` (the kit's credential hooks) or whose variables carry a
+   * scrubbed field is never written.
    */
   persistMutations?: boolean;
 }
@@ -263,7 +277,7 @@ export function createQueryPersistence({
   maxAge,
   storage = idbStorage,
   throttleTime = 1000,
-  persistMutations = true,
+  persistMutations = false,
 }: QueryPersistenceOptions): QueryPersistence {
   const prefix = `${app}-query-cache-`;
   const key = `${prefix}${user}${company === undefined || company === null || company === "" ? "" : `-${company}`}`;
@@ -330,10 +344,18 @@ export function createQueryPersistence({
     );
   };
 
-  /** The write side for mutations: TanStack's default (paused ones), minus any whose
-   *  variables carry a scrubbed field (S6); none at all with `persistMutations: false`. */
-  const shouldDehydrateMutation = (mutation: { state: { isPaused: boolean; variables?: unknown } }): boolean =>
-    persistMutations && mutation.state.isPaused && !carriesScrubbed(mutation.state.variables);
+  /** A mutation that may be on the disk: none that says `meta.persist: false` (the kit's
+   *  credential hooks, FLW-3), none whose variables carry a scrubbed field (S6). */
+  const mayKeep = (mutation: { meta?: unknown; state?: { variables?: unknown } } | null | undefined): boolean =>
+    (mutation?.meta as { persist?: unknown } | undefined)?.persist !== false &&
+    !carriesScrubbed(mutation?.state?.variables);
+
+  /** The write side for mutations: TanStack's default (paused ones), minus those
+   *  {@link mayKeep} refuses; none at all without `persistMutations`. */
+  const shouldDehydrateMutation = (mutation: {
+    meta?: unknown;
+    state: { isPaused: boolean; variables?: unknown };
+  }): boolean => persistMutations && mutation.state.isPaused && mayKeep(mutation);
 
   const withScrubbedData = (entry: unknown): unknown => {
     const query = entry as { state?: { data?: unknown } };
@@ -368,8 +390,8 @@ export function createQueryPersistence({
         clientState: {
           mutations:
             persistMutations && Array.isArray(clientState.mutations)
-              ? clientState.mutations.filter(
-                  (m) => !carriesScrubbed((m as { state?: { variables?: unknown } } | null)?.state?.variables),
+              ? clientState.mutations.filter((m) =>
+                  mayKeep(m as { meta?: unknown; state?: { variables?: unknown } } | null),
                 )
               : [],
           queries: clientState.queries

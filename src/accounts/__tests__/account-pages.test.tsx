@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import type { RouteObject } from "react-router";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { setSharedComputer } from "../../offline/shared-computer";
 import { fakeFetch, fakeHttp, noAnswer, tokens } from "../../test/fake-axios";
@@ -65,6 +65,15 @@ function mount(
   );
   return { calls, router, user: userEvent.setup(), client };
 }
+
+// The pages load when the first one is drawn (0.66, MOD-1). Load them once here, so a test
+// below that reads its page at once does so whichever test runs first, or alone.
+beforeAll(async () => {
+  mount("/forgot-password");
+  await screen.findByRole("button", { name: /send/i });
+  cleanup();
+  for (const client of clients.splice(0)) client.detach();
+});
 
 beforeEach(() => {
   localStorage.clear();
@@ -525,5 +534,72 @@ describe("0.64: Kurvenschmiede's dev.2 findings", () => {
     const source = readFileSync(`${process.cwd()}/src/accounts/require-session.tsx`, "utf8");
     expect(source).not.toMatch(/from "\.\/account-pages"/);
     expect(source).not.toMatch(/sign-in-form|register-form|reset-password/);
+  });
+});
+
+describe("0.66: the pages load when the first one is drawn (refactor audit 2026-11-22, MOD-1)", () => {
+  it("the route builders' module imports no page: an app's route table at module scope ships no form", async () => {
+    const { readFileSync } = await import("node:fs");
+    const source = readFileSync(`${process.cwd()}/src/accounts/account-pages.tsx`, "utf8");
+    const imports = [...source.matchAll(/^import (?!type )[^;]*? from "([^"]+)";/gms)].map((match) => match[1]);
+    expect(imports.filter((from) => /\/auth\/|\/demo\/demo-ended|shared-computer|auth-layout/.test(from))).toEqual([]);
+    expect(imports).not.toContain("./account-page-views");
+    expect(source).toContain('import("./account-page-views")');
+  });
+
+  /** account-pages and the context it reads, fresh: the lazy page has not loaded yet. */
+  async function fresh() {
+    vi.resetModules();
+    const pages = await import("../account-pages");
+    const context = await import("../accounts-context");
+    const made = await import("../accounts-client");
+    const client = made.createAccountsClient<typeof ada>({
+      http: fakeHttp(() => ({ status: 204 })),
+      storagePrefix: "app.",
+      publicPaths: ["/"],
+      fetch: fakeFetch(() => ({ status: 401 })),
+      navigate: vi.fn(),
+    });
+    clients.push(client);
+    const frame = ({ title, children }: AccountPageFrameProps) => (
+      <main aria-label="site">
+        <h1>{title}</h1>
+        {children}
+      </main>
+    );
+    const router = createMemoryRouter(pages.accountRoutes({ frame }), { initialEntries: ["/login"] });
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <context.AccountsProvider client={client}>
+          <RouterProvider router={router} />
+        </context.AccountsProvider>
+      </QueryClientProvider>,
+    );
+  }
+
+  it("shows the app's frame with a LoadingState until the pages' chunk is in, then the page", async () => {
+    await fresh();
+    const site = screen.getByRole("main", { name: "site" });
+    expect(site).toContainElement(screen.getByRole("status"));
+    expect(await screen.findByRole("button", { name: "Sign in" })).toBeInTheDocument();
+    expect(screen.getByRole("main", { name: "site" })).toHaveTextContent("Sign in");
+  });
+
+  it("says a chunk that did not come in the error boundary's words, in the frame, and fetches it again on Try again", async () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.doMock("../account-page-views", () => {
+      throw new TypeError("Failed to fetch dynamically imported module");
+    });
+    try {
+      await fresh();
+      expect(await screen.findByRole("alert")).toHaveTextContent("A new version is available");
+      expect(screen.getByRole("main", { name: "site" })).toContainElement(screen.getByRole("alert"));
+      vi.doUnmock("../account-page-views");
+      await userEvent.setup().click(screen.getByRole("button", { name: "Try again" }));
+      expect(await screen.findByRole("button", { name: "Sign in" })).toBeInTheDocument();
+    } finally {
+      vi.doUnmock("../account-page-views");
+      logged.mockRestore();
+    }
   });
 });

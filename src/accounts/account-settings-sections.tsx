@@ -13,7 +13,7 @@ import { PasswordSetting, ProfileSetting, TwoFactorSetting } from "../account/ac
 import { SessionsSetting, type SessionItem } from "../account/sessions-setting";
 import { InvitationsPanel, type InvitationRow, type InvitationsPanelProps } from "../admin/invitations-panel";
 import { formatPersonName } from "../lib/person-name";
-import { useKitFormat } from "../lib/format";
+import { useDayFormatter } from "../lib/day-format";
 import { ReauthDialog, type ReauthDialogLabels } from "../components/reauth-dialog";
 import type { LabelOverride } from "../i18n/kit-labels";
 import { useAccountSettingsLabels } from "../account/account-settings-labels";
@@ -72,7 +72,8 @@ export interface AccountProfileSectionProps {
 export function AccountProfileSection({ id = "profile", roleLabel }: AccountProfileSectionProps) {
   const user = useAccount();
   const save = useUpdateProfile<AccountMe>();
-  const { formatDate } = useKitFormat();
+  // The kit's day ladder (DUP-2): `useKitFormat().formatDate` skipped the app's preference.
+  const day = useDayFormatter();
   if (!user) return null;
   return (
     <ProfileSetting
@@ -80,7 +81,7 @@ export function AccountProfileSection({ id = "profile", roleLabel }: AccountProf
       name={formatPersonName({ first: user.first_name, last: user.last_name })}
       email={user.email}
       role={user.role && roleLabel ? roleLabel(user.role) : undefined}
-      memberSince={user.created_at ? formatDate(user.created_at, "medium") : undefined}
+      memberSince={user.created_at ? day(user.created_at) : undefined}
       firstName={user.first_name}
       lastName={user.last_name}
       saving={save.isPending}
@@ -92,16 +93,16 @@ export function AccountProfileSection({ id = "profile", roleLabel }: AccountProf
 /** A new password (`POST /auth/me/password`): every other session ends, and this one goes on
  *  with the fresh pair the answer brings (§6.3). A wrong current password is said under its
  *  field, by the card. */
-export function AccountPasswordSection({
-  id = "password",
-  minLength,
-  labels,
-}: {
+/** What {@link AccountPasswordSection} takes (exported since 0.66; refactor audit 2026-11-22,
+ *  API-5). */
+export interface AccountPasswordSectionProps {
   id?: string;
   minLength?: number;
   /** The card's words over the provider's `accountSettings.password` (0.64, Kurvenschmiede's U8). */
   labels?: LabelOverride<PasswordSettingLabels>;
-}) {
+}
+
+export function AccountPasswordSection({ id = "password", minLength, labels }: AccountPasswordSectionProps) {
   const change = useChangePassword();
   const describe = useFailureBeside(["password_incorrect", "invalid_credentials"]);
   return (
@@ -116,10 +117,17 @@ export function AccountPasswordSection({
   );
 }
 
+/** What {@link AccountEmailSection} takes (exported since 0.66, API-5). */
+export interface AccountEmailSectionProps {
+  id?: string;
+  /** The app's address tag (`"staunlabor"`, §4.5), offered as at sign-up. */
+  emailTag?: string;
+}
+
 /** The address, changed the contract's way (user-admin §6.2): the new address and the
  *  password, then a link to the new mailbox. The pending change is the server's, so a reload
  *  or another tab shows it. The app's address tag is offered, as at sign-up (§4.5). */
-export function AccountEmailSection({ id = "email", emailTag }: { id?: string; emailTag?: string }) {
+export function AccountEmailSection({ id = "email", emailTag }: AccountEmailSectionProps) {
   const user = useAccount();
   const { state, request, resend, cancel } = useEmailChange();
   const passkeys = usePasskeys();
@@ -163,12 +171,17 @@ function sessionItems(
     }));
 }
 
+/** What {@link AccountSessionsSection} takes (exported since 0.66, API-5). */
+export interface AccountSessionsSectionProps {
+  id?: string;
+}
+
 /**
  * The account's sessions (§6.3, user-admin §6.3): the device list with this one marked
  * `current` (and first) and never offered to end — that is the sign-out — the others each
  * ended on their own, and "Sign out everywhere", a sign-out in the contract's order.
  */
-export function AccountSessionsSection({ id = "sessions" }: { id?: string }) {
+export function AccountSessionsSection({ id = "sessions" }: AccountSessionsSectionProps) {
   const { list, revoke, signOutEverywhere } = useAccountSessions();
   const describe = useFailureBeside([]);
   return (
@@ -234,27 +247,27 @@ export function AccountTwoFactorSection({
         setup={pending ? { otpauthUri: pending.otpauth_url, secret: pending.secret } : null}
         onStartSetup={() => ask("setup")}
         onReplace={() => ask("replace")}
+        // Each call answers through its own promise (refactor audit 2026-11-22, FLW-1): the
+        // backup codes come only in the enable's answer and are shown once, and a per-call
+        // `mutate(code, { onSuccess })` is dropped when a second call starts before it lands.
         onEnable={(code) =>
-          enable.mutate(code, {
-            onSuccess: (answer) => {
+          void enable.mutateAsync(code).then(
+            (answer) => {
               setPending(null);
               setFresh(answer.backup_codes);
               toast.success(words.turnedOn);
             },
-            onError: (error) => toast.error(describe(error)),
-          })
+            (error: unknown) => toast.error(describe(error)),
+          )
         }
         onDisable={(password, code) =>
-          disable.mutate(
-            { password, code },
-            {
-              onSuccess: () => {
-                setPending(null);
-                setFresh(null);
-                toast.success(words.turnedOff);
-              },
-              onError: (error) => toast.error(describe(error)),
+          void disable.mutateAsync({ password, code }).then(
+            () => {
+              setPending(null);
+              setFresh(null);
+              toast.success(words.turnedOff);
             },
+            (error: unknown) => toast.error(describe(error)),
           )
         }
         backupCodes={{
@@ -396,9 +409,16 @@ export function AccountPasskeysSection({
   );
 }
 
+/** What {@link AccountExportSection} takes (exported since 0.66, API-5). */
+export interface AccountExportSectionProps {
+  id?: string;
+  /** The card's line under its title: what the file holds. */
+  description?: ReactNode;
+}
+
 /** The account's data as one JSON file (user-admin §6.5): server-kit's envelope, once a minute
  *  (a 429 is said as such). `description` is the app's line on what it holds. */
-export function AccountExportSection({ id = "export", description }: { id?: string; description?: ReactNode }) {
+export function AccountExportSection({ id = "export", description }: AccountExportSectionProps) {
   const exportData = useAccountExport();
   const describe = useFailureBeside([]);
   return (

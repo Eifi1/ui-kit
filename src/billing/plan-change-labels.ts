@@ -3,7 +3,7 @@
 // loads as one chunk like the other languages (0.34, KS U8). In billing/ since 0.52:
 // PlanSwitchConfirm reads them too, and with them in admin/ the billing and admin folders
 // imported each other (refactor audit 2026-10-30, MOD-6). admin/plan-change re-exports
-// both, and admin/plan-change-labels still answers for the old path.
+// both; the old admin/plan-change-labels shim went in 0.66 (refactor audit 2026-11-22, MOD-4).
 
 /** The `planChange` namespace: the column, the grant dialog and the result's lines. */
 export interface PlanChangeLabels {

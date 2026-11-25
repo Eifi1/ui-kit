@@ -305,7 +305,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         backupTitle: "Codes de secours",
         backupHint:
           "Chaque code permet de se connecter une fois à la place du code de l’application d’authentification. Conservez-les en lieu sûr\u00a0: ils ne s’affichent que maintenant.",
-        backupLeft: (count) => (count === 1 ? "Il reste 1 code de secours." : `Il reste ${count} codes de secours.`),
+        backupLeft: (count) => `Il reste ${count} ${plural(count, "code de secours", "codes de secours")}.`,
         backupRenew: "Créer de nouveaux codes de secours",
         backupRenewHint: "Les nouveaux codes remplacent les anciens, qui cessent aussitôt de fonctionner.",
         backupCopy: "Copier les codes",
@@ -462,11 +462,11 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     },
     calendarHeatmap: {
       grid: "Valeurs quotidiennes",
-      day: (date, value) => `${date} : ${value}`,
+      day: (date, value) => `${date}\u00a0: ${value}`,
       less: "Moins",
       more: "Plus",
       truncated: (count) =>
-        `Affichage des jours les plus récents ; ${n(count)} ${plural(count, "jour antérieur n’est pas affiché", "jours antérieurs ne sont pas affichés")}.`,
+        `Affichage des jours les plus récents\u00a0; ${n(count)} ${plural(count, "jour antérieur n’est pas affiché", "jours antérieurs ne sont pas affichés")}.`,
     },
     datePicker: {
       apply: "Appliquer",
@@ -642,6 +642,17 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       shutter: "Prendre la photo",
       taken: (count) => `${n(count)} ${plural(count, "photo prise", "photos prises")}.`,
       done: (count) => `Utiliser ${n(count)} ${plural(count, "photo", "photos")}`,
+    },
+    // 0.66: AttachButton. "Ajouter une pièce jointe" is the feedback field's attachmentAdd.
+    attach: {
+      trigger: "Joindre",
+      title: "Ajouter une pièce jointe",
+      camera: "Appareil photo",
+      photos: "Photos",
+      files: "Fichiers",
+      screenshot: "Capture d’écran",
+      close: "Fermer",
+      anotherPage: "Autre page",
     },
     wizard: {
       done: "Terminé",
@@ -883,7 +894,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     authedImage: {
       loading: "Chargement de l’image…",
       loadError: "Impossible de charger l’image",
-      failedImage: (alt) => `${alt} : impossible de charger l’image`,
+      failedImage: (alt) => `${alt}\u00a0: impossible de charger l’image`,
     },
     imageGrid: {
       list: "Images",
@@ -1052,12 +1063,12 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
             // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
             standardEntries: {
               recentData: (hours) =>
-                `Les données chargées récemment, pour que les pages s’ouvrent aussi sans connexion ; ce qui date de plus de ${hours} heures n’est plus utilisé et est supprimé à la prochaine ouverture de l’app. Rien n’en est conservé si vous vous connectez avec « C’est un ordinateur partagé »`,
+                `Les données chargées récemment, pour que les pages s’ouvrent aussi sans connexion\u00a0; ce qui date de plus de ${hours} ${hours < 2 ? "heure" : "heures"} n’est plus utilisé et est supprimé à la prochaine ouverture de l’app. Rien n’en est conservé si vous vous connectez avec « C’est un ordinateur partagé »`,
               sharedComputer:
                 "Si vous avez choisi « C’est un ordinateur partagé » à la connexion, conservé avec l’onglet",
               // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.
               session:
-                "Votre connexion, jusqu’à ce que vous vous déconnectiez : les jetons de connexion et les informations de votre compte, comme votre nom et votre adresse e-mail. Après une connexion avec « C’est un ordinateur partagé », conservée uniquement avec l’onglet",
+                "Votre connexion, jusqu’à ce que vous vous déconnectiez\u00a0: les jetons de connexion et les informations de votre compte, comme votre nom et votre adresse e-mail. Après une connexion avec « C’est un ordinateur partagé », conservée uniquement avec l’onglet",
             },
           },
           rights: {
@@ -1342,7 +1353,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       otherAccount:
         "Ce navigateur reçoit les notifications d’un autre compte. Activez-les ici pour les recevoir sur le compte avec lequel vous êtes connecté.",
       sharedComputer:
-        "Indisponible sur un ordinateur partagé : ce navigateur continuerait à recevoir vos notifications après votre départ.",
+        "Indisponible sur un ordinateur partagé\u00a0: ce navigateur continuerait à recevoir vos notifications après votre départ.",
       enable: "Activer les notifications",
       disable: "Désactiver",
       sendTest: "Envoyer un test",
@@ -1593,7 +1604,6 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       choose: "Choisissez un compte…",
       chooseFirst: "Choisissez qui reçoit le travail",
       confirm: "Transmettre",
-      customer: "client",
       deactivated: "désactivé",
       self: "le même compte",
       unavailable: (account, reason) => `${account} (${reason})`,
@@ -1942,7 +1952,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         `Le paiement et les factures s’ouvrent chez ${provider} dans un nouvel onglet\u202f; ${app ? `${app} reste ouvert ici` : "cette page reste ouverte"}.`,
       grantWarningTitle: "Votre accès gratuit continue",
       grantWarningBody:
-        "Votre accès gratuit n’a pas de date de fin. Tant qu’il dure, un achat ne change pas votre formule : vous paieriez pour une formule qui ne s’applique pas.",
+        "Votre accès gratuit n’a pas de date de fin. Tant qu’il dure, un achat ne change pas votre formule\u00a0: vous paieriez pour une formule qui ne s’applique pas.",
       grantWarningAction: "Acheter quand même",
       waitingChanges: (count) =>
         `${n(count)} ${plural(count, "modification en attente", "modifications en attente")} d’une formule`,
@@ -2030,7 +2040,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       secondary: "Balayage long",
       none: "— aucune —",
       nextStatus: "Statut suivant",
-      help: "Un glissement court déclenche la première action ; glisser plus loin déclenche la seconde. Une action qu’une ligne donnée ne peut pas effectuer est sautée, la suivante prend sa place.",
+      help: "Un glissement court déclenche la première action\u00a0; glisser plus loin déclenche la seconde. Une action qu’une ligne donnée ne peut pas effectuer est sautée, la suivante prend sa place.",
       saveDefault: "Définir comme mes valeurs par défaut",
       reset: "Rétablir les valeurs par défaut",
       resetMine: "Revenir à mes valeurs par défaut",
@@ -2054,10 +2064,10 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       title: "E-mail de test",
       description:
         "Envoie un e-mail à votre propre adresse, par le transport avec lequel cette installation envoie tous ses e-mails.",
-      transport: (backend) => `Transport : ${backend}`,
+      transport: (backend) => `Transport\u00a0: ${backend}`,
       action: "M’envoyer un e-mail de test",
       sent: (address) => `Envoyé à ${address}. Vérifiez la boîte de réception.`,
-      console: "Le transport console ne fait que journaliser les e-mails ; rien n’a été envoyé.",
+      console: "Le transport console ne fait que journaliser les e-mails\u00a0; rien n’a été envoyé.",
       failed: "Envoi impossible. Le journal du serveur contient la réponse du fournisseur.",
       rateLimited,
       keywords: "e-mail test courriel transport smtp resend console envoyer distribution",
@@ -2144,6 +2154,12 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         backTo: (role) => `Revenir à ${role}`,
         billingOff: "La facturation est désactivée en local\u00a0: les formules ne changent rien",
       },
+    },
+    // 0.66: TopBarNav — the page links' landmark (no word for "navigation": a screen
+    // reader adds the role) and the menu button they fold into.
+    topBarNav: {
+      navigation: "Pages",
+      menu: "Menu",
     },
     // 0.45.0 — docs/local-first-harmonization.md §1.6 (`@eifi1/ui-kit/offline`): keksdose's
     // reviewed words (nav.logout_queued_*, pwa.*) where it has the language.

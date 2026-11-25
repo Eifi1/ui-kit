@@ -4,7 +4,7 @@ import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-lab
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
 import { externalRel, pickLinkRenderer, replacingClick, routerLinkNavigation } from "./text-link";
 import type { CommitScope } from "./write-lock";
-import { LockedReason, useRefusal, type DisabledReasonDisplay } from "./field-parts";
+import { LockedReason, useLockFocusHandover, useRefusal, type DisabledReasonDisplay } from "./field-parts";
 import { Spinner } from "./spinner";
 import { BUTTON_LINK_PRESSED, ICON_BUTTON_PRESSED, RenderedButtonLink, buttonLook } from "./button-look";
 import type { ButtonSize, ButtonTone, ButtonVariant } from "./button-look";
@@ -334,15 +334,18 @@ function ButtonElement({
   referrer: _referrer,
   replace: _replace,
   reloadDocument: _reloadDocument,
+  ref,
   ...rest
 }: ButtonProps) {
   // `locked`: refused WITH words, which describe it; `refused` also covers `true`.
   const { reason: disabledReason, locked, reasonId, refused } = useRefusal(refusedProp, ownDisabledReason, commit);
+  const ownRef = useLockFocusHandover(locked, ref);
   const inert = refused || Boolean(pending);
   const ownDescribedBy = rest["aria-describedby"];
   const button = (
     <button
       {...rest}
+      ref={ownRef}
       disabled={inert ? undefined : rest.disabled}
       aria-disabled={inert || rest["aria-disabled"]}
       aria-busy={pending || rest["aria-busy"]}

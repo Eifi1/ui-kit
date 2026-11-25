@@ -5,6 +5,7 @@ import { Pencil, Plus, RefreshCw, Trash2, UserPlus } from "lucide-react";
 import { ADMIN_ACTION_CONFIRM_CODES, AdminActionConfirm } from "../admin/admin-action-confirm";
 import type { AdminConfirmLevel } from "../admin/admin-action-confirm";
 import { DEFAULT_INVITATIONS_LABELS } from "../admin/invitations-panel-labels";
+import { InviteAddressField } from "../admin/invite-address-field";
 import { AccountStateChip } from "../components/account-chips";
 import { AlertBanner } from "../components/alert-banner";
 import { Button } from "../components/button";
@@ -24,6 +25,7 @@ import { Caption, SectionLabel } from "../components/text";
 import { toast } from "../components/toast";
 import { ToggleGroup } from "../components/toggle-group";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
+import { isEmailShape } from "../lib/email-shape";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import type { LabelOverride } from "../i18n/kit-labels";
 import { KIT_LANGUAGES, resolveLanguage } from "../i18n/languages";
@@ -195,6 +197,7 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
   const invitationWords = useKitLabels("invitations", DEFAULT_INVITATIONS_LABELS);
   const kitLocale = useKitLocale();
   const [email, setEmail] = useState("");
+  const [invalid, setInvalid] = useState(false);
   const [role, setRole] = useState<AccountTeamRole>("member");
   const [locale, setLocale] = useState<KitLanguageCode>(() => resolveLanguage([defaultLocale, kitLocale], languages));
   const roles = [
@@ -206,6 +209,12 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
   const add = () => {
     const address = email.trim();
     if (!address || !doors?.onAdd) return;
+    // The shape in the kit's words, under the field, as InvitationsPanel says it (DUP-8);
+    // the browser's own type=email bubble spoke the browser's language.
+    if (!isEmailShape(address)) {
+      setInvalid(true);
+      return;
+    }
     // The address stays in the field until the add went through, so a refusal can be fixed.
     void doors
       .onAdd(address, mode === "admin" ? role : "member", locale)
@@ -229,7 +238,9 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
                   <span className="truncate font-medium text-primary">{member.display_name}</span>
                   {!member.is_active && <AccountStateChip state="inactive" size="xs" />}
                 </div>
-                <div className="truncate text-xs text-muted">{member.email}</div>
+                <div data-private className="truncate text-xs text-muted">
+                  {member.email}
+                </div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 {mode === "admin" && doors?.onSetRole ? (
@@ -238,8 +249,13 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
                     aria-label={labels.roleOf(member.display_name)}
                     options={roles}
                     value={member.role}
-                    disabled={busy}
-                    onChange={(next) => doors.onSetRole?.(member, next)}
+                    // Held by ignoring a press while a change is out, not by `disabled`: the
+                    // segment just pressed has the focus, and a native `disabled` dropped it
+                    // to <body> (INP-1). Controlled, so the segment shown stays the role.
+                    aria-busy={busy || undefined}
+                    onChange={(next) => {
+                      if (!busy) doors.onSetRole?.(member, next);
+                    }}
                   />
                 ) : (
                   <Chip size="xs" shape="square" tone={member.role === "manager" ? "info" : "neutral"}>
@@ -282,7 +298,9 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
           <ul className="space-y-2">
             {team.invitations.map((invitation) => (
               <li key={invitation.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                <span className="min-w-0 truncate text-secondary">{invitation.email}</span>
+                <span data-private className="min-w-0 truncate text-secondary">
+                  {invitation.email}
+                </span>
                 <div className="flex shrink-0 items-center gap-1">
                   <Chip size="xs" shape="square" tone={invitation.status === "expired" ? "warning" : "neutral"}>
                     {invitationWords.status[invitation.status]}
@@ -328,6 +346,7 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
 
       {doors?.onAdd && mode !== "member" && (
         <form
+          noValidate
           // One column per field at sm, so the language sits beside the address rather than
           // wrapping under it: the address, the admin's role, the language, then Add.
           className={`grid grid-cols-1 gap-2 sm:items-end ${ADD_ROW_COLUMNS[(mode === "admin" ? 1 : 0) + (asksLanguage ? 1 : 0)]}`}
@@ -336,11 +355,15 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
             add();
           }}
         >
-          <Input
+          <InviteAddressField
             label={labels.addEmail}
-            type="email"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            invalid={invalid}
+            invalidText={invitationWords.invalidEmail}
+            onChange={(next) => {
+              setInvalid(false);
+              setEmail(next);
+            }}
           />
           {mode === "admin" && (
             <ToggleGroup<AccountTeamRole>
@@ -362,7 +385,7 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
             />
           )}
           {/* Enter in the field is this button's click, so its lock refuses the submit too. */}
-          <Button type="submit" variant="secondary" commit disabled={busy || !email.trim()}>
+          <Button type="submit" variant="secondary" commit disabled={!busy && !email.trim()} pending={busy}>
             <UserPlus className="size-4" aria-hidden /> {labels.add}
           </Button>
         </form>
@@ -457,13 +480,10 @@ export function AccountTeamsSection({
   const create = () => {
     const wanted = name.trim();
     if (!wanted) return;
-    actions.create.mutate(wanted, {
-      onSuccess: (team) => {
-        setName("");
-        toast.success(labels.created(team.name));
-      },
-      onError: failed(wanted),
-    });
+    void actions.create.mutateAsync(wanted).then((team) => {
+      setName("");
+      toast.success(labels.created(team.name));
+    }, failed(wanted));
   };
 
   const doorsFor = (team: AccountAdminTeam): TeamDoors => ({
@@ -477,20 +497,23 @@ export function AccountTeamsSection({
           throw error;
         }),
     onSetRole: (member, role) =>
-      actions.setRole.mutate({ team, userId: member.user_id, role }, { onError: failed(team.name) }),
-    onRemove: (member) => actions.removeMember.mutate({ team, userId: member.user_id }, { onError: failed(team.name) }),
+      void actions.setRole.mutateAsync({ team, userId: member.user_id, role }).catch(failed(team.name)),
+    onRemove: (member) =>
+      void actions.removeMember.mutateAsync({ team, userId: member.user_id }).catch(failed(team.name)),
     onResend: (invitation) =>
-      actions.resendInvitation.mutate(invitation.id, {
-        onSuccess: (issued) =>
-          announceInvited(
-            { email: issued.email, sent: issued.sent, link: issued.link ?? null },
-            team.name,
-            labels,
-            setHandOn,
-          ),
-        onError: failed(team.name),
-      }),
-    onWithdraw: (invitation) => actions.withdrawInvitation.mutate(invitation.id, { onError: failed(team.name) }),
+      void actions.resendInvitation
+        .mutateAsync(invitation.id)
+        .then(
+          (issued) =>
+            announceInvited(
+              { email: issued.email, sent: issued.sent, link: issued.link ?? null },
+              team.name,
+              labels,
+              setHandOn,
+            ),
+          failed(team.name),
+        ),
+    onWithdraw: (invitation) => void actions.withdrawInvitation.mutateAsync(invitation.id).catch(failed(team.name)),
   });
 
   const managersOf = (team: AccountTeam) =>
@@ -580,7 +603,7 @@ export function AccountTeamsSection({
         }}
       >
         <Input label={labels.name} value={name} maxLength={120} onChange={(event) => setName(event.target.value)} />
-        <Button type="submit" variant="accent" disabled={busy || !name.trim()}>
+        <Button type="submit" variant="accent" disabled={!busy && !name.trim()} pending={busy}>
           <Plus className="size-4" aria-hidden /> {labels.create}
         </Button>
       </form>
@@ -621,15 +644,12 @@ export function AccountTeamsSection({
               event.preventDefault();
               const next = renaming.name.trim();
               if (!next) return;
-              actions.rename.mutate(
-                { team: renaming.team, name: next },
-                {
-                  onSuccess: (team) => {
-                    setRenaming(null);
-                    toast.success(labels.renamed(team.name));
-                  },
-                  onError: (error) => setRenaming((now) => now && { ...now, error }),
+              void actions.rename.mutateAsync({ team: renaming.team, name: next }).then(
+                (team) => {
+                  setRenaming(null);
+                  toast.success(labels.renamed(team.name));
                 },
+                (error: unknown) => setRenaming((now) => now && { ...now, error }),
               );
             }}
           >
@@ -757,23 +777,15 @@ export function AccountTeamsPage({
           throw error;
         }),
     onRemove: (member) =>
-      actions.removeMember.mutate(
-        { team, userId: member.user_id },
-        {
-          onSuccess: (next) => toast.success(labels.removed(member.display_name, next.name)),
-          onError: failed(team),
-        },
-      ),
+      void actions.removeMember
+        .mutateAsync({ team, userId: member.user_id })
+        .then((next) => toast.success(labels.removed(member.display_name, next.name)), failed(team)),
     onResend: (invitation) =>
-      actions.resendInvitation.mutate(
-        { team, invitationId: invitation.id },
-        {
-          onSuccess: (next) => announceInvited(next.invited, next.name, labels, setHandOn),
-          onError: failed(team),
-        },
-      ),
+      void actions.resendInvitation
+        .mutateAsync({ team, invitationId: invitation.id })
+        .then((next) => announceInvited(next.invited, next.name, labels, setHandOn), failed(team)),
     onWithdraw: (invitation) =>
-      actions.withdrawInvitation.mutate({ team, invitationId: invitation.id }, { onError: failed(team) }),
+      void actions.withdrawInvitation.mutateAsync({ team, invitationId: invitation.id }).catch(failed(team)),
   });
 
   const list = teams.data ?? [];

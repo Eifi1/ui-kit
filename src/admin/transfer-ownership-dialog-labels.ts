@@ -12,7 +12,6 @@ export const DEFAULT_TRANSFER_OWNERSHIP_LABELS: TransferOwnershipLabels = {
   choose: "Choose an account…",
   chooseFirst: "Choose who receives the work",
   confirm: "Hand it on",
-  customer: "a customer",
   deactivated: "deactivated",
   self: "the same account",
   unavailable: (account, reason) => `${account} (${reason})`,

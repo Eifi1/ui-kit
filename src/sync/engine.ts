@@ -1,6 +1,7 @@
 import { listenOn, postOnce } from "../lib/broadcast";
 import { httpStatusOf } from "../lib/http-status";
 import { isOfflineError, stampAfter } from "../offline/local-first";
+import { randomUuid } from "../lib/uuid";
 import { isSharedComputer } from "../offline/shared-computer";
 import type { OutboxChange, OutboxStatus, SyncDb, SyncedRow } from "./db";
 import type { SyncRequestBody, SyncResponseBody, SyncWireChange } from "./wire";
@@ -221,10 +222,11 @@ function webLocks(): LockManager | undefined {
 }
 
 /** A `forget()`'s epoch: unique enough to tell two apart, and on plain http too, where
- *  `crypto.randomUUID` is missing (refactor audit 2026-10-30, DUP-7). */
+ *  `crypto.randomUUID` is missing (refactor audit 2026-10-30, DUP-7) — `randomUuid`
+ *  assembles one from `getRandomValues` there (2026-11-22, DUP-4; it was `Date.now` +
+ *  `Math.random`). */
 function freshEpoch(): string {
-  const uuid = (globalThis.crypto as Partial<Crypto> | undefined)?.randomUUID;
-  return uuid ? uuid.call(globalThis.crypto) : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  return randomUuid();
 }
 
 /** A row created on this device and never echoed by the server carries `local: true`. */

@@ -26,11 +26,13 @@ import {
   DataTableLoadMoreFooter,
   emptyGroupsIn,
   GroupBandEnd,
+  groupBodyKeys,
   groupLevels,
   groupRows,
   placeEmptyGroups,
   useGroupBandTops,
   withEmptyGroups,
+  withHeadGroups,
   type DataTableGroupBy,
   type DataTableLoadMore,
   type RowGroup,
@@ -69,7 +71,7 @@ import {
 } from "../i18n/kit-labels";
 import { useEdgeFade } from "../lib/strip-fade";
 import { dirOf, type Direction } from "../lib/direction";
-import { focusContainer, focusFirst, focusIsLost, tabStops, whenFocusLeftForNothing } from "../lib/focus-left";
+import { useTableFocusReturn } from "./data-table-focus";
 
 // ---------- Types ----------
 
@@ -554,8 +556,33 @@ export interface DataTableProps<T> {
   };
   /** User-facing strings (English defaults); pass translated overrides. Merged over
    *  `dataTable` from `<UiKitProvider labels>`, so a call site only states what
-   *  differs for THIS table — typically `table`, its accessible name. */
+   *  differs for THIS table. `table` is the name of a table nothing else names. */
   labels?: LabelOverride<DataTableLabels>;
+  /**
+   * The table's accessible name, on the desktop `<table>` and the phone's card list alike,
+   * when nothing on the page names it: "Transactions", "Open invoices". A page with several
+   * tables names each — without it every one is `labels.table` ("Data table") in a screen
+   * reader's list of tables. Wins over `labels.table`; {@link aria-labelledby} and
+   * {@link caption} win over it.
+   */
+  "aria-label"?: string;
+  /**
+   * The id of what names the table on the page, usually the heading of the section it sits
+   * in (`<h2 id="accounts-heading">`). Both layouts point at it. The first choice whenever
+   * the name is already on screen: the reader hears what the eye reads, and the words live
+   * in one place.
+   */
+  "aria-labelledby"?: string;
+  /**
+   * The table's title, as a `<caption>`: in the table on a wide screen, above the card list
+   * on a phone, and the name of both (unless {@link aria-labelledby} is given). In the
+   * kit's caption type, as {@link TableCaption}. At the TOP rather than Table's bottom: a
+   * DataTable's body scrolls in a bounded box, and a caption under its last row was out of
+   * sight until the end; at the top it scrolls away under the sticky header.
+   */
+  caption?: ReactNode;
+  /** {@link caption} for screen readers only: the table's name, not drawn. */
+  hideCaption?: boolean;
   /** BCP-47 locale for the date filter's calendar and the pager's numbers. Falls
    *  back to `<UiKitProvider locale>`, then to the runtime's default. */
   locale?: string;
@@ -751,6 +778,38 @@ export interface DataTableProps<T> {
    * {@link DataTableLoadMore}.
    */
   loadMore?: DataTableLoadMore;
+  /**
+   * 0.66 (keksdose live #536, Marcel: "Einverstanden. Bereite es auf"): groups to draw with
+   * no rows at the HEAD of the list — the days between the newest booked one and today, so a
+   * day band's "+" (`groupBy`'s `action`) books on a day nothing is booked on yet. Each entry
+   * is a path through `groupBy`'s levels, `[period, day]` with two, `[key]` with one, in the
+   * order they are shown.
+   *
+   * **The anchor.** End the list with the newest group that HAS rows (the newest booked
+   * day): the first path with rows anchors the others, which are drawn before it — a day of
+   * its period inside that period, before its day; a day of a period with no rows yet (the
+   * 1st of a month) under that period's own band, before the anchor's. So rows above the
+   * head (keksdose's "Upcoming" block) stay above it. Without an anchor they go before the
+   * first row; paths after the anchor are not drawn.
+   *
+   * **Where `keys` cannot go.** A level's {@link DataTableGroupBy.keys} is read only on the
+   * first level and never under `virtualize` or a `loadMore` with more to come, because a
+   * group the rows have not reached may yet have rows. The head is certain: the newest
+   * rows are loaded first. So these are drawn on the second level, under `virtualize` (each
+   * band is drawn with the row it stands before) and with more to load.
+   *
+   * **When:** not while a column filter or {@link keyFilter} narrows the rows (an empty day
+   * there would be untrue), and only on the page that holds the anchor (the first, without
+   * one). A narrowing of the app's own — a search box, a sort that does not put the newest
+   * first — is the app's to know: pass none while it is on.
+   *
+   * Like `keys`' groups they are not rows: no count, pager, box, swipe or arrow-key stop.
+   * Each band gets its level's `label`, `end` and `action` called with no rows, and its
+   * `empty` line under it — except under `virtualize`, where the band stands alone (pass
+   * `empty: () => null` to have the same on every layout). On a phone, the paths' key at
+   * `mobileGroupBy`'s level (its own `groupBy` level, else the innermost) makes the sections.
+   */
+  headGroups?: readonly (readonly string[])[];
   /**
    * 0.48.2 (keksdose dev #632, Marcel: "The table is extremely slow. Is it virtualised…?"):
    * render only the desktop rows near the visible part of the scroller, plus `overscan`
@@ -1011,24 +1070,6 @@ export interface DataTableDesktopSwipeActions<T> {
  */
 const FOOTER_CELL = "sticky bottom-0 z-10 bg-surface-2 shadow-[inset_0_2px_0_var(--border-strong)]";
 
-/** Where focus that leaves a row is still the row's (DSP-4): an overlay — a confirm, a
- *  menu, a sheet — hands it back or closes with the row it was about. The kit marks its
- *  own (`data-kit-layer`); an app's dialog says what it is. */
-const OVERLAY_SELECTOR = '[data-kit-layer],[role="dialog"],[role="alertdialog"],[aria-modal="true"],[role="menu"]';
-
-/** `rows`' places by `rowKey`, the first row of a key winning as a `findIndex`'s did; the
- *  map built at the first lookup (0.52 code review, data-table.tsx). */
-function keyIndex<T>(rows: readonly T[], rowKey: (row: T) => string | number): (key: string | number) => number {
-  let at: Map<string | number, number> | null = null;
-  return (key) => {
-    if (!at) {
-      at = new Map();
-      for (let i = rows.length - 1; i >= 0; i--) at.set(rowKey(rows[i]), i);
-    }
-    return at.get(key) ?? -1;
-  };
-}
-
 /** How long a filter's "n of m rows" waits for the typing to pause (DSP-23 d): longer than
  *  the gap between two keystrokes, short enough to answer the word just typed. */
 const FILTER_ANNOUNCE_DELAY_MS = 500;
@@ -1063,6 +1104,9 @@ export const DEFAULT_DATA_TABLE_SORT_LABELS: DataTableSortLabels = {
 };
 
 const flipDir = (d: SortDir): SortDir => (d === "asc" ? "desc" : "asc");
+
+/** `headGroups`' development warnings already given, so a render does not repeat one. */
+const headWarnings = new Set<string>();
 
 // `virtualize`'s constants (0.48.2): the band levels a group's `<tbody>` opens with.
 const NO_BANDS: readonly (1 | 2)[] = [];
@@ -1122,6 +1166,10 @@ export function DataTable<T>({
   onPageSizeChange,
   selection,
   labels: labelsProp,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
+  caption,
+  hideCaption = false,
   locale: localeProp,
   storageKeyPrefix: storageKeyPrefixProp,
   storage: storageProp,
@@ -1139,6 +1187,7 @@ export function DataTable<T>({
   leadingRowSticky = false,
   groupBy,
   loadMore,
+  headGroups,
   virtualize = false,
   density = "comfortable",
   sortCycle = "tri",
@@ -1640,6 +1689,16 @@ export function DataTable<T>({
   // arrays it holds, as before, and changes neither.
   const footerValue = (col: DataTableColumn<T>) => col.footer?.(sorted as T[], slice as T[]);
   const footerHeadingId = useId();
+  // The table's name, one for both layouts: what names it on the page, else its caption,
+  // else `aria-label`, else `labels.table`. Both layouts point at the caption by id (the
+  // phone's is a `<p>`); an `aria-label` beside it would win over it, so there is none.
+  const captionId = useId();
+  const hasCaption = caption != null && caption !== false && caption !== "";
+  const labelledBy = ariaLabelledBy || (hasCaption ? captionId : undefined);
+  const nameProps = labelledBy ? { "aria-labelledby": labelledBy } : { "aria-label": ariaLabel || labels.table };
+  // Hidden: `sr-only-fixed` (CONTRIBUTING §3), as the table sits in an app's markup.
+  const captionClass = (pad: string) =>
+    hideCaption ? "sr-only-fixed" : cn("text-start text-muted", compact ? "text-xs" : "text-sm", pad);
   // Each open row's detail row, for its disclosure button's `aria-controls`.
   const detailIdBase = useId();
   // The actions column is the table's own, not one the user can hide: out of the count.
@@ -1831,59 +1890,35 @@ export function DataTable<T>({
   // stop per row, so a 100-row page does not put 100 stops between the header and
   // the pager.
   const rowsFocusable = !!onRowClick;
+  const tableRef = useRef<HTMLTableElement | null>(null);
   const [focusRowKey, setFocusRowKey] = useState<string | number | null>(null);
-  // The rows' places by key (0.52 code review, data-table.tsx): the tab stop's check
-  // below, the focus note and its recovery each walked the rows calling `rowKey` — on
-  // every render, at each focus, in every commit while a row was noted: under
-  // `virtualize`, 3000 rows, ~15000 calls per arrow step at the table's end. Built at the
-  // first lookup, once per array, so a table nobody focuses builds none. Keyed on the
-  // rows alone: `rowKey` is a pure function of its row, and a call site writes it inline.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const sliceIndex = useMemo(() => keyIndex(slice, rowKey), [slice]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const mobileIndex = useMemo(() => keyIndex(mobileSlice, rowKey), [mobileSlice]);
+  // `virtualize` (0.48.2): desktop only, and only with rows to window. Arrow/Home/End then
+  // move over every row, rendered or not: the target is rendered, then focused.
+  const virtualOn = !!virtualize && isMdUp && slice.length > 0;
+  const focusRowRef = useRef<((index: number) => void) | undefined>(undefined);
+  // ---- When the focused row leaves (refactor audit 2026-10-30, DSP-4), or stays while
+  // its focused element leaves (2026-11-22, DSP-1): data-table-focus.ts ----
+  const focusReturn = useTableFocusReturn({
+    rows: slice,
+    phoneRows: mobileSlice,
+    rowKey,
+    isMdUp,
+    virtualOn,
+    rowsFocusable,
+    tableRef,
+    phoneListRef,
+    focusRowRef,
+    announceMoved: () => announce(labels.filterResults(paginationTotal, isServer ? paginationTotal : rows.length)),
+  });
+  const { sliceIndex } = focusReturn;
   const tabRowKey =
     focusRowKey !== null && sliceIndex(focusRowKey) !== -1 ? focusRowKey : slice.length ? rowKey(slice[0]) : null;
 
   // What the memoised rows' handlers read at event time (0.48.2, K-052-2): the latest
   // props, refreshed every commit, so a row that bailed out of a render still toggles
   // through the current `selection` and opens through the current `onRowClick`.
-  // `virtualize` (0.48.2): desktop only, and only with rows to window. Arrow/Home/End then
-  // move over every row, rendered or not: the target is rendered, then focused.
-  const virtualOn = !!virtualize && isMdUp && slice.length > 0;
-  const focusRowRef = useRef<((index: number) => void) | undefined>(undefined);
-  // ---- When the focused row leaves (refactor audit 2026-10-30, DSP-4) ----
-  // The row holding the focus — its key, and where it stood — noted as the focus comes
-  // into it (the rows report it, through React, so a menu or a dialog a row opened in a
-  // portal is the row's too). A delete, a status change that filters the row out, an
-  // approval: the row's DOM goes, the focus with it to <body>, and the commit that took it
-  // puts the focus on the row now in its place (below).
-  const heldRow = useRef<{ key: string | number; index: number } | null>(null);
-  const noteRowFocus = (key: string | number) => {
-    heldRow.current = { key, index: (isMdUp ? sliceIndex : mobileIndex)(key) };
-  };
-  // A gone row's note waiting for the overlay that holds the focus (below): watched as
-  // a node until it leaves the page, since its close need not render the table.
-  const overlayWatch = useRef<{ layer: Element; stop: () => void } | null>(null);
-  const settleRef = useRef<() => void>(() => {});
-  const watchOverlay = (layer: Element) => {
-    if (overlayWatch.current?.layer === layer) return;
-    overlayWatch.current?.stop();
-    const observer = new MutationObserver(() => {
-      if (layer.isConnected) return;
-      stop();
-      settleRef.current();
-    });
-    const stop = () => {
-      observer.disconnect();
-      if (overlayWatch.current?.layer === layer) overlayWatch.current = null;
-    };
-    observer.observe(layer.ownerDocument.body, { childList: true, subtree: true });
-    overlayWatch.current = { layer, stop };
-  };
-  useEffect(() => () => overlayWatch.current?.stop(), []);
   const latestRowCtx: DataTableRowCtx<T> = {
-    noteFocus: noteRowFocus,
+    noteFocus: focusReturn.noteFocus,
     moveFocus: virtualOn
       ? (from, key) => {
           const target = rowNavTarget(from, key, slice.length);
@@ -1969,7 +2004,6 @@ export function DataTable<T>({
   // sections for the "assistance"-style list (feedback #317). Null unless the
   // caller opts in via `mobileGroupBy`.
   // The desktop's bands (0.48, keksdose dev #605), over the rows on screen.
-  const tableRef = useRef<HTMLTableElement | null>(null);
   // A level's declared groups with no rows (0.59, keksdose live #504; `DataTableGroupBy.keys`):
   // only where the table knows they ARE empty — it holds every row and nothing narrows them
   // (a filter, the set), and never under `virtualize`. Placed over ALL the rows, so a page
@@ -1982,15 +2016,38 @@ export function DataTable<T>({
       ? emptyGroupsIn(placeEmptyGroups(sorted, level.key, level.keys), from, to, sorted.length)
       : [];
   const pageFrom = wholeList ? 0 : safePage * effectivePageSize;
+  // `headGroups` (0.66, live #536): unless the rows are narrowed; on the page with the anchor,
+  // or the first. Development builds name the paths not drawn.
+  const heads = !narrowed && headGroups?.length ? headGroups : null;
+  const withHeads = (groups: RowGroup<T>[], paths: readonly (readonly string[])[], depth: 1 | 2) => {
+    const placed = withHeadGroups(groups, paths, depth);
+    if (!placed.anchored && pageFrom > 0) return groups;
+    const warning = `[ui-kit] DataTable headGroups not drawn (after the anchor, or a group with rows elsewhere): ${placed.ignored.join(", ")}`;
+    if (
+      Boolean(import.meta.env?.DEV) &&
+      !import.meta.env?.VITEST &&
+      placed.ignored.length > 0 &&
+      !headWarnings.has(warning)
+    ) {
+      headWarnings.add(warning);
+      console.warn(warning);
+    }
+    return placed.groups;
+  };
   const desktopGroups =
     isMdUp && levels.length > 0
-      ? withEmptyGroups(
-          groupRows(slice, levels),
-          virtualize ? [] : emptyGroupsOf(levels[0], pageFrom, pageFrom + slice.length),
-          pageFrom,
-        )
+      ? (() => {
+          const groups = withEmptyGroups(
+            groupRows(slice, levels),
+            virtualize ? [] : emptyGroupsOf(levels[0], pageFrom, pageFrom + slice.length),
+            pageFrom,
+          );
+          return heads ? withHeads(groups, heads, levels.length as 1 | 2) : groups;
+        })()
       : null;
-  const desktopEmptyGroups = !!desktopGroups?.some((g) => g.empty);
+  const desktopEmptyGroups = !!desktopGroups?.some((g) => g.empty || !!g.children?.some((c) => c.empty));
+  // Each group's `<tbody>` keys: its key and run, not its first row's index (DSP-1).
+  const bodyKeys = desktopGroups ? groupBodyKeys(desktopGroups) : null;
   // An empty declared group's line: the level's words, the table's "No entries" by
   // default; `null` (or `false`, `""`) for the band alone.
   const emptyGroupLine = (def: DataTableGroupBy<T> | null, key: string): ReactNode => {
@@ -2006,6 +2063,8 @@ export function DataTable<T>({
   // One run per innermost group, with its bands (`virtualOn` is above, with the rows' context).
   const virtualGroups: VirtualGroup[] = [];
   const virtualBands: { g1: RowGroup<T>; g2: RowGroup<T> | null }[] = [];
+  // In `virtualGroups`' order: one per first-level group without children, else per child.
+  const virtualBodyKeys = bodyKeys?.flat() ?? [];
   if (virtualOn) {
     if (!desktopGroups) virtualGroups.push({ start: 0, end: slice.length, bands: NO_BANDS, first: 0 });
     else
@@ -2057,61 +2116,10 @@ export function DataTable<T>({
   useLayoutEffect(() => {
     focusRowRef.current = focusRowAt;
   }, [focusRowAt]);
-
-  // The commit that took the focused row (DSP-4): if the focus fell with it — to <body>,
-  // not into a dialog or a field the app chose — it goes to the row now at that index,
-  // else the last row, else the table itself (`tabIndex=-1` while empty, named by
-  // `labels.table`); the card on a phone. A focusable row (`onRowClick`) takes it itself,
-  // any other its first control. The remaining count is said, as a filter's is: the
-  // focus moved without the user moving it. translation-review's `keepFocusAt` is the
-  // kit's earlier copy of the rule, for its groups.
-  //
-  // Every commit while a row is noted, a lookup by its key. A focus the user took
-  // elsewhere drops the note (`onBlur` on the root, below), and since the 0.52 code review
-  // so does one that went to nothing — a click on the page's background: kept, it was the
-  // one case where a later removal (a refetch, a sync) pulled the focus back in.
-  const settleFocus = () => {
-    const held = heldRow.current;
-    if (!held) return;
-    const now = (isMdUp ? sliceIndex : mobileIndex)(held.key);
-    if (now !== -1) {
-      held.index = now;
-      return;
-    }
-    const list = isMdUp ? tableRef.current : phoneListRef.current;
-    // In an overlay — a confirm, an edit drawer — the focus is not lost yet: the overlay
-    // hands it back to its opener as it closes, and the opener was in the row (0.52 code
-    // review, data-table.tsx: an optimistic delete with its confirm still open dropped the
-    // note, and the confirm's close dropped the focus to <body>). The note waits for the
-    // overlay to leave the page, watched as a node: the table need not render when it does
-    // (`useConfirm`'s provider, a Modal's exit). Not an overlay the table itself is in.
-    const layer = focusIsLost() ? null : document.activeElement?.closest(OVERLAY_SELECTOR);
-    if (layer && !(list && layer.contains(list))) {
-      watchOverlay(layer);
-      return;
-    }
-    heldRow.current = null;
-    overlayWatch.current?.stop();
-    if (!list || !focusIsLost()) return;
-    const shown = isMdUp ? slice : mobileSlice;
-    const at = shown.length === 0 ? -1 : Math.min(Math.max(held.index, 0), shown.length - 1);
-    if (at === -1) list.focus();
-    else if (isMdUp && virtualOn && rowsFocusable) focusRowRef.current?.(at);
-    else {
-      const row = list.querySelector<HTMLElement>(
-        isMdUp ? `:scope > tbody > tr[data-row-index="${at}"]` : `:scope > li[data-row-index="${at}"]`,
-      );
-      // Each of the row's stops in turn, then the table (0.52 code review): `focus()` on
-      // one that cannot hold it — `display: none`, in a closed <details>, a hidden input —
-      // does nothing, and the focus stayed on <body>.
-      const stops = !row ? [] : isMdUp && rowsFocusable ? [row] : tabStops(row, { includeSelf: false });
-      if (!focusFirst(stops)) focusContainer(list);
-    }
-    announce(labels.filterResults(paginationTotal, isServer ? paginationTotal : rows.length));
-  };
+  // Every commit, the focus return's check (data-table-focus.ts): here, after the window's
+  // focus mover is set, which it may use.
   useLayoutEffect(() => {
-    settleRef.current = settleFocus;
-    settleFocus();
+    focusReturn.settle();
   });
 
   // `mobileGroupBy` may be a desktop `groupBy` level (0.48), its label, end slot and
@@ -2120,7 +2128,7 @@ export function DataTable<T>({
   const mobileKey = typeof mobileGroupBy === "function" ? mobileGroupBy : mobileGroupBy?.key;
   // `start`: the section's first card's place in the list (its `data-row-index`, DSP-4).
   // A level's declared empty sections (0.59, live #504), over the cards revealed so far.
-  const mobileGroups: RowGroup<T>[] | null = mobileKey
+  const mobileRuns: RowGroup<T>[] | null = mobileKey
     ? withEmptyGroups(
         mobileSlice.reduce<RowGroup<T>[]>((acc, row, i) => {
           const key = mobileKey(row);
@@ -2133,6 +2141,17 @@ export function DataTable<T>({
         0,
       )
     : null;
+  // `headGroups` on the phone (0.66): each path's key at the sections' level — the
+  // `groupBy` level `mobileGroupBy` is, else the innermost.
+  const mobileDepth = mobileLevel && levels.includes(mobileLevel) ? levels.indexOf(mobileLevel) : -1;
+  const mobileGroups =
+    mobileRuns && heads && !isMdUp
+      ? withHeads(
+          mobileRuns,
+          heads.map((p) => [p[mobileDepth >= 0 ? mobileDepth : p.length - 1]]),
+          1,
+        )
+      : mobileRuns;
   const mobileEmptyGroups = !!mobileGroups?.some((g) => g.empty);
 
   // `frame={false}` swaps the Card for a bare wrapper carrying the same hooks and
@@ -2154,24 +2173,8 @@ export function DataTable<T>({
       // `<main>` and every `FillHeight` between it and this table key off it with
       // `has-[[data-fill-height]]`, so a page asks for the fill by passing the prop.
       data-fill-height={fillHeight ? "" : undefined}
-      // The focused row's note (DSP-4): cleared on the way down to whatever takes the
-      // focus, and set again on the way up by the row that holds it. Focus leaving for
-      // something real outside the table drops it — unless that is an overlay (a confirm,
-      // a menu), which hands the focus back, or closes with the row it asked about.
-      onFocusCapture={() => {
-        heldRow.current = null;
-        overlayWatch.current?.stop();
-      }}
-      onBlur={(e) => {
-        const to = e.relatedTarget;
-        if (to instanceof Element && !to.closest(OVERLAY_SELECTOR)) heldRow.current = null;
-        // Focus that left for nothing — a click on the page (0.52 code review): no
-        // element to say where, and a later removal of the row is no longer the user's.
-        const held = heldRow.current;
-        whenFocusLeftForNothing(e, () => {
-          if (heldRow.current === held) heldRow.current = null;
-        });
-      }}
+      // The focused row's note (DSP-4), dropped when the focus leaves the table for real.
+      {...focusReturn.rootProps}
       className={cn(
         "group/table",
         frame ? "overflow-clip" : "min-w-0",
@@ -2274,11 +2277,16 @@ export function DataTable<T>({
               }}
             />
           )}
+          {hasCaption && (
+            <p id={captionId} className={captionClass("px-4 py-2")}>
+              {caption}
+            </p>
+          )}
           <ul
             ref={phoneListRef}
             // Named as the table is, and focusable while empty: where the focus goes when
             // the last card leaves (DSP-4).
-            aria-label={labels.table}
+            {...nameProps}
             tabIndex={mobileSlice.length === 0 ? -1 : undefined}
             className={cn(
               "divide-y divide-subtle",
@@ -2423,8 +2431,8 @@ export function DataTable<T>({
             open={dialogOpen}
             // The open row's editor is the row's focus too: a Delete in it takes the row,
             // and the dialog with it (DSP-4).
-            onFocus={() => {
-              if (mobileDialogRow) noteRowFocus(rowKey(mobileDialogRow));
+            onFocus={(e) => {
+              if (mobileDialogRow) focusReturn.noteFocus(rowKey(mobileDialogRow), e.target);
             }}
             onClose={closeDialog}
             closeLabel={labels.close}
@@ -2488,7 +2496,8 @@ export function DataTable<T>({
               style={fillHeight ? edgeFadeProps.style : { ...edgeFadeProps.style, maxHeight: maxBodyHeight }}
             >
               {/* A table with no name is "table" in a screen reader's list of tables, and
-            an app renders several. `labels.table` is how a call site says which. */}
+            an app renders several: `aria-labelledby`, `caption` or `aria-label` say which
+            (`nameProps`, above), `labels.table` where none does. */}
               {/* `aria-busy` while a server page is in flight: a reader holds off announcing
             the rows that are about to be replaced, and the dimmed body says the same
             to the eye. The pager stays live — see `ServerPagination.isLoading`. */}
@@ -2496,7 +2505,7 @@ export function DataTable<T>({
                 ref={tableRef}
                 className={cn("w-full", compact ? "text-xs" : "text-sm")}
                 data-fit-grow={growDrawn ? "" : undefined}
-                aria-label={labels.table}
+                {...nameProps}
                 // Focusable while empty: where the focus goes when the last row leaves (DSP-4).
                 tabIndex={slice.length === 0 ? -1 : undefined}
                 aria-busy={isLoading || undefined}
@@ -2504,6 +2513,15 @@ export function DataTable<T>({
                 aria-rowcount={rowWindow?.rowCount}
                 data-virtualized={rowWindow ? "" : undefined}
               >
+                {/* The first child, as HTML wants it; drawn at the top (the prop says why). */}
+                {hasCaption && (
+                  <caption
+                    id={captionId}
+                    className={cn("caption-top", captionClass(compact ? "px-2 py-1.5" : "px-3 py-2"))}
+                  >
+                    {caption}
+                  </caption>
+                )}
                 {/* The locked column widths (0.48.2, `virtualize`): rows coming and going no
               longer move the columns. */}
                 {rowWindow && (
@@ -2654,7 +2672,7 @@ export function DataTable<T>({
                           const vb = virtualBands[b.group];
                           return (
                             <tbody
-                              key={vb ? `vg:${vb.g1.key}:${vb.g2?.key ?? ""}:${g.start}` : "vg"}
+                              key={vb ? `vg:${virtualBodyKeys[b.group]}` : "vg"}
                               data-vt-body=""
                               className={bodyClass}
                             >
@@ -2699,23 +2717,27 @@ export function DataTable<T>({
                           {emptyRow}
                         </tbody>
                       )}
-                      {desktopGroups.map((g1) =>
+                      {/* One flat list of keyed `<tbody>`s (DSP-1): a nested array is
+                        matched by its place, so a group inserted above re-mounted every
+                        two-level group below it whatever its key. */}
+                      {desktopGroups.flatMap((g1, i) =>
                         g1.empty ? (
                           // A declared group with no rows (0.59): its band and one line.
-                          <tbody key={`g:${g1.key}:empty`} className={bodyClass}>
+                          <tbody key={`g:${bodyKeys![i][0]}`} className={bodyClass}>
                             {band(1, levels[0], g1)}
                             {emptyLineRow(levels[0], g1.key)}
                           </tbody>
                         ) : g1.children ? (
                           g1.children.map((g2, j) => (
-                            <tbody key={`g:${g1.key}:${g2.key}:${g2.start}`} className={bodyClass}>
+                            <tbody key={`g:${bodyKeys![i][j]}`} className={bodyClass}>
                               {j === 0 && band(1, levels[0], g1)}
                               {band(2, levels[1], g2)}
-                              {rowsOf(g2)}
+                              {/* A head day with no rows (0.66, `headGroups`): its line. */}
+                              {g2.empty ? emptyLineRow(levels[1], g2.key) : rowsOf(g2)}
                             </tbody>
                           ))
                         ) : (
-                          <tbody key={`g:${g1.key}:${g1.start}`} className={bodyClass}>
+                          <tbody key={`g:${bodyKeys![i][0]}`} className={bodyClass}>
                             {band(1, levels[0], g1)}
                             {rowsOf(g1)}
                           </tbody>

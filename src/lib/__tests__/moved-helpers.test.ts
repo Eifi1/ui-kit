@@ -2,7 +2,6 @@
 import { describe, expect, it } from "vitest";
 import * as accountParts from "../../account/account-parts";
 import * as adminPlanChange from "../../admin/plan-change";
-import * as adminPlanChangeLabels from "../../admin/plan-change-labels";
 import * as authErrors from "../../auth/auth-errors";
 import * as billingPlanChangeLabels from "../../billing/plan-change-labels";
 import * as notificationParts from "../../notifications/notification-parts";
@@ -20,7 +19,6 @@ describe("the moved helpers", () => {
     expect(accountParts.useMounted).toBe(useMountedModule.useMounted);
     expect(accountParts.settle).toBe(useMountedModule.settle);
     expect(authErrors.httpStatusOf).toBe(httpStatusOf);
-    expect(adminPlanChangeLabels.DEFAULT_PLAN_CHANGE_LABELS).toBe(billingPlanChangeLabels.DEFAULT_PLAN_CHANGE_LABELS);
     expect(adminPlanChange.DEFAULT_PLAN_CHANGE_LABELS).toBe(billingPlanChangeLabels.DEFAULT_PLAN_CHANGE_LABELS);
     expect(notificationParts.describeFailure).toBe(describeFailureModule.describeFailure);
   });

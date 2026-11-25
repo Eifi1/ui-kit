@@ -83,6 +83,26 @@ describe("PasskeysSetting", () => {
     expect(screen.getByRole("button", { name: "Rename Laptop" })).toHaveFocus();
   });
 
+  // Refactor audit 2026-11-22, DUP-1: the Enter that confirms an IME candidate (Chinese,
+  // Japanese) is still typing — it must not open the OS passkey sheet or save half a word.
+  it("takes no IME Enter as the name's Enter, in the add field and in the rename", async () => {
+    const onAdd = vi.fn();
+    const onRename = vi.fn(() => Promise.resolve());
+    render(<PasskeysSetting passkeys={KEYS} onAdd={onAdd} onRename={onRename} />);
+    const name = screen.getByLabelText("Name (optional)");
+    fireEvent.change(name, { target: { value: "工作" } });
+    fireEvent.keyDown(name, { key: "Enter", isComposing: true });
+    fireEvent.keyDown(name, { key: "Enter", keyCode: 229 });
+    expect(onAdd).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Rename Laptop" }));
+    const field = screen.getByRole("textbox", { name: "New name for Laptop" });
+    fireEvent.change(field, { target: { value: "桌面" } });
+    await act(async () => fireEvent.keyDown(field, { key: "Enter", isComposing: true }));
+    expect(onRename).not.toHaveBeenCalled();
+    expect(field).toBeInTheDocument();
+  });
+
   it("deletes only after an inline confirm, which starts on Cancel", () => {
     const onDelete = vi.fn();
     render(<PasskeysSetting passkeys={KEYS} onAdd={vi.fn()} onDelete={onDelete} />);

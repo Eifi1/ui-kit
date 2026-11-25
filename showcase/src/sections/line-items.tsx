@@ -286,8 +286,7 @@ function LineItems016Demo() {
           Add focuses the new line&rsquo;s first field with {code("focusQuietly")}, and so does a remove that leaves the
           focus on a field: a picker there (Combobox, InlineEntityCombobox, Autocomplete) takes the focus and opens
           neither its list nor, on a phone, its sheet until the person asks. An app that moves the focus itself calls{" "}
-          {code("focusQuietly(el)")}; a control of its own that opens on focus asks {code("isQuietFocus(el)")} in its{" "}
-          {code("onFocus")}.
+          {code("focusQuietly(el)")}.
         </Note>
       </div>
     </Example>

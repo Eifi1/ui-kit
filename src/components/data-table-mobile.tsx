@@ -1,5 +1,10 @@
 import { Fragment, isValidElement, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent, ReactNode } from "react";
+import type {
+  FocusEvent as ReactFocusEvent,
+  MouseEvent as ReactMouseEvent,
+  PointerEvent as ReactPointerEvent,
+  ReactNode,
+} from "react";
 import { ChevronDown, ChevronRight, Filter } from "lucide-react";
 import { FOCUS_RING } from "./focus-ring";
 import { SortStrip } from "./sort-strip";
@@ -295,7 +300,7 @@ export function MobileSort<T>({
         sortAscending: sortLabels.sortAscending,
         sortDescending: sortLabels.sortDescending,
       }}
-      onPick={onPick}
+      onChange={onPick}
       onFlip={onFlip}
     />
   );
@@ -345,7 +350,7 @@ export interface MobileRowProps<T> {
    *  takes the focus when a focused one leaves (refactor audit 2026-10-30, DSP-4). */
   rowIndex?: number;
   /** The focus came into the card, or into anything it opened (a portal included). */
-  onFocusIn?: () => void;
+  onFocusIn?: (e: ReactFocusEvent) => void;
 }
 
 /** A phone card's part in DataTable's `selection` (0.40, keksdose live #421). */

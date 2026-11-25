@@ -225,6 +225,8 @@ describe("AccountTeamsSection", () => {
     await user.click(within(ben).getByRole("radio", { name: "Manager" }));
     await waitFor(() => expect(calls.map((c) => c.route)).toContain("patch /admin/teams/4/members/7"));
     await waitFor(() => expect(screen.getAllByRole("button", { name: "Rename" })[0]).toBeDisabled());
+    // The segment just pressed is not natively disabled under its focus (INP-1).
+    expect(within(ben).getByRole("radio", { name: "Manager" })).toBeEnabled();
     await user.click(screen.getAllByRole("button", { name: /Actions for Rig crew/ })[0]);
     expect(await screen.findByRole("button", { name: "Delete team" })).toBeDisabled();
     answer({ status: 200, data: rig() });
@@ -244,9 +246,14 @@ describe("AccountTeamsSection", () => {
     await user.click(within(dialog).getByRole("button", { name: "Rename" }));
     await waitFor(() => expect(calls.map((c) => c.route)).toContain("patch /admin/teams/4"));
     const ben = within(team).getByRole("radiogroup", { name: "Role of Ben Example in the team" });
-    await waitFor(() => expect(within(ben).getByRole("radio", { name: "Manager" })).toBeDisabled());
+    // Held by ignoring a press, not by `disabled`, which dropped the pressed segment's focus
+    // to <body> (INP-1): a press meanwhile sends nothing.
+    await waitFor(() => expect(ben).toHaveAttribute("aria-busy", "true"));
+    expect(within(ben).getByRole("radio", { name: "Manager" })).toBeEnabled();
+    await user.click(within(ben).getByRole("radio", { name: "Manager" }));
+    expect(calls.map((c) => c.route)).not.toContain("patch /admin/teams/4/members/7");
     answer({ status: 200, data: rig({ name: "Rig crew 2", version: 4 }) });
-    await waitFor(() => expect(within(ben).getByRole("radio", { name: "Manager" })).toBeEnabled());
+    await waitFor(() => expect(ben).not.toHaveAttribute("aria-busy"));
   });
 
   it("names a manager, and re-sends a team's invitation through the admin's invitations", async () => {
@@ -303,6 +310,21 @@ describe("AccountTeamsPage", () => {
     expect(sent?.data).toEqual({ email: "dee@example.com", role: "member", locale: "en" });
     expect(sent?.ifMatch).toBe("3");
     expect(await screen.findByText("dee@example.com is in Rig crew now.")).toBeInTheDocument();
+  });
+
+  it("says an address without its shape in the kit's words under the field, and keeps addresses private (DUP-8)", async () => {
+    const { calls, user } = mount(<AccountTeamsPage languages={["en"]} />, {
+      "get /teams": () => ({ status: 200, data: [rig({ my_role: "manager" })] }),
+    });
+    expect(await screen.findByText("You manage this team.")).toBeInTheDocument();
+    const field = screen.getByLabelText("Add by email address");
+    expect(field).toHaveAttribute("data-private");
+    expect(field).toHaveAttribute("inputmode", "email");
+    await user.type(field, "dee@example");
+    await user.click(screen.getByRole("button", { name: "Add" }));
+    expect(await screen.findByText("Enter a complete email address.")).toBeInTheDocument();
+    expect(calls.find((c) => c.route === "post /teams/4/members")).toBeUndefined();
+    expect(screen.getByText("Cy Example").closest("li")?.querySelector("[data-private]")).not.toBeNull();
   });
 
   it("asks a manager's invitation language before the Add button", async () => {

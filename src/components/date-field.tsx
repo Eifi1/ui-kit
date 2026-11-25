@@ -313,6 +313,12 @@ function DateFieldTrigger({
     // "whatever held focus" is the page. The requirement is this trigger, every time,
     // however the panel was opened.
   }, [open, triggerRef]);
+  // A lock arriving closes an open panel: a locked field opens nothing. The remount into
+  // the lock's frame used to do it; the frame no longer remounts the field (INP-4,
+  // refactor audit 2026-11-22), so it is said here.
+  useEffect(() => {
+    if (locked && open) toggle();
+  }, [locked, open, toggle]);
   // The caller's `ref` (API-3, refactor audit 2026-10) is handed the trigger once it is
   // mounted, rather than merged into `attrs.ref`: that one is a `RefObject` by contract
   // (`DateTriggerAttributes`), which a `renderTrigger` button may read, and this way a

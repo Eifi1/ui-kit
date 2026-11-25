@@ -18,7 +18,13 @@ import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
 import { externalRel, pickLinkRenderer, replacingClick, routerLinkNavigation } from "./text-link";
 import type { CommitScope } from "./write-lock";
 import { hasContent } from "../lib/presence";
-import { CompactControlsContext, LockedReason, useRefusal, type DisabledReasonDisplay } from "./field-parts";
+import {
+  CompactControlsContext,
+  LockedReason,
+  useLockFocusHandover,
+  useRefusal,
+  type DisabledReasonDisplay,
+} from "./field-parts";
 import { Spinner } from "./spinner";
 import {
   HOVER_INK,
@@ -939,6 +945,7 @@ function IconButtonElement({
   // `locked`: refused WITH words, which take the bubble; `refused` also covers `true`,
   // which keeps the label's.
   const { reason: disabledReason, locked, reasonId, refused } = useRefusal(refusedProp, ownDisabledReason, commit);
+  const ownRef = useLockFocusHandover(locked, ref);
   const outer = outerBox(locked || tipped(tooltip, withText, label), badge);
   // Pending is inert like a refused button — focusable, every activation swallowed —
   // without the refused look: the spinner is the state.
@@ -946,7 +953,7 @@ function IconButtonElement({
   const ownDescribedBy = rest["aria-describedby"];
   const button = (
     <button
-      ref={ref}
+      ref={ownRef}
       {...rest}
       disabled={inert ? undefined : rest.disabled}
       aria-disabled={inert || rest["aria-disabled"]}

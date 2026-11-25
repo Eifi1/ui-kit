@@ -188,4 +188,14 @@ describe("the dates a device locks itself at (§12.5)", () => {
     expect(billingDaysLeft(null, noon)).toBeNull();
     expect(billingDaysLeft("not a date", noon)).toBeNull();
   });
+
+  it("counts in the provider's time zone when given one (refactor audit 2026-11-22, DUP-2)", () => {
+    // 23:30Z on 7 November is the 7th in New York and already the 8th in Berlin and Tokyo.
+    const now = new Date(Date.UTC(2026, 10, 7, 12, 0));
+    const ends = new Date(Date.UTC(2026, 10, 7, 23, 30));
+    expect(billingDaysLeft(ends, now)).toBe(1);
+    expect(billingDaysLeft(ends, now, "America/New_York")).toBe(0);
+    // Tokyo: now is 21:00 on the 7th, the end 08:30 on the 8th.
+    expect(billingDaysLeft(ends, now, "Asia/Tokyo")).toBe(1);
+  });
 });

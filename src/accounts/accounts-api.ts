@@ -104,6 +104,10 @@ export interface AccountInvitationCheck {
 export interface AccountInvitationAccepted {
   email: string;
   role?: string | null;
+  /** 0.66: the group it joined (server-kit 0.32's `InvitationGroup`, from its
+   *  `invitation_group` hook), `null` for none. Typed since the wire check found it (API-2):
+   *  until then it was read through the index signature, as `unknown`. */
+  group?: { id?: number | null; name?: string | null } | null;
   [field: string]: unknown;
 }
 

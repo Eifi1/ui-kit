@@ -33,7 +33,8 @@ function FormActionsPlacements() {
       <div className="space-y-6">
         <div>
           <p className="mb-2 text-xs font-medium text-secondary">
-            placement=&quot;inline&quot; (default) — submits the enclosing form, pending on click
+            placement=&quot;inline&quot; (default) — submits the enclosing form, pending on click; Save keeps the focus
+            while pending (aria-disabled)
           </p>
           <form
             onSubmit={(e) => {

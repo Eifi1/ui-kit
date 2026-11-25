@@ -89,28 +89,11 @@ export const AXE_KNOWN: readonly AxeKnown[] = [
   },
   {
     rule: "nested-interactive",
-    pages: ["buttons"],
-    html: /^<div (?:class="relative h-56 [^"]*" style="[^"]*" )?role="img" aria-label="(?:A map at|Camera viewfinder)/,
-    reason:
-      'The specimen\'s own backdrop (showcase/src/sections/buttons-012-demo.tsx): a role="img" stand-in for a ' +
-      "map or a camera with the FloatingActionButton inside it. Fix in the showcase: no role on the backdrop, " +
-      "or the picture's name on a sibling.",
-  },
-  {
-    rule: "nested-interactive",
     pages: ["links"],
     html: /^<div role="button" tabindex="0" class="flex min-w-0 flex-wrap items-center justify-between/,
     reason:
       "The specimen (showcase/src/sections/links-demo.tsx) is a clickable row with a TextLink inside, the pattern " +
       "TextLink's stopPropagation exists for; the nesting is what it demonstrates.",
-  },
-  {
-    rule: "definition-list",
-    pages: ["media"],
-    html: /^<dl class="space-y-1 font-mono/,
-    reason:
-      "The specimen's status readout (showcase/src/sections/media-demo.tsx) is a <dl> of plain <div>s. Fix in " +
-      "the showcase: a <div>, or <dt>/<dd> pairs.",
   },
 ];
 

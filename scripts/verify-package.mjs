@@ -79,6 +79,9 @@ for (const need of [
   "dist/pay/pay.css",
   "dist/pay/.well-known/apple-developer-merchantid-domain-association",
   "dist/bin/eifi1-pay-page.mjs",
+  // The dependency audit's bin (0.65.1), every app's security gate: required since 0.66
+  // (refactor audit 2026-11-22, TST-3), and run once installed, below.
+  "dist/bin/eifi1-npm-audit.mjs",
 ]) {
   if (shipped.has(need)) ok(need);
   else fail(`${need} is missing from the tarball`);
@@ -369,6 +372,25 @@ try {
   const payJs = readFileSync(join(installed, "dist", "pay", "pay.js"), "utf8");
   if (/^\s*import\s|\bimport\(|\brequire\(/m.test(payJs)) fail("dist/pay/pay.js loads a module");
   else ok("dist/pay/pay.js loads nothing");
+
+  log("• the dependency audit's bin reaches its main as installed");
+  // Staunlabor's frontend gate runs `eifi1-npm-audit` (0.65.1), and the kit's own gate runs
+  // the source, so nothing ran the shipped bin: an entry guard that failed open would have
+  // passed every app's gate with no output and exit 0 (refactor audit 2026-11-22, TST-3). A
+  // wrong flag answers before npm is asked anything, so this needs no network: exit 2 and
+  // the usage line prove the bin ran its main.
+  const auditBin = join(scratch, "node_modules", ".bin", "eifi1-npm-audit");
+  if (!existsSync(auditBin)) fail("npm linked no eifi1-npm-audit into node_modules/.bin");
+  else {
+    try {
+      run(auditBin, ["--audit-level", "bogus"], scratch);
+      fail("eifi1-npm-audit accepted --audit-level bogus");
+    } catch (e) {
+      if (e.status === 2 && /usage: eifi1-npm-audit/.test(e.stderr ?? ""))
+        ok("eifi1-npm-audit runs from node_modules/.bin and refuses a wrong flag with exit 2");
+      else fail(`eifi1-npm-audit answered a wrong flag with exit ${e.status}: ${e.stderr || e.message}`);
+    }
+  }
 
   log("• testing is pure and knows the installed kit's tokens");
   // The guard an app runs from its own suite (docs/colour-roles-harmonization.md §8.3):

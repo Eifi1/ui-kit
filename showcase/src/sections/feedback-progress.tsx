@@ -71,7 +71,7 @@ function ProgressDeterminate() {
         <Button variant="secondary" onClick={() => setValue((v) => Math.min(100, v + 10))} disabled={running}>
           +10
         </Button>
-        <Button variant="accent" onClick={run} disabled={running}>
+        <Button variant="accent" onClick={run} refused={running}>
           {running ? "Uploading…" : "Simulate an upload"}
         </Button>
         <span className="font-mono text-xs text-muted">value={value}</span>
@@ -500,7 +500,7 @@ function AlertInteractiveDemo() {
           <code className="font-mono">common.dismiss</code>). <code className="font-mono">icon</code> replaces the
           tone&apos;s glyph; it stays decorative. Dismiss one from the keyboard: once the banner is gone the focus moves
           on to the next control, where Tab from the × would have gone, or to{" "}
-          <code className="font-mono">dismissFocusRef</code> (0.52).
+          <code className="font-mono">dismissFocusRef</code>.
         </Note>
       </div>
     </Example>

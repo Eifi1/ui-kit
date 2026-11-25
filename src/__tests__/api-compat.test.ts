@@ -118,10 +118,11 @@ describe("compareApi", () => {
  * breaking change that compared as nothing, or as only another type's, so the gate passed
  * with no word in the adopt doc. Each reproduced on two small packages, as above.
  */
-// Each case builds two TypeScript programs over fixture packages and runs the checker:
-// ~4 s alone, 30 s under the full check's six loaded workers (0.52, one case timed out at
-// vitest's 20 s). Real compiler work, so a longer budget, not a retry.
-describe("compareApi: what the 0.52 code review found it passing", { timeout: 120_000 }, () => {
+// Each case builds two TypeScript programs over fixture packages. Once took ~4 s alone and
+// 30 s under the full check's six loaded workers (0.52, one case timed out at vitest's 20 s),
+// almost all of it parsing TypeScript's lib files again; compareApi keeps them parsed now
+// (refactor audit 2026-11-22, TST-2), so the suite's budget holds.
+describe("compareApi: what the 0.52 code review found it passing", () => {
   /** The changes from `old` to `new`, by name. */
   const compare = (
     name: string,
@@ -259,6 +260,64 @@ describe("compareApi: what the 0.52 code review found it passing", { timeout: 12
   });
 });
 
+/**
+ * A generic function or component was compared by its required arguments alone: a parameter
+ * that takes something else, an inline prop made required or a return changed passed with no
+ * word (refactor audit 2026-11-22, API-1; 157 generic exports, 105 read by an app). Each is
+ * now compared through an instantiation expression, `typeof O.useDebounce<any>`.
+ */
+describe("compareApi: generic functions (refactor audit 2026-11-22, API-1)", () => {
+  const changes = new Map(
+    compareApi(
+      pkg(
+        "generic-fns-old",
+        [
+          "export declare function plain(value: string, ms: number): void;",
+          "export declare function useDebounce<T>(value: T, ms: number): T;",
+          "export declare function useStore<T>(initial: T): [T, (next: T) => void];",
+          "export declare function Grid<T>(props: { rows: readonly T[]; dense?: boolean }): null;",
+          "export declare function widen<T>(value: T, ms: number): T;",
+          "export declare function more<T>(value: T): T;",
+          "export declare function became<T>(value: T, ms: number): T;",
+          "export declare class Store<T> { constructor(initial: T, size: number) }",
+        ].join("\n"),
+      ),
+      pkg(
+        "generic-fns-new",
+        [
+          "export declare function plain(value: string, ms: string): void;",
+          "export declare function useDebounce<T>(value: T, ms: string): T;",
+          "export declare function useStore<T>(initial: T): { value: T; set(next: T): void };",
+          "export declare function Grid<T>(props: { rows: readonly T[]; dense: boolean }): null;",
+          "export declare function widen<T>(value: T, ms: number | string, options?: { lead?: boolean }): T;",
+          "export declare function more<T, U = string>(value: T, extra?: U): T;",
+          "export declare function became(value: unknown, ms: string): unknown;",
+          "export declare class Store<T> { constructor(initial: T, size: string) }",
+        ].join("\n"),
+      ),
+    ).map((c) => [c.name, c]),
+  );
+
+  it("flags a changed parameter, as it does a plain function's", () => {
+    expect(changes.get("plain")?.detail).toBe("parameter 2 `ms` takes string, was number");
+    expect(changes.get("useDebounce")?.detail).toBe("parameter 2 `ms` takes string, was number");
+    expect(changes.get("Store")?.detail).toMatch(/parameter 2 `size` takes string, was number/);
+  });
+
+  it("flags a helper's changed return and a component's inline prop made required", () => {
+    expect(changes.get("useStore")?.detail).toMatch(/^returns \{ value: any; set\(next: any\): void; \}, was \[any,/);
+    expect(changes.get("Grid")?.detail).toMatch(/parameter 1 `props` takes .*dense: boolean/);
+  });
+
+  it("flags a function that stopped being generic, by its parameters", () => {
+    expect(changes.get("became")?.detail).toMatch(/parameter 2 `ms` takes string, was number/);
+  });
+
+  it("leaves out a widened parameter, an optional one added, and a defaulted type parameter added", () => {
+    for (const name of ["widen", "more"]) expect(changes.has(name), name).toBe(false);
+  });
+});
+
 describe("previousRelease", () => {
   it("is the version itself between releases, the one before it on a release commit", () => {
     const published = ["0.50.1", "0.51.6", "0.51.7", "0.9.0"];
@@ -357,7 +416,7 @@ describe("the adopt doc", () => {
   });
 });
 
-describe("checkApi", { timeout: 120_000 }, () => {
+describe("checkApi", () => {
   it("reads the adopt docs of the root it reads the version and the releases from (0.52 code review)", () => {
     // The docs came from the repository's own docs/ whatever the root: a fixture's gate
     // answered by the adopt docs the repository held that day.

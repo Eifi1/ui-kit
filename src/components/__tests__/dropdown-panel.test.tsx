@@ -1,8 +1,8 @@
 import { useRef } from "react";
 import type { ComponentProps } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { DropdownPanel, useDropdown } from "../dropdown";
+import { DropdownPanel, DropdownSearchHeader, useDropdown } from "../dropdown";
 
 /**
  * Keksdose dev#548: *"Currency select half blocked."*
@@ -91,6 +91,82 @@ describe("DropdownPanel", () => {
     // …while a press anywhere else still closes it.
     fireEvent.pointerDown(document.body);
     expect(screen.queryByRole("button", { name: "CHF" })).toBeNull();
+  });
+});
+
+/**
+ * The plain parts, lifted from keksdose's own suite (FS-7 of its 2026-11-22 audit): the
+ * un-anchored wrapper's outside press, the panel's slots and empty row, the search box.
+ */
+describe("useDropdown, un-anchored", () => {
+  it("toggles, and closes on a press outside the wrapper but not on one inside it", () => {
+    render(
+      <>
+        <Harness anchored={false} />
+        <button type="button">outside</button>
+      </>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "open" }));
+    fireEvent.pointerDown(screen.getByRole("button", { name: "CHF" }));
+    expect(screen.getByRole("button", { name: "CHF" })).toBeInTheDocument();
+    fireEvent.pointerDown(screen.getByRole("button", { name: "outside" }));
+    expect(screen.queryByRole("button", { name: "CHF" })).toBeNull();
+    // The trigger toggles it, both ways.
+    fireEvent.click(screen.getByRole("button", { name: "open" }));
+    expect(screen.getByRole("button", { name: "CHF" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "open" }));
+    expect(screen.queryByRole("button", { name: "CHF" })).toBeNull();
+  });
+});
+
+describe("DropdownPanel's slots", () => {
+  it("renders the header above the list, not in it", () => {
+    render(
+      <DropdownPanel header={<div>Header row</div>}>
+        <li>Item</li>
+      </DropdownPanel>,
+    );
+    const header = screen.getByText("Header row");
+    const item = screen.getByText("Item");
+    expect(header.compareDocumentPosition(item) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(item.closest("ul")).not.toContainElement(header);
+  });
+
+  it("shows the empty row only while `empty`, outside the options' semantics", () => {
+    const { rerender } = render(<DropdownPanel empty>{null}</DropdownPanel>);
+    const row = screen.getByText("—");
+    expect(row.tagName).toBe("LI");
+    // A caller who made the list a listbox gets no child that is not an option.
+    expect(row).toHaveAttribute("role", "presentation");
+    rerender(
+      <DropdownPanel>
+        <li>Item</li>
+      </DropdownPanel>,
+    );
+    expect(screen.queryByText("—")).toBeNull();
+  });
+});
+
+describe("DropdownSearchHeader", () => {
+  it("shows the placeholder and reports each change of the query", () => {
+    const onQueryChange = vi.fn();
+    render(
+      <DropdownSearchHeader
+        query=""
+        onQueryChange={onQueryChange}
+        inputRef={{ current: null }}
+        placeholder="Search things"
+      />,
+    );
+    fireEvent.change(screen.getByPlaceholderText("Search things"), { target: { value: "ab" } });
+    expect(onQueryChange).toHaveBeenCalledExactlyOnceWith("ab");
+  });
+
+  it("shows the query it is given", () => {
+    render(
+      <DropdownSearchHeader query="zur" onQueryChange={() => {}} inputRef={{ current: null }} aria-label="Search" />,
+    );
+    expect(screen.getByRole("textbox", { name: "Search" })).toHaveValue("zur");
   });
 });
 

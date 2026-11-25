@@ -353,9 +353,9 @@ function Legal028Demo() {
         </div>
         <Note>
           {code('<LegalPage page="privacy" operator={OPERATOR} header={<AppHeader />}>')} draws the app&apos;s header,
-          &ldquo;← Back to home&rdquo;, the title, the as-of line from {code('updated="2026-10-29"')} (0.51.3, the date
-          written out in the page&apos;s language), the page&apos;s notice from the kit&apos;s labels, the app&apos;s{" "}
-          {code("summary")} points under the kit&apos;s &ldquo;In short&rdquo; (0.51.4), the sections, and{" "}
+          &ldquo;← Back to home&rdquo;, the title, the as-of line from {code('updated="2026-10-29"')} (the date written
+          out in the page&apos;s language), the page&apos;s notice from the kit&apos;s labels, the app&apos;s{" "}
+          {code("summary")} points under the kit&apos;s &ldquo;In short&rdquo;, the sections, and{" "}
           {code("<LegalFooter />")} with the page marked. {code('<LegalKitSection section="rights">')} renders a shared
           section in the page&apos;s language, filled in with the operator (the country named by {code("Intl")}); its
           children are the app&apos;s paragraph where the contract gives it one. The privacy and terms sections are
@@ -508,7 +508,8 @@ function ConsentAgainDemo() {
         modal, and Not now is not a refusal: the banner does not hide itself, the app remembers the ×. The old text is a{" "}
         {code("<del>")} and the new an {code("<ins>")}, each led by a hidden &ldquo;Removed:&rdquo; /
         &ldquo;Added:&rdquo;. Agree {code("commit")}s, so a write lock (the demo, a lapsed plan, offline) disables it
-        with its reason.
+        with its reason. Deprecated, with its {code("consentAgain")} labels: no app asks a consent again, and it leaves
+        the kit with the next minor.
       </Note>
     </Example>
   );

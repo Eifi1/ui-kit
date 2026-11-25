@@ -630,13 +630,13 @@ function UseAuthedSrcSpecimen() {
             <span className={READOUT}>{status}</span>
           )}
         </div>
-        <dl className={`space-y-1 ${READOUT}`}>
+        <div className={`space-y-1 ${READOUT}`}>
           <div>status: {status}</div>
           <div>type: {String(type)}</div>
           <div>src: {src ? `${src.slice(0, 28)}…` : "null"}</div>
           <div>error: {error ? String((error as Error).message ?? error) : "—"}</div>
           <div>fetches: {log.map((e) => e.outcome).join(" · ") || "—"}</div>
-        </dl>
+        </div>
       </div>
       <div className="mt-3">
         <Note>

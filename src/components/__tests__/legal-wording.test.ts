@@ -54,7 +54,7 @@ function legalWording(labels: UiKitLabels): Record<string, string> {
 }
 
 /**
- * The legal wording as of 0.63. Update an entry ONLY in the change that adds the
+ * The legal wording as of 0.66. Update an entry ONLY in the change that adds the
  * `**Legal wording:**` line for it to the adopt doc.
  *
  * 0.58 (keksdose's legal audit, legal decision 10): `terms` — the refund sentence moved
@@ -83,11 +83,15 @@ function legalWording(labels: UiKitLabels): Record<string, string> {
  * 0.63 (docs/auth-harmonization.md §12.9): `privacy` — a third standard entry, the sign-in
  * `@eifi1/ui-kit/accounts` keeps (`standardEntries.session`). Announced in docs/adopt-0.63.md
  * for the apps that list it.
+ *
+ * 0.66 (refactor audit 2026-11-22, DOC-5): `privacy`, French only — the two standard entries
+ * (`recentData`, `session`) take a no-break space before ";" and ":", as French writes them
+ * everywhere else. No word changed. Announced in the 0.66 adopt note.
  */
 const LEGAL_WORDING: Record<string, Record<string, string>> = {
   en: { impressum: "ad15487c7ecd", legal: "19962ca87a89", privacy: "d4bc4b0b4ad5", terms: "41d67860190b" },
   "de-CH": { impressum: "e02af20d24c7", legal: "aaea3302cba4", privacy: "7e5007f971ba", terms: "ce9971b444c5" },
-  fr: { impressum: "4da463defd7a", legal: "4cbd81b82932", privacy: "575940f54985", terms: "257115a45dde" },
+  fr: { impressum: "4da463defd7a", legal: "4cbd81b82932", privacy: "cdf9ad56b301", terms: "257115a45dde" },
   it: { impressum: "5c9a396da7ba", legal: "ec2d48f0fa4a", privacy: "a08212e1d25b", terms: "98995c10e7a1" },
   es: { impressum: "51110d63b161", legal: "6afe0fa1f3ee", privacy: "663ff8d2709f", terms: "604a6af9da3c" },
   hu: { impressum: "677076521418", legal: "75d7bbd6869e", privacy: "7df8afc7b774", terms: "12871aadd0ab" },
@@ -116,5 +120,23 @@ describe("the legal wording (DOC-6)", () => {
       expect(rows.length).toBeGreaterThan(40);
       expect(rows.some((key) => key.endsWith("(operator)"))).toBe(true);
     }
+  });
+});
+
+/**
+ * `recentData(1)` said "1 hours", "1 Stunden", "plus de 1 heures", "1 horas", "1 ore" (Marcel,
+ * 2026-11-23). One hour is singular; the pinned wording above (sampled at 24) does not move.
+ */
+describe("the privacy page's recent-data line at one hour", () => {
+  const ONE: Record<string, RegExp> = {
+    en: /older than 1 hour the app/,
+    "de-CH": /älter als 1 Stunde ist/,
+    fr: /date de plus de 1 heure n’est/,
+    it: /più di 1 ora l’app/,
+    es: /más de 1 hora la app/,
+  };
+  it.each(Object.keys(ONE))("%s says it in the singular", (code) => {
+    const line = CATALOGUES[code]().legal.sections.privacy.browser.standardEntries!.recentData(1);
+    expect(line).toMatch(ONE[code]);
   });
 });

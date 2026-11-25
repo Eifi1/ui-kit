@@ -55,14 +55,10 @@ function GroupsOverContent() {
       label="ButtonGroup — elevated, and gapped over an image"
       hint="toolbars that float OVER content: a filled, shadowed frame, or separate discs"
     >
-      <div
-        className="relative h-56 overflow-hidden rounded-md border border-subtle"
-        style={{ background: MAP_GROUND }}
-        role="img"
-        aria-label={`A map at ${zoom}% zoom, rotated ${rotation}°`}
-      >
+      <div className="relative h-56 overflow-hidden rounded-md border border-subtle" style={{ background: MAP_GROUND }}>
         <div
-          aria-hidden
+          role="img"
+          aria-label={`A map at ${zoom}% zoom, rotated ${rotation}°`}
           className="absolute inset-0 grid place-items-center text-4xl font-bold text-inverse opacity-70 transition-transform"
           style={{ transform: `scale(${zoom / 100}) rotate(${rotation}deg)` }}
         >
@@ -471,8 +467,8 @@ export function DisabledReasonLineDemo() {
       <Note>
         The kit&apos;s own controls draw their {code("disabledReason")} this way where a tooltip cannot be relied on —
         on touch and at Large text ({code("useDisabledReasonLine")} decides). A control of the app&apos;s that has a
-        reason to give uses the part directly. The button here is {code("refused")} (0.55), not {code("disabled")}: a
-        natively disabled button leaves the Tab order, so the description the line gives it was never heard.
+        reason to give uses the part directly. The button here is {code("refused")}, not {code("disabled")}: a natively
+        disabled button leaves the Tab order, so the description the line gives it was never heard.
       </Note>
     </Example>
   );

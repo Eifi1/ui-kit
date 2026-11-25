@@ -6,7 +6,7 @@ import { Select } from "../components/select";
 import { Textarea } from "../components/textarea";
 import type { ButtonSize, ButtonVariant } from "../components/button-look";
 import { Modal } from "../components/modal";
-import { isApplePlatform } from "../hooks/use-hotkey";
+import { isApplePlatform, isSubmitChord } from "../hooks/use-hotkey";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { hasContent } from "../lib/presence";
@@ -18,6 +18,7 @@ import {
   type FeedbackAttachmentError,
   type FeedbackAttachmentErrorInfo,
 } from "./feedback-attachment";
+import type { AttachTile } from "../components/attach-button";
 import { DEFAULT_FEEDBACK_DIALOG_LABELS } from "./feedback-dialog-labels";
 
 /** One category the dialog offers. `C` (0.52): the app's category type — the kit's
@@ -187,6 +188,15 @@ interface FeedbackDialogBaseProps<C extends string = string> {
    *  Default `"md"`; `"sm"` draws the paperclip and camera at 14px. */
   attachmentButtonSize?: ButtonSize;
   /**
+   * The attachment field's `picker` (0.66): `"sheet"` offers the ways in as one sheet of
+   * sources rather than a row of buttons. Opt-in; left out, the field's default
+   * (`"buttons"`). Handed through unchanged, in both `attachments` modes.
+   */
+  picker?: "buttons" | "sheet";
+  /** The attachment field's `sources` (0.66): which ways in it offers, in order. Left out,
+   *  the field's default. */
+  sources?: readonly AttachTile[];
+  /**
    * A muted line under the body saying who will read it (0.38, docs/feedback-harmonization.md
    * §9.2 decision 6) — the kit's sentence is `feedbackDialog.publicNotice`, "Other users
    * will see the title and text (never your screenshots or files)", which
@@ -264,6 +274,8 @@ export function FeedbackDialog<C extends string = string>(props: FeedbackDialogP
     requireBody = true,
     attachmentButtonVariant,
     attachmentButtonSize,
+    picker,
+    sources,
     publicNotice,
   } = props;
   const [title, setTitle] = useState(defaultTitle);
@@ -361,6 +373,9 @@ export function FeedbackDialog<C extends string = string>(props: FeedbackDialogP
     // Left undefined they are the field's own defaults (secondary / md).
     buttonVariant: attachmentButtonVariant,
     buttonSize: attachmentButtonSize,
+    // Left undefined they are the field's own defaults too.
+    picker,
+    sources,
     // On `document`, not on the panel: the Modal focuses its own panel on open
     // and traps Tab inside it, so while this dialog is up every paste in the
     // page is meant for it — including the one made with nothing in
@@ -399,7 +414,7 @@ export function FeedbackDialog<C extends string = string>(props: FeedbackDialogP
       // something") — you are describing what is under it while you type.
       draggable
       onKeyDown={(e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        if (isSubmitChord(e)) {
           e.preventDefault();
           trySubmit();
         }

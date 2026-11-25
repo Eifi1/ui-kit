@@ -37,13 +37,29 @@ export { prefersReducedMotion } from "./lib/reduced-motion";
 // 0.58: focus that is not a request to open anything — the kit's tours and LineItems' Add
 // move the focus this way. `focusQuietly` for an app's own focus move (keksdose's split
 // editor), `isQuietFocus` for an app's own open-on-focus control to honour the kit's.
-export { focusQuietly, isQuietFocus } from "./lib/quiet-focus";
+export {
+  focusQuietly,
+  /** @deprecated 0.66 — none: no app reads it, the kit's controls ask it themselves; removed in 0.67 */
+  isQuietFocus,
+} from "./lib/quiet-focus";
 // 0.59 (keksdose 846423e6, which carried private copies): where the focus goes when the
 // control holding it leaves the page, by the kit's own rules — `focusIsLost` (it fell to
 // <body>), `focusFirst` (to the first candidate that takes it), and `returnFocus`, the whole
 // rule an overlay closing or a removed control follows. A row leaving a list: `useRowLeaves`.
-export { focusIsLost, focusFirst, returnFocus } from "./lib/focus-left";
-export type { FocusReturn } from "./lib/focus-left";
+// Off the barrel in 0.67 (refactor audit 2026-11-22, API-3): keksdose took `useRowLeaves`
+// instead, and no app reads the three; the module keeps them for the kit.
+export {
+  /** @deprecated 0.66 — `useRowLeaves` for a row leaving a list; removed in 0.67 */
+  focusIsLost,
+  /** @deprecated 0.66 — `useRowLeaves` for a row leaving a list; removed in 0.67 */
+  focusFirst,
+  /** @deprecated 0.66 — `useRowLeaves` for a row leaving a list; removed in 0.67 */
+  returnFocus,
+} from "./lib/focus-left";
+export type {
+  /** @deprecated 0.66 — none, with `returnFocus`; removed in 0.67 */
+  FocusReturn,
+} from "./lib/focus-left";
 // Save a fetched Blob as a download, and read the name a Content-Disposition asks for
 // (`filename*` first) — 0.34, KS U5; the kit's own three downloads use them.
 export { saveBlob, filenameFromDisposition } from "./lib/download";
@@ -143,6 +159,7 @@ export {
   unreviewedRows,
   reviewUndo,
   // 0.26: swipe bindings for an app's Settings → Interaction (keksdose #377 rework).
+  /** @deprecated 0.66 — `createSwipeSettingsStore` with `TRANSLATION_REVIEW_SWIPE_SURFACE`; removed in 0.67 */
   TRANSLATION_REVIEW_SWIPE_ACTIONS,
   DEFAULT_TRANSLATION_REVIEW_SWIPE,
   translationReviewSwipePlan,
@@ -423,6 +440,9 @@ export { QuantityField } from "./components/quantity-field";
 export type { QuantityFieldProps } from "./components/quantity-field";
 export * from "./components/sparkline";
 export * from "./components/stat-tile";
+// 0.66 (Staunlabor's public pages): a quiet row of three to six StatTiles between two hairlines.
+export { StatStrip } from "./components/stat-strip";
+export type { StatStripProps } from "./components/stat-strip";
 export * from "./components/signature-pad";
 export * from "./components/password-strength";
 export * from "./components/page-contents";
@@ -485,6 +505,17 @@ export { CameraButton } from "./components/camera-button";
 export type { CameraButtonProps } from "./components/camera-button";
 export { CameraCapture, DEFAULT_CAMERA_LABELS } from "./components/camera-capture";
 export type { CameraCaptureProps, CameraFacing, CameraLabels } from "./components/camera-capture";
+// 0.66: one way in for attachments — camera, photos, files and a screenshot behind one
+// paperclip; a sheet on a phone, a menu on a desktop, or the tiles inline (the
+// AttachButton draft, Marcel 2026-11-16).
+export { AttachButton, DEFAULT_ATTACH_LABELS, attachDropzoneProps } from "./components/attach-button";
+export type {
+  AttachButtonProps,
+  AttachLabels,
+  AttachOptions,
+  AttachSource,
+  AttachTile,
+} from "./components/attach-button";
 // The chart kit, whole, from its subpath (`@eifi1/ui-kit/chart`, which names its parts):
 // the chart shell and its palette, the treemap, the series chart with its zoom, legend,
 // labels and facing-pair axes, the height every chart takes, and the pie chart.
@@ -748,6 +779,9 @@ export type {
 } from "./components/legal-page";
 // 0.55 (keksdose's price pool, consent-again-notice.tsx): a consent asked again after its
 // text changed — the card where it stays, the banner where it waits; the subject is the app's.
+// Deprecated in 0.66, removed in 0.67 (refactor audit 2026-11-22, API-3): keksdose's pool
+// asks nothing again since 2026-11-08, and no other app asked. The tags are on the module's
+// declarations, which go with it.
 export { ConsentAgainNotice, DEFAULT_CONSENT_AGAIN_LABELS } from "./components/consent-again-notice";
 export type {
   ConsentAgainNoticeProps,
@@ -1268,6 +1302,7 @@ export {
   pushSupported,
   PushDeviceError,
   // 0.52 (§10.6, refactor audit 2026-10-30 FLW-2): an explicit sign-out releases this device's push.
+  /** @deprecated 0.66 — `dropPushSubscription`, the same call that never rejects; removed in 0.67 */
   releaseThisDevicePush,
   // 0.62 (Marcel 2026-11-13): the same at every sign-out, never rejecting.
   dropPushSubscription,

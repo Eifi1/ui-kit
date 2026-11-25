@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 import { isEditableContent } from "../lib/editable-content";
+import { isComposing } from "../lib/ime";
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 
 /**
  * A key combination: modifiers and one key, joined by "+", case-insensitive —
@@ -118,6 +120,29 @@ export function matchesHotkey(e: KeyboardEvent, combo: ParsedHotkey): boolean {
   // cancelled it (0.52 code review, use-hotkey.ts).
   const symbol = want.length === 1 && !/[a-z0-9 ]/.test(want);
   return symbol && !combo.shift ? true : e.shiftKey === combo.shift;
+}
+
+/**
+ * What "submit" answers, on every platform: Ctrl+Enter and Cmd+Enter with nothing else
+ * held. Literals, not `parseHotkey` calls: no module-scope call for a bundler to keep.
+ */
+const SUBMIT_CHORDS: readonly ParsedHotkey[] = [
+  { ctrl: true, meta: false, shift: false, alt: false, key: "Enter" },
+  { ctrl: false, meta: true, shift: false, alt: false, key: "Enter" },
+];
+
+/**
+ * The kit's ONE reading of a submit chord (refactor audit 2026-11-22, DUP-7): Ctrl+Enter
+ * or Cmd+Enter with nothing else held, through {@link matchesHotkey}, and not a key repeat
+ * (holding the keys in LineItems added a row per repeat), not an IME composition's Enter,
+ * not one something already took (`defaultPrevented`). FormActions' `submitShortcut`
+ * (DUP-12, 0.52) and LineItems' add are it; three hand copies fired on Ctrl+Shift+Enter
+ * and on every repeat. A React or a native event. Internal: not on the barrel.
+ */
+export function isSubmitChord(e: KeyboardEvent | ReactKeyboardEvent): boolean {
+  const native = "nativeEvent" in e ? e.nativeEvent : e;
+  if (!SUBMIT_CHORDS.some((chord) => matchesHotkey(native, chord))) return false;
+  return !native.repeat && !isComposing(native) && !native.defaultPrevented;
 }
 
 /** Is the focus somewhere that takes typed characters? Editable content by the kit's one

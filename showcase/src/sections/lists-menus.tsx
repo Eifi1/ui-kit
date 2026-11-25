@@ -433,9 +433,7 @@ function TickedAway() {
           <code className="font-mono">useRowLeaves</code> gives a focus that fell to the page to the next item&apos;s
           box, else the one before, else its <code className="font-mono">fallback</code> (the group&apos;s header here;
           for the last item taken back out of Done, that item&apos;s own box on the list). A focus that went somewhere
-          real stays there. The rules under it — <code className="font-mono">focusIsLost</code>,{" "}
-          <code className="font-mono">focusFirst</code> and <code className="font-mono">returnFocus</code> — are
-          exported for a recovery of an app&apos;s own.
+          real stays there.
         </Note>
       </div>
     </Example>
@@ -862,8 +860,7 @@ function BulkInlineSticky() {
           zero it still renders its live region, which has to be in the DOM before the first &ldquo;2 selected&rdquo;
           can be heard. Scroll the box with the bar showing: the sticky one stays over the rows. The count is spoken on
           every change and names the toolbar. Clear from the keyboard: the focus goes back to the box it came into the
-          bar from, or to <code className="font-mono">returnFocusRef</code> when the selection takes that box with it
-          (0.52).
+          bar from, or to <code className="font-mono">returnFocusRef</code> when the selection takes that box with it.
         </Note>
       </div>
     </Example>
@@ -1099,7 +1096,7 @@ export function BulkActionBarPanelDemo() {
       hint='a form under the toolbar; selection mode before the first tick; variant={{ base: "floating", md: "sticky" }}'
     >
       <Row className="mb-3">
-        <Button variant="secondary" size="sm" onClick={() => setSelecting(true)} disabled={selecting}>
+        <Button variant="secondary" size="sm" onClick={() => setSelecting(true)} refused={selecting}>
           Select
         </Button>
         <span className={READOUT}>

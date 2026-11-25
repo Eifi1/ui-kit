@@ -604,7 +604,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2302 names from 388 modules** in the main barrel — 1032 values and 1270 types — and 350 more in 17 standalone entries. _Italic_ is a type-only export.
+**2319 names from 393 modules** in the main barrel — 1040 values and 1279 types — and 365 more in 17 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -612,24 +612,24 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2302 |
+| `@eifi1/ui-kit` | 2319 |
 | `@eifi1/ui-kit/chart` | 102 |
-| `@eifi1/ui-kit/shell` | 109 |
+| `@eifi1/ui-kit/shell` | 114 |
 | `@eifi1/ui-kit/data-table` | 57 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 49 |
-| `@eifi1/ui-kit/feedback` | 222 |
+| `@eifi1/ui-kit/feedback` | 223 |
 | `@eifi1/ui-kit/search` | 20 |
-| `@eifi1/ui-kit/dates` | 26 |
+| `@eifi1/ui-kit/dates` | 32 |
 | `@eifi1/ui-kit/table-text` | 14 |
 | `@eifi1/ui-kit/currencies` | 3 |
 | `@eifi1/ui-kit/eslint` | 1 |
 | `@eifi1/ui-kit/testing` | 18 |
 | `@eifi1/ui-kit/testing/react` | 2 |
 | `@eifi1/ui-kit/rhf` | 52 |
-| `@eifi1/ui-kit/offline` | 38 |
-| `@eifi1/ui-kit/accounts` | 146 |
-| `@eifi1/ui-kit/sync` | 37 |
+| `@eifi1/ui-kit/offline` | 40 |
+| `@eifi1/ui-kit/accounts` | 151 |
+| `@eifi1/ui-kit/sync` | 39 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
 | `@eifi1/ui-kit/push-worker` | 10 |
 | `@eifi1/ui-kit/i18n/de-CH` | 2 |
@@ -724,9 +724,10 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/quantity-field` | `QuantityField`, _`QuantityFieldProps`_ |
 | `components/sparkline` | `DEFAULT_SPARKLINE_LABELS`, `Sparkline`, `sparklineSummary`, _`SparklineLabels`_, _`SparklineProps`_, _`SparklineTone`_ |
 | `components/stat-tile` | `DEFAULT_STAT_TILE_LABELS`, `StatTile`, `StatTileGrid`, _`StatTileDelta`_, _`StatTileGridProps`_, _`StatTileLabels`_, _`StatTileLinkProps`_, _`StatTileProps`_, _`StatTileSubValue`_, _`StatTileTone`_ |
+| `components/stat-strip` | `StatStrip`, _`StatStripProps`_ |
 | `components/signature-pad` | `DEFAULT_SIGNATURE_PAD_LABELS`, `SignaturePad`, `SignatureView`, _`SignatureDetail`_, _`SignaturePadHandle`_, _`SignaturePadLabels`_, _`SignaturePadProps`_, _`SignatureViewProps`_ |
 | `components/password-strength` | `DEFAULT_PASSWORD_STRENGTH_LABELS`, `passwordByteLength`, `passwordRules`, `PasswordStrengthMeter`, `scorePassword`, _`PasswordRule`_, _`PasswordRuleId`_, _`PasswordScoreOptions`_, _`PasswordStrengthLabels`_, _`PasswordStrengthMeterProps`_, _`PasswordStrengthScore`_ |
-| `components/page-contents` | `DEFAULT_PAGE_CONTENTS_LABELS`, `PageContents`, `PageContentsLayout`, `useScrollSpy`, _`PageContentsItem`_, _`PageContentsLabels`_, _`PageContentsLayoutProps`_, _`PageContentsProps`_, _`UseScrollSpyOptions`_ |
+| `components/page-contents` | `DEFAULT_PAGE_CONTENTS_LABELS`, `PAGE_CONTENTS_BAR_TARGET`, `PageContents`, `PageContentsLayout`, `useScrollSpy`, _`PageContentsItem`_, _`PageContentsLabels`_, _`PageContentsLayoutProps`_, _`PageContentsProps`_, _`UseScrollSpyOptions`_ |
 | `components/disclosure` | `Collapse`, `Disclosure`, _`CollapseProps`_, _`DisclosureProps`_, _`DisclosureTriggerProps`_ |
 | `components/dialog-frame` | `DEFAULT_DIALOG_FRAME_LABELS`, `DialogFrame`, _`DialogFrameLabels`_, _`DialogFrameProps`_ |
 | `components/danger-confirm` | `CurrentPasswordInput`, `DangerConfirm`, `DEFAULT_DANGER_CONFIRM_LABELS`, `TypedConfirmField`, `typedMatches`, _`CurrentPasswordInputLabels`_, _`CurrentPasswordInputProps`_, _`DangerConfirmLabels`_, _`DangerConfirmProps`_, _`DangerConfirmValues`_, _`DangerConsequence`_, _`TypedConfirmFieldLabels`_, _`TypedConfirmFieldProps`_, _`TypedMatch`_ |
@@ -742,6 +743,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/file-button` | `DEFAULT_FILE_PICKER_LABELS`, `FileButton`, _`FileButtonProps`_ |
 | `components/camera-button` | `CameraButton`, _`CameraButtonProps`_ |
 | `components/camera-capture` | `CameraCapture`, _`CameraCaptureProps`_, _`CameraFacing`_ |
+| `components/attach-button` | `AttachButton`, `attachDropzoneProps`, _`AttachButtonProps`_, _`AttachOptions`_, _`AttachSource`_, _`AttachTile`_ |
 | `components/chart` | `ChartContainer`, `ChartLegend`, `ChartLegendContent`, `ChartTooltip`, `ChartTooltipContent`, `useChart`, _`ChartConfig`_, _`ChartSeriesConfig`_ |
 | `components/treemap` | `fitLabel`, `Treemap`, `TreemapCell`, _`TreemapCellProps`_, _`TreemapEdges`_, _`TreemapNode`_, _`TreemapProps`_ |
 | `components/treemap-labels` | `DEFAULT_TREEMAP_LABELS`, _`TreemapLabels`_ |
@@ -833,6 +835,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/data-table-cells` | `booleanColumn`, `BooleanMark`, _`BooleanColumnOptions`_, _`BooleanMarkProps`_ |
 | `components/use-table-state` | `useTableUrlState`, _`TableUrlState`_, _`TableUrlStateProps`_, _`TableUrlSync`_, _`UseTableUrlStateOptions`_, _`UseTableUrlStateReturn`_ |
 | `components/camera-labels` | `DEFAULT_CAMERA_LABELS`, _`CameraLabels`_ |
+| `components/attach-button-labels` | `DEFAULT_ATTACH_LABELS`, _`AttachLabels`_ |
 | `components/translation-review-editor` | `TranslationReviewEditor`, _`TranslationReviewEditorProps`_ |
 | `components/translation-review-parts` | `REVIEW_STATUS_TONES`, `ReviewStatusChip`, `TranslationExportButton`, `TranslationLocaleTabs`, `TranslationProgress`, _`ReviewStatusChipProps`_, _`TranslationExportButtonProps`_, _`TranslationLocaleTab`_, _`TranslationLocaleTabsProps`_, _`TranslationProgressProps`_ |
 | `components/translation-review-labels` | `DEFAULT_TRANSLATION_REVIEW_LABELS`, _`TranslationReviewLabels`_ |
@@ -911,6 +914,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `shell/fill-height` | `FILL_HEIGHT_CLASS`, `FillHeight`, _`FillHeightProps`_ |
 | `shell/admin-menu` | `adminMenuEntry`, `AdminMenuRow`, `AdminWaitingBadge`, `useAdminMenuEntry`, _`AdminMenuEntryOptions`_, _`AdminMenuRowProps`_, _`AdminWaitingBadgeProps`_, _`UseAdminMenuEntryOptions`_ |
 | `shell/top-bar-actions` | `TopBarActions`, _`TopBarActionsProps`_ |
+| `shell/top-bar-nav` | `DEFAULT_TOP_BAR_NAV_LABELS`, `TopBarNav`, _`TopBarNavItem`_, _`TopBarNavLabels`_, _`TopBarNavProps`_ |
 | `shell/account-menu-language` | `AccountMenuLanguage`, _`AccountMenuLanguageOption`_, _`AccountMenuLanguageProps`_ |
 | `shell/account-menu-text-size` | `AccountMenuTextSize`, _`AccountMenuTextSizeProps`_ |
 | `shell/tour-menu` | `TourMenu`, _`TourMenuProps`_, _`TourMenuTour`_ |
@@ -979,6 +983,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `feedback/feedback-replies` | `DEFAULT_FEEDBACK_REPLIES_LABELS`, `FeedbackReplyComposer`, `feedbackReplyNudge`, `FeedbackReplyTimeline`, `useFeedbackRepliesLabels`, _`FeedbackRepliesLabels`_, _`FeedbackReplyComposerProps`_, _`FeedbackReplyTimelineProps`_ |
 | `feedback/feedback-entry-file` | `FeedbackEntryFile`, `useFeedbackEntryUpload`, _`FeedbackEntryFileProps`_, _`FeedbackEntryUpload`_, _`FeedbackEntryUploadOptions`_, _`FeedbackEntryUploadState`_ |
 | `feedback/feedback-inbox-page` | `FeedbackInbox`, `useFeedbackInbox`, _`FeedbackInboxBulk`_, _`FeedbackInboxMutation`_, _`FeedbackInboxProps`_, _`FeedbackInboxState`_, _`FeedbackReplyPost`_, _`FeedbackReworkPost`_, _`UseFeedbackInboxOptions`_ |
+| `feedback/feedback-inbox-bulk` | `isFeedbackBulkPatch` |
 | `feedback/feedback-page-frame` | `FeedbackPageFrame`, _`FeedbackPageFrameHeaderProps`_, _`FeedbackPageFrameProps`_ |
 | `feedback/feedback-comments` | `useFeedbackComments`, _`FeedbackCommentsApi`_, _`FeedbackCommentsState`_, _`UseFeedbackCommentsOptions`_ |
 | `feedback/feedback-public-page` | `FeedbackPublicPage`, `useFeedbackPublicPage`, _`FeedbackPublicApi`_, _`FeedbackPublicPageProps`_, _`FeedbackPublicPageState`_, _`FeedbackPublicRead`_, _`FeedbackPublicRequest`_, _`UseFeedbackPublicPageOptions`_ |
@@ -1130,7 +1135,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 
 | Module | Exports |
 |---|---|
-| `lib/dates` | `addDaysIso`, `addMonthsClamped`, `calendarMonthPresets`, `currentDate`, `dateRangePresets`, `endOfMonthIso`, `endOfYearIso`, `formatIsoDate`, `lastFullMonthsRange`, `lastFullYearsRange`, `localeWeekStart`, `monthKey`, `pad`, `parseIsoDate`, `sameYmd`, `setToday`, `shiftIso`, `startOfMonthIso`, `startOfWeekIso`, `startOfYearIso`, `subscribeToday`, `todayIso`, `todayOverride`, `toLocalIso`, _`CalendarMonthPresetOptions`_, _`DateRangePreset`_ |
+| `lib/dates` | `addDaysIso`, `addMonthsClamped`, `addMonthsIso`, `calendarMonthPresets`, `currentDate`, `dateRangePresets`, `daysBetweenIso`, `endOfMonthIso`, `endOfYearIso`, `formatIsoDate`, `isoWeekNumber`, `lastFullMonthsRange`, `lastFullYearsRange`, `localeWeekStart`, `monthKey`, `monthsBetweenIso`, `monthStartOf`, `pad`, `parseIsoDate`, `sameYmd`, `setToday`, `shiftIso`, `startOfMonthIso`, `startOfWeekIso`, `startOfYearIso`, `subscribeToday`, `todayIso`, `todayOverride`, `toLocalIso`, `weekStartOf`, _`CalendarMonthPresetOptions`_, _`DateRangePreset`_ |
 
 ### @eifi1/ui-kit/table-text (standalone)
 
@@ -1179,6 +1184,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `offline/shared-computer` | `DEFAULT_SHARED_COMPUTER_LABELS`, `isSharedComputer`, `setSharedComputer`, `SharedComputerChoice`, _`SharedComputerChoiceProps`_, _`SharedComputerLabels`_, _`SharedComputerStorage`_ |
 | `offline/shared-computer-idle` | `useSharedComputerIdleSignOut`, _`SharedComputerIdleSignOutOptions`_ |
 | `offline/local-first` | `isOfflineError`, `readLocalFirst`, `stampAfter`, `uuid5`, `writeLocalFirst` |
+| `lib/uuid` | `randomUuid`, `uuid5Sync` |
 | `offline/feedback-comments-query` | `feedbackCommentsQueryKey`, `useFeedbackCommentsQuery`, _`UseFeedbackCommentsQueryOptions`_ |
 
 ### @eifi1/ui-kit/accounts (standalone)
@@ -1193,10 +1199,10 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `accounts/accounts-api` | _`AccountAdminActionPage`_, _`AccountAdminActionQuery`_, _`AccountAdminActionRow`_, _`AccountAdminConfirmation`_, _`AccountAdminMailResult`_, _`AccountAdminUser`_, _`AccountDeletionResult`_, _`AccountDeletionTerms`_, _`AccountEmailChange`_, _`AccountEmailConfirmed`_, _`AccountEmailVerification`_, _`AccountErasureResult`_, _`AccountInvitation`_, _`AccountInvitationAccepted`_, _`AccountInvitationCheck`_, _`AccountInvitationDraft`_, _`AccountInvitationIssued`_, _`AccountMe`_, _`AccountPasskey`_, _`AccountPasskeyOptions`_, _`AccountPasswordReset`_, _`AccountProfilePatch`_, _`AccountReviewerResult`_, _`AccountRosterPage`_, _`AccountRosterQuery`_, _`AccountsApi`_, _`AccountSessionInfo`_, _`AccountTwoFactorEnabled`_, _`AccountTwoFactorSetup`_, _`AccountTwoFactorStatus`_ |
 | `accounts/passkey-ceremony` | `passkeysAvailable` |
 | `accounts/accounts-context` | `accountQueryKeys`, `AccountsProvider`, `useAccountsClient`, _`AccountsProviderProps`_ |
-| `accounts/accounts-hooks` | `useAccountDeletion`, `useAccountExport`, `useAccountSessions`, `useAdminActions`, `useAdminAttention`, `useAdminMail`, `useAdminRoster`, `useAdminUserActions`, `useChangePassword`, `useCurrentUser`, `useEmailChange`, `useInvitationsAdmin`, `useMailTest`, `usePasskeys`, `useTranslationReviews`, `useTwoFactor`, `useUpdateProfile` |
+| `accounts/accounts-hooks` | `useAccountDeletion`, `useAccountExport`, `useAccountSessions`, `useAdminActionLog`, `useAdminActions`, `useAdminAttention`, `useAdminMail`, `useAdminRoster`, `useAdminUserActions`, `useChangePassword`, `useCurrentUser`, `useEmailChange`, `useInvitationsAdmin`, `useMailTest`, `usePasskeys`, `useTranslationReviews`, `useTwoFactor`, `useUpdateProfile` |
 | `accounts/account-pages` | `accountPage`, `accountRouteElements`, `accountRoutes`, _`AccountPageFrameProps`_, _`AccountPageName`_, _`AccountPaths`_, _`AccountRegisterFieldsProps`_, _`AccountRoutesOptions`_ |
 | `accounts/require-session` | `RequireSession`, _`RequireSessionProps`_ |
-| `accounts/account-settings-sections` | `AccountDeletionSection`, `AccountEmailSection`, `AccountExportSection`, `AccountInvitationsSection`, `AccountPasskeysSection`, `AccountPasswordSection`, `AccountProfileSection`, `AccountSessionsSection`, `AccountTwoFactorSection`, _`AccountDeletionSectionProps`_, _`AccountInvitationsSectionProps`_, _`AccountPasskeysSectionProps`_, _`AccountProfileSectionProps`_, _`AccountTwoFactorSectionProps`_ |
+| `accounts/account-settings-sections` | `AccountDeletionSection`, `AccountEmailSection`, `AccountExportSection`, `AccountInvitationsSection`, `AccountPasskeysSection`, `AccountPasswordSection`, `AccountProfileSection`, `AccountSessionsSection`, `AccountTwoFactorSection`, _`AccountDeletionSectionProps`_, _`AccountEmailSectionProps`_, _`AccountExportSectionProps`_, _`AccountInvitationsSectionProps`_, _`AccountPasskeysSectionProps`_, _`AccountPasswordSectionProps`_, _`AccountProfileSectionProps`_, _`AccountSessionsSectionProps`_, _`AccountTwoFactorSectionProps`_ |
 | `accounts/account-admin-sections` | `AccountAdminLogSection`, `AccountAdminOverviewSection`, `AccountMailTestSection`, `AccountUserRosterSection`, _`AccountAdminLogSectionProps`_, _`AccountAdminOverviewSectionProps`_, _`AccountMailTestSectionProps`_, _`AccountRosterLabels`_, _`AccountUserRosterSectionProps`_ |
 | `accounts/account-roster-labels` | `DEFAULT_ACCOUNT_ROSTER_LABELS` |
 | `accounts/account-translation-review` | `AccountTranslationReview`, _`AccountTranslationReviewProps`_ |
@@ -1217,6 +1223,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `sync/hooks` | `useSyncQuery`, `useSyncStatus`, `useSyncWorker` |
 | `sync/wire` | _`SyncPageCursor`_, _`SyncRefusalBody`_, _`SyncRejectionBody`_, _`SyncRequestBody`_, _`SyncResponseBody`_, _`SyncWireChange`_ |
 | `offline/local-first` | `isOfflineError`, `readLocalFirst`, `stampAfter`, `uuid5`, `writeLocalFirst` |
+| `lib/uuid` | `randomUuid`, `uuid5Sync` |
 
 ### @eifi1/ui-kit/sync/testing (standalone)
 
@@ -1340,7 +1347,8 @@ are the contract's:
 - **The pages:** `accountRoutes(options)` answers route objects for the sign-in, the sign-up
   (with the invitation's check), the password reset, the mailed links and the demo's end, and
   `accountRouteElements(options)` (0.64) the same as `<Route>` elements for an app whose
-  routes are JSX `<Routes>`; `RequireSession` gates the private ones.
+  routes are JSX `<Routes>`; `RequireSession` gates the private ones. The pages load when the
+  first one is drawn (0.66), so a route table built in the entry chunk ships no form.
 - **The settings:** `AccountProfileSection`, `AccountPasswordSection`, `AccountEmailSection`,
   `AccountSessionsSection`, `AccountPasskeysSection`, `AccountExportSection`,
   `AccountDeletionSection`, and the admin's `AccountInvitationsSection`, for the app's own
@@ -1349,434 +1357,13 @@ are the contract's:
   offline and timeouts in the kit's seven languages, and the app's own codes through
   `appCode`.
 
-Peer: `@tanstack/react-query` (optional for every other entry). The passkey ceremony needs no
-library. The contract is
-[docs/auth-harmonization.md](https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md)
-§12.9.
-
-## i18n
-
-| Module | Exports |
-|---|---|
-| `i18n/kit-labels` | `DEFAULT_APP_SHELL_LABELS`, `DEFAULT_CALCULATOR_LABELS`, `DEFAULT_COMBOBOX_LABELS`, `DEFAULT_COMMON_LABELS`, `DEFAULT_CURRENCY_LABELS`, `DEFAULT_DATE_PICKER_LABELS`, `DEFAULT_FILE_LABELS`, `DEFAULT_MULTI_SELECT_LABELS`, `DEFAULT_PICKER_SHEET_LABELS`, `DEFAULT_SWIPEABLE_ROW_LABELS`, `DEFAULT_TOP_BAR_LABELS`, `formatFileSize`, `missingKitLabels`, `UiKitProvider`, `useKitChartTooltipPlacement`, `useKitDateFormatter`, `useKitDocumentTitle`, `useKitFileLabels`, `useKitLabelOverrides`, `useKitLabels`, `useKitLink`, `useKitLocale`, `useKitTableStorage`, `useKitTableStorageKeyPrefix`, `useKitTimeZone`, `useKitWeekStart`, _`AppShellLabels`_, _`CalculatorLabels`_, _`ChartTooltipPlacement`_, _`ComboboxLabels`_, _`CommonLabels`_, _`CurrencyLabels`_, _`DatePickerLabels`_, _`FileLabels`_, _`KitDateFormatContext`_, _`KitDateFormatter`_, _`KitLinkComponent`_, _`KitLinkProps`_, _`LabelOverride`_, _`MultiSelectLabels`_, _`PickerSheetLabels`_, _`SwipeableRowLabels`_, _`TopBarLabels`_, _`UiKitLabelOverrides`_, _`UiKitLabels`_, _`UiKitProviderProps`_ |
-| `i18n/defaults` | `DEFAULT_UI_KIT_LABELS` |
-| `i18n/review` | `kitLabelStrings`, _`KitLabelStringsOptions`_ |
-| `i18n/languages` | `formatLocaleOf`, `KIT_LANGUAGES`, `languageOptions`, `loadUiKitLabels`, `peekUiKitLabels`, `resolveLanguage`, `useUiKitLabels`, _`KitLanguage`_, _`KitLanguageCode`_ |
-| `i18n/plurals` | `withAllPlurals`, _`PluralForms`_ |
-
-### shell
-
-| Module | Exports |
-|---|---|
-| `shell/topbar-controls` | `LanguageMenu`, `ThemeToggle`, `TOPBAR_MENU_ITEM_CLASS`, `TOPBAR_TRIGGER_CLASS`, _`LanguageMenuTrigger`_, _`LanguageOption`_ |
-| `shell/top-bar` | `TopBar`, _`TopBarProps`_ |
-| `shell/app-shell` | `AppShell`, `DEFAULT_APP_SHELL_MORE_LABELS`, `DEFAULT_MOBILE_MAX_ITEMS`, _`AppShellMoreLabels`_, _`AppShellNavItem`_, _`AppShellProps`_, _`AppShellSidebarFooterItem`_, _`AppShellSubItem`_ |
-| `shell/option-switcher-menu` | `OptionSwitcherMenu`, _`OptionSwitcherOption`_ |
-| `shell/topbar-action-menu` | `TopBarActionMenu`, _`TopBarMenuEntry`_, _`TopBarMenuHeader`_ |
-| `shell/top-bar-brand` | `TopBarBrand`, _`TopBarBrandProps`_ |
-| `shell/auth-layout` | `AuthLayout`, _`AuthLayoutProps`_ |
-| `shell/fill-height` | `FILL_HEIGHT_CLASS`, `FillHeight`, _`FillHeightProps`_ |
-| `shell/admin-menu` | `adminMenuEntry`, `AdminMenuRow`, `AdminWaitingBadge`, `useAdminMenuEntry`, _`AdminMenuEntryOptions`_, _`AdminMenuRowProps`_, _`AdminWaitingBadgeProps`_, _`UseAdminMenuEntryOptions`_ |
-| `shell/top-bar-actions` | `TopBarActions`, _`TopBarActionsProps`_ |
-| `shell/account-menu-language` | `AccountMenuLanguage`, _`AccountMenuLanguageOption`_, _`AccountMenuLanguageProps`_ |
-| `shell/account-menu-text-size` | `AccountMenuTextSize`, _`AccountMenuTextSizeProps`_ |
-| `shell/tour-menu` | `TourMenu`, _`TourMenuProps`_, _`TourMenuTour`_ |
-| `shell/sync-status-indicator` | `SyncStatusIndicator`, _`SyncState`_, _`SyncStatus`_, _`SyncStatusIndicatorProps`_, _`SyncStatusScope`_ |
-| `shell/held-changes-banner` | `DEFAULT_HELD_CHANGES_BANNER_LABELS`, `HeldChangesBanner`, _`HeldChangesBannerLabels`_, _`HeldChangesBannerProps`_ |
-| `shell/dev-menu` | `DevMenu`, _`DevMenuProps`_, _`DevMenuSection`_ |
-| `shell/top-bar-parts-labels` | `DEFAULT_TOP_BAR_PARTS_LABELS`, `useTopBarPartsLabels`, _`DevSwitchersLabels`_, _`SyncStatusLabels`_, _`TopBarPartsLabels`_, _`TourMenuLabels`_ |
-| `shell/company-switcher` | `CompanySwitcher`, `DEFAULT_COMPANY_SWITCHER_LABELS`, _`CompanySwitcherCompany`_, _`CompanySwitcherLabels`_, _`CompanySwitcherProps`_ |
-
-### settings
-
-| Module | Exports |
-|---|---|
-| `settings/settings-layout` | `SettingsLayout`, _`SettingsDocumentTitleParts`_, _`SettingsLayoutProps`_, _`SettingsLayoutWidth`_ |
-| `settings/use-settings-route` | `settingsFromListState`, `useSettingsRoute`, _`SettingsLayoutMode`_, _`SettingsLocation`_, _`SettingsLocationResult`_, _`SettingsLocationRules`_, _`SettingsRoute`_, _`UseSettingsRouteOptions`_ |
-| `settings/use-settings-focus` | `useFocusParam`, `useSettingsFocus` |
-| `settings/settings-section` | `SettingsSection`, _`SettingsSectionProps`_ |
-| `settings/settings-context` | `useSettingsLayout`, _`SettingsLayoutContextValue`_ |
-| `settings/settings-heading` | `SettingsHeadingLevel`, `useSettingsHeadingLevel`, _`SettingsHeadingLevelProps`_, _`SettingsHeadingTag`_ |
-| `settings/settings-catalogue` | `settingsHref`, `settingsSearchEntries`, `visibleSettingsEntries`, `visibleSettingsGroups`, _`SettingsEntry`_, _`SettingsGroup`_, _`SettingsSearchEntriesOptions`_ |
-| `settings/settings-labels` | `DEFAULT_SETTINGS_LABELS`, `useSettingsLabels`, _`SettingsCoreGroup`_, _`SettingsGroupLabels`_, _`SettingsLabels`_ |
-| `settings/device-reset-setting` | `DEFAULT_DEVICE_RESET_LABELS`, `DEVICE_RESET_ANCHOR`, `DeviceResetSetting`, _`DeviceResetLabels`_, _`DeviceResetSettingProps`_ |
-| `settings/swipe-settings-store` | `createSwipeSettingsStore`, `FEEDBACK_SWIPE_SURFACE`, `SWIPE_NONE`, `TRANSLATION_REVIEW_SWIPE_SURFACE`, _`SwipeActionOf`_, _`SwipeBinding`_, _`SwipeLadderMap`_, _`SwipeLadders`_, _`SwipeNone`_, _`SwipeSettingsLegacy`_, _`SwipeSettingsOptions`_, _`SwipeSettingsState`_, _`SwipeSettingsStore`_, _`SwipeSide`_, _`SwipeSlot`_, _`SwipeSurface`_, _`SwipeSurfaces`_ |
-| `settings/swipe-setting` | `DEFAULT_SWIPE_SETTING_LABELS`, `SWIPE_SETTING_ANCHOR`, `SwipeSetting`, _`SwipeSettingLabels`_, _`SwipeSettingProps`_, _`SwipeSurfaceLabels`_ |
-| `settings/use-account-language` | `matchOfferedLanguage`, `resolveAccountLanguage`, `useAccountLanguage`, _`AccountLanguage`_, _`AccountLanguageSource`_, _`ResolveAccountLanguageInput`_, _`ResolvedAccountLanguage`_, _`UseAccountLanguageOptions`_ |
-| `settings/use-account-appearance` | `useAccountAppearance`, _`AccountAppearance`_, _`AccountAppearanceFields`_, _`AccountAppearancePatch`_, _`AppearanceSource`_, _`DeviceAppearance`_, _`ResolvedAccountAppearance`_, _`UseAccountAppearanceOptions`_ |
-
-### landing
-
-| Module | Exports |
-|---|---|
-| `landing/routing` | `clearLastVisitedPage`, `DEFAULT_LAST_VISITED_EXCLUDES`, `NEXT_PARAM`, `readLastVisitedPage`, `RedirectIfAuthed`, `RootEntry`, `safeNextPath`, `useLastVisitedPage`, _`LastVisitedPageOptions`_, _`PathPattern`_, _`RedirectIfAuthedProps`_, _`RootEntryProps`_, _`RoutingSession`_ |
-| `landing/public-header` | `PublicHeader`, _`PublicHeaderBrand`_, _`PublicHeaderProps`_ |
-| `landing/landing-labels` | `DEFAULT_LANDING_LABELS`, `useLandingLabels`, _`LandingLabels`_ |
-| `landing/access` | `accessAction`, `useAccessAction`, _`AccessChoice`_, _`AccessLabels`_, _`AccessLink`_ |
-| `landing/landing-actions` | `LandingActions`, _`LandingActionsProps`_, _`LandingSession`_ |
-| `landing/landing-sections` | `CtaBand`, `FeatureRow`, `FeatureRows`, `Hero`, `PublicFooter`, `TrustStrip`, _`CtaBandProps`_, _`FeatureRowProps`_, _`FeatureRowsProps`_, _`HeroProps`_, _`PublicFooterProps`_, _`TrustItem`_, _`TrustStripProps`_ |
-| `landing/page-seo` | `metaContent`, `seoCopyProblems`, `usePageSeo`, _`PageSeo`_, _`SeoCopy`_, _`SeoCopyLimits`_, _`SeoCopyProblem`_, _`SeoCopyProblemCode`_ |
-| `landing/public-page` | `PublicPage`, _`PublicPageProps`_ |
-
-### feedback
-
-| Module | Exports |
-|---|---|
-| `feedback/feedback-attachment` | `DEFAULT_FEEDBACK_ATTACHMENT_LABELS`, `FeedbackAttachmentField`, `pastedName`, _`FeedbackAttachmentError`_, _`FeedbackAttachmentErrorInfo`_, _`FeedbackAttachmentFieldLabels`_, _`FeedbackAttachmentFieldMultipleProps`_, _`FeedbackAttachmentFieldProps`_, _`FeedbackAttachmentFieldRefsProps`_, _`FeedbackAttachmentFieldSingleProps`_, _`FeedbackAttachmentRef`_, _`FeedbackAttachmentRefsError`_ |
-| `feedback/feedback-dialog` | `DEFAULT_FEEDBACK_DIALOG_LABELS`, `FeedbackDialog`, _`FeedbackAttachmentLabels`_, _`FeedbackCategoryOption`_, _`FeedbackDialogLabels`_, _`FeedbackDialogMultipleProps`_, _`FeedbackDialogProps`_, _`FeedbackDialogSingleProps`_, _`FeedbackDialogTextLabels`_, _`FeedbackMultipleSubmission`_, _`FeedbackSubmission`_, _`FeedbackSubmitHint`_ |
-| `feedback/feedback-inbox` | `FeedbackCategoryBadge`, `FeedbackDetail`, `FeedbackDetailSection`, `FeedbackNoteEditor`, `FeedbackProse`, `FeedbackStatusBadge`, `FeedbackStatusTransitions`, _`FeedbackNoteAttachment`_ |
-| `feedback/feedback-thread` | `ChatComposer`, `DEFAULT_FEEDBACK_COMPOSER_LABELS`, `DEFAULT_FEEDBACK_THREAD_LABELS`, `FeedbackThread`, _`ChatComposerHandle`_, _`ChatComposerLabels`_, _`ChatComposerProps`_, _`ChatComposerSlotContext`_, _`FeedbackComposerAttachment`_, _`FeedbackThreadAttachment`_, _`FeedbackThreadEvent`_, _`FeedbackThreadItem`_, _`FeedbackThreadLabels`_, _`FeedbackThreadMessage`_, _`FeedbackThreadProps`_ |
-| `feedback/feedback-record` | `appendRework`, `attachmentName`, `DEFAULT_ATTACHMENT_ACCEPT`, `DEFAULT_MAX_ATTACHMENT_BYTES`, `DEFAULT_MAX_ATTACHMENTS`, `FEEDBACK_ATTACHMENT_ACCEPT`, `FEEDBACK_AUTHOR_EDITABLE_STATUSES`, `FEEDBACK_AWAITING_STATUSES`, `FEEDBACK_COMMENT_MAX`, `FEEDBACK_DECIDED_STATUSES`, `FEEDBACK_PICKABLE_CATEGORIES`, `FEEDBACK_QUEUE_STATUSES`, `FEEDBACK_REPLY_MAX`, `FEEDBACK_REWORKABLE_STATUSES`, `feedbackReworkCount`, `isImageAttachment`, `replaceDescription`, `reworkCount`, `splitBodyAttachments`, `splitDescription`, _`FeedbackContext`_, _`FeedbackEnvironment`_, _`FeedbackRecord`_ |
-| `feedback/feedback-labels` | `DEFAULT_FEEDBACK_CATEGORY_LABELS`, `DEFAULT_FEEDBACK_STATUS_LABELS`, `DEFAULT_FEEDBACK_TOAST_LABELS`, `useFeedbackCategoryLabels`, `useFeedbackStatusLabels`, `useFeedbackToastLabels`, _`FeedbackCategoryLabels`_, _`FeedbackStatusLabels`_, _`FeedbackToastLabels`_ |
-| `feedback/feedback-status-undo` | `useFeedbackStatusUndo`, _`FeedbackStatusChange`_, _`FeedbackStatusMutateAsync`_, _`FeedbackStatusPatch`_, _`FeedbackStatusRow`_, _`FeedbackStatusUndoOptions`_ |
-| `feedback/feedback-swipe` | `DEFAULT_FEEDBACK_SWIPE`, `FEEDBACK_SWIPE_ACTIONS`, `feedbackSwipeOmitShown`, `feedbackSwipePlan`, _`FeedbackSwipeAction`_, _`FeedbackSwipeBinding`_, _`FeedbackSwipeOptions`_ |
-| `feedback/feedback-menu` | `DEFAULT_FEEDBACK_MENU_LABELS`, `FeedbackMenu`, _`FeedbackMenuLabels`_, _`FeedbackMenuProps`_ |
-| `feedback/feedback-context` | `DEFAULT_FEEDBACK_CONTEXT_LABELS`, `feedbackContext`, `FeedbackContextBox`, _`FeedbackContextBoxProps`_, _`FeedbackContextInput`_, _`FeedbackContextLabels`_, _`FeedbackSubmitter`_ |
-| `feedback/feedback-capture` | `captureAppScreenshot`, _`CaptureAppScreenshotOptions`_ |
-| `feedback/feedback-submit` | `useFeedbackSubmit`, _`FeedbackCreatePayload`_, _`FeedbackSubmit`_, _`FeedbackSubmitOpenOptions`_, _`UseFeedbackSubmitOptions`_ |
-| `feedback/feedback-table` | `DEFAULT_FEEDBACK_PAGE_LABELS`, `FeedbackAwaitingToggle`, `FeedbackEmptyState`, `FeedbackMobileCard`, `feedbackMobileGroupBy`, `FeedbackSubject`, `isFeedbackAwaiting`, `useFeedbackColumns`, `useFeedbackPageLabels`, `useFeedbackRenderDate`, _`FeedbackAwaitingToggleProps`_, _`FeedbackColumnsOptions`_, _`FeedbackEmptyStateProps`_, _`FeedbackMobileCardProps`_, _`FeedbackPageLabels`_, _`FeedbackRenderDate`_, _`FeedbackSubjectProps`_, _`FeedbackTableRow`_, _`UseFeedbackColumnsOptions`_ |
-| `feedback/feedback-row-detail` | `DEFAULT_FEEDBACK_DETAIL_LABELS`, `FeedbackReworkSection`, `FeedbackRowDetail`, _`FeedbackDetailLabels`_, _`FeedbackDetailPatch`_, _`FeedbackDetailUpdateAsync`_, _`FeedbackReworkSectionProps`_, _`FeedbackReworkSend`_, _`FeedbackRowAccess`_, _`FeedbackRowDetailProps`_, _`FeedbackUpload`_ |
-| `feedback/feedback-crash` | `createCrashReporter`, _`CrashFiling`_, _`CrashReportCreate`_, _`CrashReporter`_, _`CrashReporterOptions`_, _`CrashReportResponse`_ |
-| `feedback/deploy-environment` | `deployEnvironment`, _`DeployEnvironmentHosts`_ |
-| `feedback/feedback-public-switch` | `FeedbackPublicSwitch`, _`FeedbackPublicSwitchProps`_, _`FeedbackPublicSwitchRow`_, _`FeedbackPublicSwitchViewer`_ |
-| `feedback/feedback-public-list` | `DEFAULT_FEEDBACK_PUBLIC_LABELS`, `FeedbackPublicDetail`, `FeedbackPublicList`, `useFeedbackPublicLabels`, _`FeedbackPublicDetailProps`_, _`FeedbackPublicLabels`_, _`FeedbackPublicListProps`_ |
-| `feedback/feedback-public-types` | _`FeedbackComment`_, _`FeedbackEntryKind`_, _`FeedbackPublicListItem`_, _`FeedbackPublicRecord`_, _`FeedbackPublicSort`_, _`FeedbackReply`_, _`FeedbackVoteState`_ |
-| `feedback/feedback-vote-button` | `DEFAULT_FEEDBACK_VOTE_LABELS`, `FeedbackVoteButton`, _`FeedbackVoteButtonProps`_, _`FeedbackVoteLabels`_ |
-| `feedback/feedback-comment-thread` | `DEFAULT_FEEDBACK_COMMENTS_LABELS`, `FeedbackCommentThread`, _`FeedbackCommentsLabels`_, _`FeedbackCommentThreadProps`_ |
-| `feedback/feedback-replies` | `DEFAULT_FEEDBACK_REPLIES_LABELS`, `FeedbackReplyComposer`, `feedbackReplyNudge`, `FeedbackReplyTimeline`, `useFeedbackRepliesLabels`, _`FeedbackRepliesLabels`_, _`FeedbackReplyComposerProps`_, _`FeedbackReplyTimelineProps`_ |
-| `feedback/feedback-entry-file` | `FeedbackEntryFile`, `useFeedbackEntryUpload`, _`FeedbackEntryFileProps`_, _`FeedbackEntryUpload`_, _`FeedbackEntryUploadOptions`_, _`FeedbackEntryUploadState`_ |
-| `feedback/feedback-inbox-page` | `FeedbackInbox`, `useFeedbackInbox`, _`FeedbackInboxBulk`_, _`FeedbackInboxMutation`_, _`FeedbackInboxProps`_, _`FeedbackInboxState`_, _`FeedbackReplyPost`_, _`FeedbackReworkPost`_, _`UseFeedbackInboxOptions`_ |
-| `feedback/feedback-page-frame` | `FeedbackPageFrame`, _`FeedbackPageFrameHeaderProps`_, _`FeedbackPageFrameProps`_ |
-| `feedback/feedback-comments` | `useFeedbackComments`, _`FeedbackCommentsApi`_, _`FeedbackCommentsState`_, _`UseFeedbackCommentsOptions`_ |
-| `feedback/feedback-public-page` | `FeedbackPublicPage`, `useFeedbackPublicPage`, _`FeedbackPublicApi`_, _`FeedbackPublicPageProps`_, _`FeedbackPublicPageState`_, _`FeedbackPublicRead`_, _`FeedbackPublicRequest`_, _`UseFeedbackPublicPageOptions`_ |
-| `feedback/feedback-vocabulary` | `FEEDBACK_CATEGORY_META`, `FEEDBACK_CATEGORY_ORDER`, `FEEDBACK_STATUS_META`, `FEEDBACK_STATUS_ORDER`, `feedbackCategoryRank`, `nextFeedbackStatus`, `selectableFeedbackStatuses`, `visibleFeedbackStatuses`, _`FeedbackCategory`_, _`FeedbackStatus`_ |
-
-### wizard
-
-| Module | Exports |
-|---|---|
-| `wizard/types` | `DEFAULT_WIZARD_LABELS`, _`FieldErrors`_, _`StepStatus`_, _`SummaryItem`_, _`SummarySection`_, _`UseWizardOptions`_, _`UseWizardReturn`_, _`ValidateResult`_, _`WizardFinishResult`_, _`WizardLabels`_, _`WizardStepConfig`_, _`WizardUrlSync`_ |
-| `wizard/use-wizard` | `useWizard` |
-| `wizard/wizard-context` | `useOptionalWizardContext`, `useWizardContext`, `useWizardNextGate`, `useWizardStepValidate`, `WizardContextProvider`, _`WizardContextValue`_ |
-| `wizard/validation` | `requiredFieldsValidator`, _`RequiredFieldSpec`_ |
-| `wizard/wizard-step` | `WizardStep`, _`WizardStepProps`_ |
-| `wizard/wizard-summary` | `WizardSummary` |
-| `wizard/stepper-nav` | `StepperNav` |
-
-### tour
-
-| Module | Exports |
-|---|---|
-| `tour/tour` | `DEFAULT_TOUR_LABELS`, `TourProvider`, `useTour`, `useTourOptional`, _`TourAt`_, _`TourCompletion`_, _`TourEngine`_, _`TourLabels`_, _`TourLauncher`_, _`TourPlacement`_, _`TourStart`_, _`TourStep`_, _`TourStepContext`_ |
-| `tour/tour-catalogue` | `DEFAULT_TOUR_CATALOGUE_LABELS`, `TourCatalogue`, `TourCatalogueCard`, _`TourCatalogueCardProps`_, _`TourCatalogueLabels`_, _`TourCatalogueProps`_ |
-| `tour/tour-info` | `doneCount`, `earnedPoints`, `isTourDone`, `isTourNew`, `isTourReset`, _`TourCompletions`_, _`TourGroup`_, _`TourInfo`_, _`TourUpdate`_ |
-| `tour/use-tour-progress` | `completeTour`, `resetTourProgress`, `signOutTourProgress`, `useTourProgress`, _`TourProgress`_, _`TourProgressAccount`_, _`TourProgressAdopt`_, _`TourProgressBody`_, _`UseTourProgressOptions`_ |
-| `tour/use-tour-url-sync` | `useTourCatalogueUrlState`, `useTourUrlSync`, _`TourCatalogueFilter`_, _`TourStateFilter`_, _`UseTourUrlSyncOptions`_ |
-| `tour/tour-guide-button` | `DEFAULT_TOUR_GUIDE_LABELS`, `TourGuideButton`, _`TourGuideButtonProps`_, _`TourGuideLabels`_ |
-| `tour/tour-gates` | `useTourGate`, `useTourGateRelease`, _`TourGateRelease`_ |
-
-### search
-
-| Module | Exports |
-|---|---|
-| `search/command-palette` | `CommandPalette`, `DEFAULT_COMMAND_PALETTE_LABELS`, _`CommandItem`_, _`CommandPaletteDensity`_, _`CommandPaletteLabels`_ |
-| `search/search-index` | `createSearchIndex`, _`SearchEntry`_, _`SearchHit`_, _`SearchIndex`_, _`SearchIndexOptions`_, _`SearchMatchField`_ |
-| `search/global-search` | `DEFAULT_GLOBAL_SEARCH_LABELS`, `GlobalSearch`, _`GlobalSearchLabels`_, _`GlobalSearchProps`_, _`GlobalSearchSource`_, _`GlobalSearchSourceGroup`_, _`GlobalSearchSuggestion`_, _`GlobalSearchTriggerProps`_ |
-| `search/use-command-key` | `useCommandKey` |
-
-### auth
-
-| Module | Exports |
-|---|---|
-| `auth/sign-in-form` | `DEFAULT_SIGN_IN_LABELS`, `SignInForm`, _`SignInAction`_, _`SignInAnswer`_, _`SignInCodeValues`_, _`SignInCredentials`_, _`SignInFormProps`_, _`SignInLabels`_, _`SignInNewPasswordValues`_, _`SignInStep`_ |
-| `auth/register-form` | `DEFAULT_REGISTER_LABELS`, `RegisterForm`, _`RegisterFormProps`_, _`RegisterLabels`_, _`RegisterValues`_ |
-| `auth/complete-name-dialog` | `CompleteNameDialog`, `DEFAULT_COMPLETE_NAME_LABELS`, _`CompleteNameDialogProps`_, _`CompleteNameLabels`_, _`CompleteNameValues`_ |
-| `auth/email-tag` | `taggedEmail` |
-| `auth/auth-errors` | `authErrorCode`, `billingRefusalText`, `isAuthError`, `isBillingError`, `isRateLimited`, `retryAfterSeconds`, _`AccountErrorCode`_, _`AuthErrorCode`_, _`BillingErrorCode`_, _`BillingRefusalTextOptions`_, _`DemoErrorCode`_, _`KitErrorCode`_ |
-| `auth/forgot-password-form` | `DEFAULT_FORGOT_PASSWORD_LABELS`, `ForgotPasswordForm`, _`ForgotPasswordFormProps`_, _`ForgotPasswordLabels`_ |
-| `auth/reset-password-form` | `DEFAULT_RESET_PASSWORD_LABELS`, `ResetPasswordForm`, _`ResetPasswordCheck`_, _`ResetPasswordFormProps`_, _`ResetPasswordLabels`_, _`ResetPasswordResult`_, _`ResetPasswordValues`_ |
-| `auth/verify-email` | `DEFAULT_VERIFY_EMAIL_LABELS`, `EmailVerificationBanner`, `VerifyEmailStatus`, _`EmailVerificationBannerProps`_, _`VerifyEmailFailure`_, _`VerifyEmailLabels`_, _`VerifyEmailStatusProps`_ |
-| `auth/not-found-page` | `DEFAULT_NOT_FOUND_LABELS`, `NotFoundPage`, _`NotFoundLabels`_, _`NotFoundPageProps`_ |
-| `auth/accept-invitation` | `AcceptInvitation`, `DEFAULT_ACCEPT_INVITATION_LABELS`, _`AcceptInvitationFailure`_, _`AcceptInvitationLabels`_, _`AcceptInvitationProps`_, _`AcceptInvitationResult`_ |
-| `auth/status-parts` | _`AuthHeadingLevel`_ |
-
-### account
-
-| Module | Exports |
-|---|---|
-| `account/account-settings` | `PasswordSetting`, `ProfileSetting`, `TwoFactorSetting`, _`PasswordSettingStrength`_, _`ProfileNameValues`_, _`ProfileSettingDisplayNameProps`_, _`ProfileSettingNamesProps`_, _`ProfileSettingProps`_, _`TwoFactorSetupData`_ |
-| `account/passkeys-setting` | `PasskeysSetting`, _`PasskeyDataAttributes`_, _`PasskeyId`_, _`PasskeyItem`_, _`PasskeysSettingProps`_ |
-| `account/email-change-setting` | `DEFAULT_EMAIL_CHANGE_LABELS`, `EmailChangeSetting`, _`EmailChangeAction`_, _`EmailChangeLabels`_, _`EmailChangeSettingProps`_, _`EmailChangeValues`_ |
-| `account/sessions-setting` | `DEFAULT_SESSIONS_LABELS`, `SessionsSetting`, _`SessionId`_, _`SessionItem`_, _`SessionsAction`_, _`SessionsLabels`_, _`SessionsSettingProps`_ |
-| `account/delete-account-setting` | `DEFAULT_DELETE_ACCOUNT_LABELS`, `DeleteAccountSetting`, _`DeleteAccountConsequence`_, _`DeleteAccountLabels`_, _`DeleteAccountSettingProps`_, _`DeleteAccountValues`_, _`DeletionMode`_ |
-| `account/data-export-setting` | `DataExportSetting`, `DEFAULT_DATA_EXPORT_LABELS`, _`DataExportFile`_, _`DataExportLabels`_, _`DataExportSettingProps`_ |
-| `account/account-settings-labels` | `DEFAULT_ACCOUNT_SETTINGS_LABELS`, _`AccountSettingsLabels`_, _`PasskeysSettingLabels`_, _`PasswordSettingLabels`_, _`ProfileSettingLabels`_, _`TwoFactorSettingLabels`_ |
-
-### admin
-
-| Module | Exports |
-|---|---|
-| `admin/user-roster` | `DEFAULT_USER_ROSTER_LABELS`, `USER_ROSTER_MAX_PAGE_SIZE`, `USER_ROSTER_PAGE_SIZE`, `USER_ROSTER_SORT_KEYS`, `UserIdentityCell`, `userRosterSort`, `UserRowActions`, `useUserRosterColumns`, _`AdminUserStateFields`_, _`RoleEditing`_, _`RosterState`_, _`UserIdentityCellProps`_, _`UserRosterColumnsOptions`_, _`UserRosterLabels`_, _`UserRosterRow`_, _`UserRosterSortKey`_, _`UserRowAction`_, _`UserRowActionList`_, _`UserRowActionsProps`_ |
-| `admin/role-select` | `DEFAULT_ROLE_SELECT_LABELS`, `RolesEditor`, `RoleSelect`, _`RoleLock`_, _`RoleLockCode`_, _`RolesEditorProps`_, _`RoleSelectLabels`_, _`RoleSelectProps`_ |
-| `admin/reviewer-scope-editor` | `DEFAULT_REVIEWER_SCOPE_LABELS`, `ReviewerScopeEditor`, _`ReviewerScope`_, _`ReviewerScopeArea`_, _`ReviewerScopeEditorProps`_, _`ReviewerScopeLabels`_, _`ReviewerScopeLanguage`_ |
-| `admin/admin-action-confirm` | `AdminActionConfirm`, `DEFAULT_ADMIN_ACTION_LABELS`, _`AdminActionConfirmProps`_, _`AdminActionConfirmValues`_, _`AdminActionLabels`_, _`AdminActionTarget`_, _`AdminConfirmLevel`_ |
-| `admin/admin-action-log` | `ADMIN_ACTION_KINDS`, `AdminActionLog`, `DEFAULT_ADMIN_ACTION_LOG_LABELS`, _`AdminActionKind`_, _`AdminActionLogEntry`_, _`AdminActionLogLabels`_, _`AdminActionLogPaging`_, _`AdminActionLogProps`_, _`AdminGroupNoun`_, _`AdminGroupTarget`_, _`AdminOtherTarget`_ |
-| `admin/transfer-ownership-dialog` | `DEFAULT_TRANSFER_OWNERSHIP_LABELS`, `TransferOwnershipDialog`, _`TransferCandidate`_, _`TransferOwnershipDialogProps`_, _`TransferOwnershipLabels`_, _`TransferUnavailable`_, _`TransferValues`_ |
-| `admin/invitations-panel` | `DEFAULT_INVITATIONS_LABELS`, `InvitationsPanel`, _`InvitationDraft`_, _`InvitationRow`_, _`InvitationScope`_, _`InvitationSentAnswer`_, _`InvitationsLabels`_, _`InvitationsPanelProps`_, _`InvitationStatus`_ |
-| `admin/admin-parts` | _`AdminPerson`_ |
-| `admin/admin-area-labels` | `DEFAULT_ADMIN_AREA_LABELS`, `useAdminAreaLabels`, _`AdminAreaLabels`_, _`AdminSharedSection`_, _`AdminTileLabels`_ |
-| `admin/admin-sections` | `ADMIN_SECTIONS`, `adminSectionOrder`, `adminSections`, _`AdminKeptSection`_, _`AdminOwnSection`_, _`AdminSectionDefinition`_, _`AdminSectionOrderOptions`_, _`AdminSectionPlace`_, _`AdminSectionsOptions`_ |
-| `admin/admin-forbidden` | `AdminForbidden`, _`AdminForbiddenProps`_ |
-| `admin/admin-overview` | `AdminOverview`, `adminWaitingCount`, `AttentionTile`, _`AdminAttention`_, _`AdminAttentionTile`_, _`AdminExtraTile`_, _`AdminFeedbackTile`_, _`AdminFeedbackTileKey`_, _`AdminOverviewProps`_, _`AdminOwnTile`_, _`AttentionTileProps`_ |
-| `admin/admin-tool-links` | `AdminToolLinks`, _`AdminToolLink`_, _`AdminToolLinksProps`_ |
-| `admin/mail-test-card` | `DEFAULT_MAIL_TEST_CARD_LABELS`, `MAIL_TEST_ANCHOR`, `MailTestCard`, _`MailTestAnswer`_, _`MailTestCardLabels`_, _`MailTestCardProps`_ |
-| `admin/plan-change` | `DEFAULT_PLAN_CHANGE_LABELS`, `PlanChangeConfirm`, `usePlanChangeResult`, `usePlanColumn`, _`PlanChange`_, _`PlanChangeConfirmProps`_, _`PlanChangeLabels`_, _`PlanChangeLine`_, _`PlanChangeOutcome`_, _`PlanChangeResultOptions`_, _`PlanChangeTone`_, _`PlanColumnOptions`_, _`PlanColumnUsage`_ |
-
-### billing
-
-| Module | Exports |
-|---|---|
-| `billing/billing-labels` | `DEFAULT_BILLING_LABELS`, `SUBSCRIPTION_STATUSES`, `useBillingLabels`, _`BillingLabels`_, _`SubscriptionStatus`_ |
-| `billing/plan-price` | `BILLING_INTERVALS`, `billingCurrencyFor`, `formatPlanPrice`, `minorToMajor`, `planPrice`, _`BillingCurrency`_, _`BillingInterval`_, _`PlanIntervalPrices`_, _`PlanPriceAnswer`_, _`PlanPrices`_ |
-| `billing/plan-card` | `GrantWarningConfirm`, `PlanCard`, `PlanPicker`, _`BillingPlan`_, _`GrantWarningConfirmProps`_, _`PlanCardProps`_, _`PlanChoice`_, _`PlanPickerProps`_, _`PlanRelation`_ |
-| `billing/subscription-status-chip` | `SUBSCRIPTION_STATUS_TONES`, `SubscriptionStatusChip`, _`SubscriptionStatusChipProps`_ |
-| `billing/billing-banner` | `BillingBanner`, _`BillingBannerKind`_, _`BillingBannerProps`_ |
-| `billing/plan-limit-notice` | `planLimitMailto`, `PlanLimitNotice`, _`PlanLimitNoticeProps`_ |
-| `billing/plan-limit` | `isPlanLimit`, _`PlanLimitRefusal`_ |
-| `billing/billing-lock` | `combineWriteLocks`, `useBillingLockReason`, `useBillingWriteLock`, _`BillingLockReasonOptions`_, _`CombinedWriteLock`_, _`WriteLockSource`_ |
-| `billing/billing-standing` | `billingDaysLeft`, `billingLockAt`, `isBillingReadOnly`, _`BillingStanding`_ |
-| `billing/subscription-actions` | `SubscriptionActions`, _`SubscriptionActionsProps`_ |
-| `billing/checkout-return` | `CHECKOUT_RETURN_PARAM`, `CHECKOUT_RETURN_VALUE`, `checkoutReturnUrl`, `isCheckoutReturn`, `withoutCheckoutReturn` |
-| `billing/checkout-processing` | `checkoutFingerprint`, `noteCheckoutStarted`, `useCheckoutProcessing`, _`CheckoutOverview`_, _`CheckoutProcessingOptions`_ |
-| `billing/pay-page` | `paddleLocale`, `PAY_PAGE_APPS`, `payPageUrl`, _`PaddleEnvironment`_, _`PayPageApp`_ |
-| `billing/billing-overview` | `isPermanentGrant`, _`BillingOverview`_, _`BillingPortalAccess`_, _`PaidPrice`_, _`PlanSwitchPreview`_, _`PlanSwitchRequest`_, _`PortalRequest`_, _`PortalTarget`_, _`SubscriptionSource`_ |
-| `billing/plan-limit-toast` | `usePlanLimitToast`, _`PlanLimitToastOptions`_ |
-| `billing/plan-switch` | `PlanSwitchConfirm`, _`PlanSwitchConfirmProps`_, _`PlanSwitchSide`_ |
-| `billing/cancel-subscription` | `CancelSubscriptionConfirm`, _`CancelSubscriptionConfirmProps`_ |
-| `billing/provider-page` | `openProviderPage`, _`OpenProviderPageOptions`_, _`ProviderPageWay`_ |
-| `billing/cancel-request` | `useCancelRequest`, _`CancelRequest`_, _`CancelRequested`_, _`CancelRequestView`_ |
-| `billing/subscription-standing` | `subscriptionStanding`, `SubscriptionStanding`, _`SubscriptionStandingOverview`_, _`SubscriptionStandingProps`_ |
-| `billing/usage-meter` | `UsageMeter`, _`UsageMeterProps`_ |
-
-### notifications
-
-| Module | Exports |
-|---|---|
-| `notifications/notifications-labels` | `DEFAULT_NOTIFICATIONS_LABELS`, _`NotificationRegionLabels`_, _`NotificationsLabels`_ |
-| `notifications/notification-types` | _`DigestCadence`_, _`NotificationChannel`_, _`NotificationSettingsPatch`_, _`NotificationSwitches`_, _`NotificationTypeEntry`_, _`NotificationTypeGroup`_, _`NotificationTypesValue`_, _`PushDeviceItem`_ |
-| `notifications/notification-types-setting` | `NotificationTypesSetting`, _`NotificationTypesSettingProps`_ |
-| `notifications/quiet-hours-setting` | `QuietHoursSetting`, _`QuietHoursSettingProps`_ |
-| `notifications/notification-inbox` | `INBOX_BADGE_INTERVAL`, `NotificationInbox`, _`NotificationInboxAction`_, _`NotificationInboxItem`_, _`NotificationInboxProps`_ |
-| `notifications/notification-bell` | `NotificationBell`, _`NotificationBellProps`_ |
-| `notifications/device-zone-report` | `deviceTimeZone`, `useDeviceZoneReport`, _`DeviceZoneReportOptions`_ |
-| `notifications/use-push-device` | `dropPushSubscription`, `notifyPushSubscriptionChanged`, `PUSH_SUBSCRIPTION_CHANGED`, `PushDeviceError`, `pushSupported`, `releaseThisDevicePush`, `usePushDevice`, _`PushDevice`_, _`PushDeviceErrorCode`_, _`PushPermission`_, _`PushSubscriptionInput`_, _`UsePushDeviceOptions`_ |
-| `notifications/push-worker` | `handlePushSubscriptionChange`, `pushSubscriptionInput`, `resubscribeAfterChange`, _`PushReplaceInput`_, _`PushResubscribeOutcome`_, _`PushSubscriptionChangeEventLike`_, _`PushSubscriptionChangeOptions`_, _`PushWorkerScope`_ |
-| `notifications/push-device-setting` | `PushDeviceSetting`, _`PushDeviceAction`_, _`PushDeviceSettingProps`_ |
-| `notifications/push-devices-setting` | `PushDevicesSetting`, _`PushDevicesSettingProps`_ |
-| `notifications/unsubscribe-panel` | `UnsubscribePanel`, `unsubscribeTokenType`, _`UnsubscribePanelProps`_ |
-| `notifications/feedback-notification-types` | `DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS`, `useFeedbackNotificationTypes`, `useFeedbackNotificationTypesLabels`, _`FeedbackNotificationTypeId`_, _`FeedbackNotificationTypesLabels`_ |
-
-### demo
-
-| Module | Exports |
-|---|---|
-| `demo/demo-labels` | `DEFAULT_DEMO_LABELS`, `useDemoLabels`, _`DemoLabels`_ |
-| `demo/demo-session` | `isDemoSession`, _`DemoModel`_, _`DemoSessionUser`_ |
-| `demo/demo-countdown` | `useDemoCountdown`, _`DemoCountdown`_, _`DemoCountdownOptions`_, _`DemoExpiry`_ |
-| `demo/demo-start` | `DemoStart`, _`DemoStartProps`_ |
-| `demo/demo-banner` | `DemoBanner`, _`DemoBannerProps`_ |
-| `demo/demo-ended` | `DemoEnded`, _`DemoEndedProps`_ |
-
-### root
-
-| Module | Exports |
-|---|---|
-| `currencies` | `CURRENCY_COUNTRIES` |
-
-### @eifi1/ui-kit/dates (standalone)
-
-| Module | Exports |
-|---|---|
-| `lib/dates` | `addDaysIso`, `addMonthsClamped`, `calendarMonthPresets`, `currentDate`, `dateRangePresets`, `endOfMonthIso`, `endOfYearIso`, `formatIsoDate`, `lastFullMonthsRange`, `lastFullYearsRange`, `localeWeekStart`, `monthKey`, `pad`, `parseIsoDate`, `sameYmd`, `setToday`, `shiftIso`, `startOfMonthIso`, `startOfWeekIso`, `startOfYearIso`, `subscribeToday`, `todayIso`, `todayOverride`, `toLocalIso`, _`CalendarMonthPresetOptions`_, _`DateRangePreset`_ |
-
-### @eifi1/ui-kit/table-text (standalone)
-
-| Module | Exports |
-|---|---|
-| `lib/table-text` | `cellNumber`, `isCellNumber`, `parseRows`, `parseTable`, `parseTextTable`, `splitRow`, `tableNumber`, _`DecimalRule`_, _`ParsedTable`_, _`ParseTableOptions`_, _`ParseTextTableOptions`_, _`TableLine`_, _`TableSeparator`_, _`TextTable`_ |
-
-### @eifi1/ui-kit/eslint (standalone)
-
-| Module | Exports |
-|---|---|
-| `eslint/index` | `default` |
-
-### @eifi1/ui-kit/testing (standalone)
-
-| Module | Exports |
-|---|---|
-| `testing/css-variables` | `declaredCustomProperties`, `KIT_CSS_VARIABLES`, `undeclaredCssVariables`, _`UndeclaredCssVariablesOptions`_ |
-| `testing/viewport` | `setViewportWidth`, `stubResizeObserver`, `stubViewportWidth`, `viewportMatchMedia`, _`ResizeObserverStub`_, _`StubbedBoxSize`_, _`ViewportOptions`_ |
-| `testing/tour` | `tourStepContext`, _`TestTourStepContext`_, _`TourStepContextOptions`_, _`TourStepVia`_ |
-
-### @eifi1/ui-kit/testing/react (standalone)
-
-| Module | Exports |
-|---|---|
-| `testing/react` | `rowMenuAction`, _`RowMenuLabels`_ |
-
-### @eifi1/ui-kit/rhf (standalone)
-
-| Module | Exports |
-|---|---|
-| `rhf/form-core` | `Form` |
-| `rhf/use-rhf-wizard-step` | `useRhfWizardStep`, _`RhfWizardStepOptions`_ |
-| `rhf/fields` | `RhfCheckbox`, `RhfChoiceField`, `RhfCombobox`, `RhfCountrySelect`, `RhfDateField`, `RhfDateRangePicker`, `RhfField`, `RhfIbanInput`, `RhfInlineEntityCombobox`, `RhfIntegerField`, `RhfMoneyField`, `RhfMonthPicker`, `RhfNumberField`, `RhfPhoneInput`, `RhfQuantityField`, `RhfSelect`, `RhfTextarea`, `RhfTextCombobox`, `RhfTextField`, `RhfTimeInput`, `RhfToggleGroup`, _`RhfCheckboxProps`_, _`RhfChoiceFieldProps`_, _`RhfComboboxProps`_, _`RhfCountrySelectProps`_, _`RhfDateFieldProps`_, _`RhfDateRangePickerProps`_, _`RhfFieldBaseProps`_, _`RhfFieldProps`_, _`RhfFieldRenderContext`_, _`RhfIbanInputProps`_, _`RhfInlineEntityComboboxProps`_, _`RhfIntegerFieldProps`_, _`RhfMoneyFieldProps`_, _`RhfMonthPickerProps`_, _`RhfNumberFieldProps`_, _`RhfPhoneInputProps`_, _`RhfQuantityFieldProps`_, _`RhfSelectOption`_, _`RhfSelectProps`_, _`RhfTextareaProps`_, _`RhfTextComboboxProps`_, _`RhfTextFieldProps`_, _`RhfTimeInputProps`_, _`RhfToggleGroupProps`_ |
-| `rhf/line-items` | `RhfLineItems`, _`RhfLineItemCellContext`_, _`RhfLineItemsColumn`_, _`RhfLineItemsProps`_ |
-
-### @eifi1/ui-kit/offline (standalone)
-
-| Module | Exports |
-|---|---|
-| `offline/query-persistence` | `createQueryPersistence`, `DEFAULT_SCRUB_FIELDS`, `isCacheSafe`, `removeStaleQueryCopies`, _`QueryPersistence`_, _`QueryPersistenceOptions`_, _`QueryPersistenceStorage`_, _`RemoveStaleQueryCopiesOptions`_, _`ScrubField`_ |
-| `offline/sign-out-pending-dialog` | `DEFAULT_SIGN_OUT_PENDING_DIALOG_LABELS`, `SignOutPendingDialog`, _`SignOutPendingDialogLabels`_, _`SignOutPendingDialogProps`_ |
-| `offline/pwa-update-prompt` | `DEFAULT_PWA_UPDATE_PROMPT_LABELS`, `PwaUpdatePrompt`, _`PwaUpdatePromptLabels`_, _`PwaUpdatePromptProps`_ |
-| `offline/service-worker-updates` | `createServiceWorkerUpdates`, `useServiceWorkerUpdate`, _`RegisterServiceWorker`_, _`ServiceWorkerUpdates`_ |
-| `offline/shared-computer` | `DEFAULT_SHARED_COMPUTER_LABELS`, `isSharedComputer`, `setSharedComputer`, `SharedComputerChoice`, _`SharedComputerChoiceProps`_, _`SharedComputerLabels`_, _`SharedComputerStorage`_ |
-| `offline/shared-computer-idle` | `useSharedComputerIdleSignOut`, _`SharedComputerIdleSignOutOptions`_ |
-| `offline/local-first` | `isOfflineError`, `readLocalFirst`, `stampAfter`, `uuid5`, `writeLocalFirst` |
-| `offline/feedback-comments-query` | `feedbackCommentsQueryKey`, `useFeedbackCommentsQuery`, _`UseFeedbackCommentsQueryOptions`_ |
-
-### @eifi1/ui-kit/accounts (standalone)
-
-| Module | Exports |
-|---|---|
-| `accounts/storage-entries` | `accountStorageEntries`, _`AccountStorageEntry`_ |
-| `accounts/accounts-client` | `createAccountsClient`, _`AccountsClient`_, _`AccountsClientOptions`_, _`AccountSessionEnd`_, _`AccountsHttp`_, _`AccountsPasskeyFinish`_, _`AccountsRequest`_, _`AccountTokens`_ |
-| `accounts/session-store` | _`AccountSession`_, _`AccountUser`_, _`SharedSessionPlace`_ |
-
-### @eifi1/ui-kit/sync (standalone)
-
-| Module | Exports |
-|---|---|
-| `sync/db` | `createSyncDb`, `rowByPk`, `SYNC_DB_PK_INDEX`, _`CreateSyncDbOptions`_, _`OutboxChange`_, _`OutboxStatus`_, _`SyncDb`_, _`SyncDbIndexedDB`_, _`SyncDbUpgrade`_, _`SyncedRow`_, _`SyncMetaEntry`_ |
-| `sync/engine` | `createSyncEngine`, `DEFAULT_HOLD_CODES`, `releaseSyncEngine`, `syncEngineFor`, _`SyncCounts`_, _`SyncEngine`_, _`SyncEngineOptions`_, _`SyncEngineState`_, _`SyncRoundResult`_, _`SyncStep`_, _`SyncStepContext`_, _`SyncStepResult`_ |
-| `sync/hooks` | `useSyncQuery`, `useSyncStatus`, `useSyncWorker` |
-| `sync/wire` | _`SyncPageCursor`_, _`SyncRefusalBody`_, _`SyncRejectionBody`_, _`SyncRequestBody`_, _`SyncResponseBody`_, _`SyncWireChange`_ |
-| `offline/local-first` | `isOfflineError`, `readLocalFirst`, `stampAfter`, `uuid5`, `writeLocalFirst` |
-
-### @eifi1/ui-kit/sync/testing (standalone)
-
-| Module | Exports |
-|---|---|
-| `sync/testing` | `createFakeSyncTransport`, _`FakeSyncAnswer`_, _`FakeSyncTransport`_ |
-
-### @eifi1/ui-kit/i18n/* (standalone)
-
-| Entry point | Exports |
-|---|---|
-| `@eifi1/ui-kit/i18n/de-CH` | `UI_KIT_LABELS_DE_CH`, `uiKitLabelsDeCh` |
-| `@eifi1/ui-kit/i18n/en` | `uiKitLabelsEn` |
-| `@eifi1/ui-kit/i18n/es` | `UI_KIT_LABELS_ES`, `uiKitLabelsEs` |
-| `@eifi1/ui-kit/i18n/fr` | `UI_KIT_LABELS_FR`, `uiKitLabelsFr` |
-| `@eifi1/ui-kit/i18n/hu` | `UI_KIT_LABELS_HU`, `uiKitLabelsHu` |
-| `@eifi1/ui-kit/i18n/it` | `UI_KIT_LABELS_IT`, `uiKitLabelsIt` |
-| `@eifi1/ui-kit/i18n/zh` | `UI_KIT_LABELS_ZH`, `uiKitLabelsZh` |
-
-<!-- END GENERATED: exports -->
-
-## Forms / refs
-
-Every field takes a `ref` — a React 19 ref prop, no `forwardRef` (since 0.34) — to the
-element that takes focus: the `<input>` of `Input`, `NumberField`, `AmountInput`,
-`ChipInput`…, the trigger button of a picker (`DatePicker`, `MonthPicker`, `MultiSelect`,
-`CurrencySelect`, `CountrySelect`), and for `ToggleGroup` the group, whose `focus()` lands
-on its checked option (`ChoiceField`: that group, or its `<select>` on a phone). So they work directly with react-hook-form:
-`<Input {...field} />` (from `Controller`/`register`) attaches RHF's ref, giving
-focus-and-scroll-to-error for free. A component that spreads its props onto an element
-(`Card`, `EmptyState`, `PageHeader`, …) takes that element's `ref` too. For fields bound
-to a react-hook-form form in one line each, see `@eifi1/ui-kit/rhf` below.
-
-### react-hook-form — `@eifi1/ui-kit/rhf` (optional)
-
-The react-hook-form adapter: `Form`, the bound fields (`RhfTextField`, `RhfNumberField`,
-`RhfMoneyField`, `RhfDateField`, `RhfSelect`, `RhfCombobox`, `RhfCheckbox`, …) and
-`RhfField` for a control of your own, and the only entry that needs `react-hook-form` (an
-**optional** peer, `^7.55.0`). The main barrel does not import it, so apps without a form
-library install nothing.
-
-```tsx
-import { Form, RhfField, RhfNumberField, RhfTextField } from "@eifi1/ui-kit/rhf";
-
-<Form {...form}>
-  <RhfTextField name="title" label="Title" required rules={{ required: "Give it a title." }} />
-  <RhfNumberField name="amount" label="Amount" unit="EUR" hint="Net of VAT." />
-  <RhfField name="street" label="Street" render={({ field, invalid }) => (
-    <AddressAutocomplete {...field} invalid={invalid} />
-  )} />
-</Form>
-```
-
-Each bound field is a label, the control, a hint and the form's message wired to each
-other: the control's `aria-describedby` names only the hint and message actually rendered
-(merged after the control's own), `aria-invalid` and `invalid` come from the field state,
-and `field.ref` reaches the focusable element, so a failed submit focuses the first field
-in error. The message is the form's own; the kit adds no text. The shadcn scaffold the
-adapter started as (`FormField`, `FormItem`, `FormLabel`, `FormControl`,
-`FormDescription`, `FormMessage`, `useFormField`) left the public surface in 0.35.
-
-### Pasted and imported tables — `@eifi1/ui-kit/table-text`
-
-Pure functions over strings (no React, nothing to install): one lexer for a table pasted
-out of a spreadsheet or read from a CSV, with the comma decided by a named rule rather
-than a guess.
-
-- `parseTable(text, { decimal, columns?, headerLines? })` → `{ rows, header, decimalComma, skipped }`
-  - `decimal: "whole-text"` — a **file**: separator and decimal mark decided once for the
-    whole text, and reported back as `decimalComma`.
-  - `decimal: "per-line"` — a **paste**: each line read on its own evidence.
-  - `columns` slices extra columns off and reports shorter lines; `skipped` holds 1-based
-    line numbers as they stand in the text.
-- `parseRows(text, width)` — the paste door: `{ rows }`, or `{ error: line }` naming the
-  first unreadable line (never a silent empty table).
-- `splitRow(line)`, `cellNumber(cell)`, `isCellNumber(cell)` — a single cell's comma is
-  always a decimal mark.
-
-Not handled, on purpose: thousands separators (reported, not guessed), quoted fields,
-empty cells held open as holes.
-
-## Offline and sync
-
-Two standalone entries, each with optional peers of its own, so an online-only app installs
-neither (their names are in the export inventory above):
-
-- **`@eifi1/ui-kit/offline`** — the query cache kept on the device with its scrub list
-  (`createQueryPersistence`), the question at sign-out while changes wait
-  (`SignOutPendingDialog`), the service-worker update prompt (`PwaUpdatePrompt`) and the
-  shared-computer choice. Peers: `@tanstack/react-query`,
-  `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister`,
-  `idb-keyval`.
-- **`@eifi1/ui-kit/sync`** — the sync engine, one per Dexie database (`createSyncDb`,
-  `createSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery`), speaking
-  server-kit's `POST /sync`; `@eifi1/ui-kit/sync/testing` has a fake transport. Peer:
-  `dexie`.
-
-What works offline, the merge rule, sign-out on a shared computer and the engine's round
-are the contract's:
-[docs/local-first-harmonization.md](https://github.com/Eifi1/ui-kit/blob/main/docs/local-first-harmonization.md).
-
-## Accounts
-
-`@eifi1/ui-kit/accounts` (0.63, standalone) wires the kit's sign-in parts to server-kit's
-`auth_router` once, so an app writes no session plumbing of its own. Its first part is the
-session: `createAccountsClient({ http, storagePrefix, publicPaths, … })` on the app's own
-axios instance (typed structurally: axios stays the app's) puts the bearer on every request,
-renews the session through the kit's refresh over a bare `fetch`, keeps it where the
-shared-computer choice says (the device, the tab, or page memory), signs out in the contract's
-order (this device's push, `DELETE /auth/sessions/current`, then the tokens), and sends
-`shared_device` with the sign-in, the sign-up and the passkey finish. `accountStorageEntries`
-lists the keys it keeps, each with the privacy page's line in the kit's seven languages. No
-peer beyond the required ones. The contract is
+- **Feedback:** `AccountFeedbackPage` and `AccountPublicFeedbackPage` on server-kit's feedback
+  routes. Their "Capture screenshot" needs the optional peer `modern-screenshot`; an app that
+  does not install it passes `onCaptureScreenshot={null}` (0.66), or the button is shown and
+  every capture ends in "Could not capture a screenshot".
+
+Peer: `@tanstack/react-query` (optional for every other entry), and `modern-screenshot` for the
+feedback pages' screenshot capture. The passkey ceremony needs no library. The contract is
 [docs/auth-harmonization.md](https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md)
 §12.9.
 

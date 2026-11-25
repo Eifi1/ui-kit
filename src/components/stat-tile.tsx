@@ -1,4 +1,4 @@
-import { createContext, useContext, useId, useLayoutEffect, useState } from "react";
+import { useContext, useId, useLayoutEffect, useState } from "react";
 import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from "react";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -17,6 +17,7 @@ import { Tooltip } from "./tooltip";
 import { SKELETON_CLASS } from "./skeleton";
 import { DEFAULT_STAT_TILE_LABELS } from "./stat-tile-labels";
 import { formatWithMinus } from "../lib/minus";
+import { StatTileGridLoadingContext, StatTileStripContext } from "./stat-tile-context";
 
 /**
  * The words a stat tile speaks. The delta's arrow is an icon, and an icon is not a
@@ -262,6 +263,8 @@ export interface StatTileProps extends Omit<ComponentPropsWithRef<"div">, "child
    * for figures set straight into a card's content (a summary row under a card title),
    * where any box would be a box in a box. keksdose wrote both by hand over the card
    * tile (`border-0 shadow-none bg-transparent p-0`) for its tiles inside a card.
+   *
+   * Default `card`; `plain` inside a {@link StatStrip}, whose hairlines are the frame.
    */
   variant?: "card" | "inset" | "plain";
   /** Makes the tile a link. See {@link renderLink} for a router. */
@@ -340,7 +343,7 @@ export function StatTile({
   footerSensitive = false,
   loading = false,
   size = "md",
-  variant = "card",
+  variant: variantProp,
   href,
   renderLink,
   onClick,
@@ -359,6 +362,8 @@ export function StatTile({
   // (see StatTileGrid's `loading`).
   const gridLoading = useContext(StatTileGridLoadingContext);
   loading = loading || gridLoading;
+  const inStrip = useContext(StatTileStripContext);
+  const variant = variantProp ?? (inStrip ? "plain" : "card");
   const kitLink = useKitLink();
   const [labelEl, setLabelEl] = useState<HTMLElement | null>(null);
   const labelCut = useIsTruncated(truncateLabel ? labelEl : null);
@@ -708,9 +713,6 @@ export interface StatTileGridProps extends ComponentPropsWithRef<"div"> {
   /** The grid's one sentence — `loading` from {@link StatTileLabels}. */
   labels?: LabelOverride<Pick<StatTileLabels, "loading">>;
 }
-
-/** Set by a loading {@link StatTileGrid}; read by each tile in it. */
-const StatTileGridLoadingContext = createContext(false);
 
 /**
  * The row of tiles every dashboard in the three apps lays out by hand, each with its

@@ -50,10 +50,17 @@ import {
  *
  * **One Undo for the batch**: the toast the single change has (§4.5, 8 s), naming how many
  * changed; Undo puts EACH changed report back to what IT was — the selection may mix
- * statuses — and only the reports that changed. A report whose PATCH failed (the
- * mutation's `onError` toasts the server's sentence, as for a single change) is not in the
+ * statuses — and only the reports that changed. A report whose PATCH failed is not in the
  * Undo, and STAYS SELECTED, so the next press retries exactly those; the bar's count says
  * how many.
+ *
+ * **One toast and one refetch for the batch** (refactor audit 2026-11-22, FLW-2). Each
+ * PATCH is the page's own mutation, so its `onSuccess` invalidated the whole list and its
+ * `onError` toasted, per report: a bulk of 40 read `GET /feedback` 40 times (and its Undo
+ * 40 more), and a dropped network put up 40 error toasts beneath the bar's own. So every
+ * patch a batch sends is marked ({@link isFeedbackBulkPatch}) for the mutation's `onError`
+ * to leave to the bar's summary, and the refetch waits for the batch's last PATCH
+ * (`queryClient.isMutating({ mutationKey }) <= 1` in `onSettled`, §13.6).
  */
 
 /** Which bulk change: the {@link FeedbackDetailPatch} key it sends. */
@@ -95,12 +102,32 @@ export function feedbackBulkTargets<T extends FeedbackRecord>(
   }
 }
 
+/** The patches a batch (or its Undo) sent. By identity: TanStack hands the mutation's
+ *  callbacks the very object `mutateAsync` was called with, and a mark ON the patch — a
+ *  key — would reach the wire through a `mutationFn` that spreads it. */
+const bulkPatches = new WeakSet<object>();
+
+/**
+ * Whether the mutation's `variables` are a patch the inbox's bulk edit sent (0.66, refactor
+ * audit 2026-11-22, FLW-2; docs/feedback-harmonization.md §13.6). The page's `update`
+ * leaves its error toast to the bar, which says the batch's failures once (`bulkFailed`):
+ *
+ * ```ts
+ * onError: (error, patch) => isFeedbackBulkPatch(patch) || toast.error(describe(error)),
+ * ```
+ */
+export function isFeedbackBulkPatch(variables: unknown): boolean {
+  return typeof variables === "object" && variables !== null && bulkPatches.has(variables);
+}
+
 /**
  * Each patch through `call`, {@link FEEDBACK_BULK_CONCURRENCY} at a time, every one
- * answered before it resolves — and which of them landed, by index. A rejection is the
- * mutation's own to report (its `onError`), so it is only counted here.
+ * answered before it resolves — and which of them landed, by index. A rejection is only
+ * counted here: the bar says the batch's failures once, and the mutation's `onError` keeps
+ * quiet for a patch it sees marked ({@link isFeedbackBulkPatch}).
  */
 async function eachPatch(call: FeedbackDetailUpdateAsync, patches: readonly FeedbackDetailPatch[]) {
+  for (const patch of patches) bulkPatches.add(patch);
   const landed = patches.map(() => false);
   let next = 0;
   const worker = async () => {
@@ -110,7 +137,7 @@ async function eachPatch(call: FeedbackDetailUpdateAsync, patches: readonly Feed
         await call(patches[at]);
         landed[at] = true;
       } catch {
-        // Counted, not reported: the mutation's `onError` has said why.
+        // Counted, not reported: the bar's summary says it once for the batch.
       }
     }
   };

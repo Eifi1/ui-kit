@@ -379,10 +379,10 @@ function SyncStates() {
         </div>
         <Note>
           With {code("onSync")} it is a "sync now" button, disabled offline and mid-round but keeping its colour;
-          without it, a status (§6.9). {code("waitingForTab")} (0.55) is a round that waits for another tab's on the
-          same device copy: the sync engine lets one tab sync at a time, and says so meanwhile. The second row is a
-          status only, {code("hideWhenIdle")} (the third one, in sync, draws nothing), the short words beside the cloud,
-          and the {code("scope")} words in the tooltip (§6.10).
+          without it, a status (§6.9). {code("waitingForTab")} is a round that waits for another tab's on the same
+          device copy: the sync engine lets one tab sync at a time, and says so meanwhile. The second row is a status
+          only, {code("hideWhenIdle")} (the third one, in sync, draws nothing), the short words beside the cloud, and
+          the {code("scope")} words in the tooltip (§6.10).
         </Note>
       </div>
     </Example>
@@ -479,11 +479,10 @@ function HeldChanges() {
           The indicator in the bar shows the state; the banner is the room for what one control has none for (§2.6.1).
           The app keeps the logic — what is held, how it goes, the sync after — and hands over the count, its own
           sentence ({code("message")}, here naming the garden), the way back where there is one ({code("onSwitchBack")}:
-          keksdose's budget switch) and {code("onDiscard")}. "Discard…" asks first in the kit's confirm with the count,
-          then awaits the app's promise, busy while it runs; a refusal leaves the banner with the error under the
-          sentence (pick "Discard fails"). With no way back the kit's own sentence stands and Discard is the one button.
-          A strip for the shell (keksdose), one line on a phone with "More"; a box above a page (kastlan's handover
-          pages).
+          a budget switch's) and {code("onDiscard")}. "Discard…" asks first in the kit's confirm with the count, then
+          awaits the app's promise, busy while it runs; a refusal leaves the banner with the error under the sentence
+          (pick "Discard fails"). With no way back the kit's own sentence stands and Discard is the one button. A strip
+          for the shell, one line on a phone with "More"; a box above a page (a handover page).
         </Note>
       </div>
     </Example>

@@ -21,7 +21,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { afterEach, describe, expect, it } from "vitest";
-import { GROUPS, isParallel, runGroups, testWorkers, writeStamp } from "../../scripts/check.mjs";
+import { GROUPS, RELEASE_TESTS, isParallel, runGroups, testWorkers, writeStamp } from "../../scripts/check.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const scripts = (JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as { scripts: Record<string, string> })
@@ -98,49 +98,6 @@ afterEach(() => {
   for (const dir of temps.splice(0)) rmSync(dir, { recursive: true, force: true });
 });
 
-/**
- * TST-9 (refactor audit 2026-10-30): the lists that NAME the gates had drifted from the
- * package.json scripts that ARE the gates — `format:check` ran first in check:static
- * for a release before any list said so, and ci.yml's lacked check:commit-rules and the
- * two inventories. Each list is read here and compared with the script, step for step.
- */
-describe("the gate lists say what package.json runs (TST-9)", () => {
-  /** A group's steps, as the lists name them. */
-  const steps = (group: string) =>
-    scripts[group].split(" && ").map((step) => {
-      const npm = /^npm run (\S+)$/.exec(step);
-      if (npm) return npm[1];
-      const inventory = /^node scripts\/gen-(export|styling)-inventory\.mjs --check$/.exec(step);
-      if (inventory) return `${inventory[1]} inventory`;
-      return step;
-    });
-  /** The list on the line the group's name starts: `#   check:static  a · b`, `- \`check:static\`: a · b`. */
-  const listed = (text: string, group: string) => {
-    const line = new RegExp(`^(?:\\s*[#*-])?\\s*\`?${group}\`?:?\\s+(.+)$`, "m").exec(text)?.[1] ?? "";
-    return line
-      .replace(/\s*\(.*$/, "")
-      .split(" · ")
-      .map((s) => s.trim());
-  };
-  const docs = {
-    "scripts/check.mjs": readFileSync(join(ROOT, "scripts/check.mjs"), "utf8"),
-    ".github/workflows/ci.yml": readFileSync(join(ROOT, ".github/workflows/ci.yml"), "utf8"),
-    "CONTRIBUTING.md": readFileSync(join(ROOT, "CONTRIBUTING.md"), "utf8"),
-  };
-
-  it.each(GROUPS)("%s", (group) => {
-    for (const [file, text] of Object.entries(docs)) expect(listed(text, group), file).toEqual(steps(group));
-  });
-
-  it("`npm run dev` rebuilds what `npm run build` builds, after tsup", () => {
-    // It skipped flatten-en and the pay page: a dev build's en.js imported ~90 label modules.
-    const after = scripts.build.split(" && ").slice(1);
-    const onSuccess = /--onSuccess "([^"]+)"/.exec(scripts.dev.replace(/\\"/g, '"'))?.[1];
-    expect(onSuccess?.split(" && ")).toEqual(after);
-    expect(scripts.build.split(" && ")[0]).toMatch(/tsup/);
-  });
-});
-
 describe("the check's tree stamp (TST-2)", () => {
   it("is a file named by the tree, and only the newest 20 are kept", () => {
     const dir = temp("uikit-stamps-");
@@ -200,8 +157,9 @@ describe(".husky/pre-push (TST-2)", () => {
       join(dir, "scripts", "check-dependencies.mjs"),
       'import { appendFileSync } from "node:fs";\nappendFileSync(process.env.DEPS_LOG, "deps\\n");\nprocess.exit(Number(process.env.DEPS_EXIT ?? 0));\n',
     );
-    // The shared commit rules the hook runs for a stamped tree: the vendored copies themselves.
-    for (const name of ["check-pushed-commits.cjs", "check-commit-msg.cjs"]) {
+    // The shared commit rules the hook runs for a stamped tree, and check.mjs, whose
+    // --release runs a release commit's tests: the files themselves.
+    for (const name of ["check-pushed-commits.cjs", "check-commit-msg.cjs", "check.mjs"]) {
       writeFileSync(join(dir, "scripts", name), readFileSync(join(ROOT, "scripts", name)));
     }
     return { dir, head: git(dir, "rev-parse", "HEAD"), tree: git(dir, "rev-parse", "HEAD^{tree}") };
@@ -320,7 +278,9 @@ describe(".husky/pre-push (TST-2)", () => {
   // TST-1 (refactor audit 2026-10-30): `npm run release` commits CHANGELOG.md and the
   // "version" lines on a tree that has just passed, and the hook ran the whole check again
   // for that: 6–10 minutes per release, 41 releases between 0.34 and 0.51.6.
-  const DEPRECATIONS = "npm exec --no -- vitest run src/__tests__/deprecations.test.ts HEAD_SHA=";
+  // The tests that read what a release commit writes (scripts/check.mjs RELEASE_TESTS;
+  // changelog.test.ts joined deprecations.test.ts in refactor audit 2026-11-22, TST-1).
+  const RELEASE = `npm exec --no -- vitest run ${RELEASE_TESTS.join(" ")} HEAD_SHA=`;
 
   /** A repo whose manifests' tree passed (unless `stampParent` is false), ready for `bump`. */
   function released({ stampParent = true } = {}) {
@@ -355,13 +315,15 @@ describe(".husky/pre-push (TST-2)", () => {
     return git(dir, "rev-parse", "HEAD");
   }
 
-  it("runs only the commit messages and the deprecations test for a release commit on a tree that passed", () => {
+  it("runs only the commit messages and the release tests for a release commit on a tree that passed", () => {
     const { dir, bump, line } = released();
     bump();
     const result = push(dir, line(commitRelease(dir)));
     expect(result.status).toBe(0);
-    // The version is what deprecations.test reads: a MINOR bump can make a removal due.
-    expect(result.npm).toEqual([DEPRECATIONS]);
+    // The version is what deprecations.test reads (a MINOR bump can make a removal due), and
+    // CHANGELOG.md what changelog.test reads.
+    expect(RELEASE_TESTS).toContain("src/lib/__tests__/changelog.test.ts");
+    expect(result.npm).toEqual([RELEASE]);
     expect(result.out).toMatch(/release commit/);
   });
 

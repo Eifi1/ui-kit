@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { UiKitProvider } from "../../i18n/kit-labels";
 import { fakeFetch, fakeHttp } from "../../test/fake-axios";
 import type { Answer, Cfg } from "../../test/fake-axios";
 import { AccountTranslationReview } from "../account-translation-review";
@@ -97,6 +98,40 @@ describe("AccountTranslationReview", () => {
     expect(within(rowOf("Enregistrer")).queryByRole("button", { name: "Approve" })).toBeNull();
     // French is read against English: only those two catalogues are loaded.
     expect(loadStrings.mock.calls.map(([code]) => code).sort()).toEqual(["en", "fr"]);
+  });
+
+  it("says a verdict's day through the app's date preference, the kit's day ladder (DUP-2)", async () => {
+    const preference = vi.fn((iso: string) => `day ${iso}`);
+    const { user } = mount(
+      <UiKitProvider formatDate={preference} timeZone="UTC">
+        <AccountTranslationReview loadStrings={loadStrings} kitWords={false} />
+      </UiKitProvider>,
+      {
+        "get /translations/reviews": () => ({
+          status: 200,
+          data: {
+            locales: ["fr"],
+            areas: null,
+            reviews: [
+              {
+                locale: "fr",
+                key: "site.save",
+                text: "Enregistrer",
+                reference_text: "Save",
+                verdict: "APPROVED",
+                note: null,
+                suggestion: null,
+                reviewer_name: "Amélie",
+                reviewed_at: "2026-11-14T10:00:00Z",
+              },
+            ],
+          },
+        }),
+      },
+    );
+    await screen.findByText("Enregistrer");
+    await user.click(screen.getByText("Enregistrer"));
+    expect(await screen.findByText(/day 2026-11-14, 10:00/)).toBeInTheDocument();
   });
 
   it("stores an approval with the wording it was given on", async () => {

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { ReactElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { layoutParent } from "../../test/layout-root";
 import userEvent from "@testing-library/user-event";
 import { Combobox, InlineEntityCombobox } from "../combobox";
 import { EntityCombobox } from "../entity-combobox";
@@ -462,7 +463,7 @@ describe("MultiEntityCombobox: hint, like the rest of the family", () => {
       />,
     );
     const trigger = screen.getByRole("combobox", { name: "Tenants" });
-    const row = trigger.parentElement!.parentElement!;
+    const row = layoutParent(layoutParent(trigger)!)!;
     expect(row).toContainElement(screen.getByRole("button", { name: "Everyone who signs" }));
   });
 });

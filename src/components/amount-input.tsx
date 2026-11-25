@@ -5,6 +5,7 @@ import { CurrencyOptionList, getCurrency } from "./currency-option-list";
 import { useComboboxCore } from "./combobox-core";
 import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField } from "./field-base";
 import { cn } from "../lib/cn";
+import { isImeEnter } from "../lib/ime";
 import { currencyMinorDigits } from "../lib/format";
 import { roundHalfAway } from "../lib/round";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
@@ -623,7 +624,8 @@ export function AmountInput(props: AmountInputProps) {
               setFocused(false);
             }}
             onKeyDown={(e) => {
-              if (e.key !== "Enter") return;
+              // Not an IME candidate's Enter (NumberInput's rule, refactor audit 2026-11-22).
+              if (e.key !== "Enter" || isImeEnter(e)) return;
               // Locked: Enter submits no form and settles nothing.
               if (locked) e.preventDefault();
               else commit();

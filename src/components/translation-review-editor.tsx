@@ -245,7 +245,8 @@ export function TranslationReviewEditor({
                 variant="default"
                 commit={COMMIT_EXCEPT_BILLING}
                 pending={busy === "approve"}
-                disabled={busy !== null}
+                // Not the pressed one: a native `disabled` drops its focus to <body> (INP-1).
+                disabled={busy !== null && busy !== "approve"}
                 onClick={() => save("APPROVED")}
               >
                 {labels.approve}
@@ -255,7 +256,7 @@ export function TranslationReviewEditor({
               variant={missing ? "default" : "danger"}
               commit={COMMIT_EXCEPT_BILLING}
               pending={busy === "flag"}
-              disabled={busy !== null || !canFlag}
+              disabled={(busy !== null && busy !== "flag") || (busy === null && !canFlag)}
               onClick={() => save("NEEDS_CHANGE")}
             >
               {missing ? labels.suggest : labels.flag}
@@ -265,7 +266,7 @@ export function TranslationReviewEditor({
                 variant="ghost"
                 commit={COMMIT_EXCEPT_BILLING}
                 pending={busy === "clear"}
-                disabled={busy !== null}
+                disabled={busy !== null && busy !== "clear"}
                 onClick={() => void run("clear", () => onClear({ locale: row.locale, key: row.key }))}
               >
                 {labels.reset}

@@ -309,7 +309,7 @@ export function QuietHoursDemo() {
         Zurich. The card names it read-only and a time sends no zone; screens keep showing device time. {code("held")}{" "}
         says a held push arrives when the window ends — an app that runs the notifications tick. Switch the report off
         for the fallback. A time is saved when it is entered — leaving the field, or Enter — never per keystroke, and
-        one request per field runs at a time: a time entered meanwhile is sent after it (0.52).
+        one request per field runs at a time: a time entered meanwhile is sent after it.
       </Note>
     </Example>
   );
@@ -514,9 +514,8 @@ export function PushDeviceDemo() {
         on while the browser has not asked yet opens the explainer first; the browser&apos;s own prompt comes after
         Continue. A test that reached no device says so. Every sign-out calls {code("dropPushSubscription(unregister)")}{" "}
         before it revokes and clears the session: the device stops showing the account&apos;s notifications to whoever
-        uses it next, and a failure there never stops the sign-out ({code("releaseThisDevicePush(unregister)")} does the
-        same and rejects as the request did, for a caller that wants to know). On a shared computer (
-        {code("isSharedComputer()")}, or the {code("sharedComputer")} prop) the card does not offer push at all.
+        uses it next, and a failure there never stops the sign-out. On a shared computer ({code("isSharedComputer()")},
+        or the {code("sharedComputer")} prop) the card does not offer push at all.
       </Note>
     </Example>
   );

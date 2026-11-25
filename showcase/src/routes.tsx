@@ -265,6 +265,7 @@ const Rhf022Demo = lazySection(() => import("./sections/rhf-022-demo"), "Rhf022D
 const Country022Demo = lazySection(() => import("./sections/country-022-demo"), "Country022Demo");
 const Guards022Demo = lazySection(() => import("./sections/signature-password-demo"), "Guards022Demo");
 const FileLock022Demo = lazySection(() => import("./sections/file-inputs"), "FileLock022Demo");
+const AttachDemo = lazySection(() => import("./sections/attach"), "AttachDemo");
 const InlineEdit022Demo = lazySection(() => import("./sections/measured-grid-demo"), "InlineEdit022Demo");
 const OneTimeCode022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "OneTimeCode022Demo");
 const OneTimeCodeUnlabelled022Demo = lazySection(
@@ -889,12 +890,15 @@ export const GROUPS: ShowcaseGroup[] = [
           "useHasCamera",
           "FileDropzone",
           "useFileDrop",
+          "AttachButton",
+          "attachDropzoneProps",
         ],
         Body: () => (
           <>
             <FileInputs />
             <Files016Demo />
             <FileLock022Demo />
+            <AttachDemo />
           </>
         ),
       },
@@ -1372,7 +1376,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The KPI tile every dashboard repeats — value, change, trend — and the tiny line that fits in a table cell.",
         icon: Gauge,
-        components: ["StatTile", "StatTileGrid", "Sparkline"],
+        components: ["StatTile", "StatTileGrid", "StatStrip", "Sparkline"],
         Body: StatsDemo,
       },
       {
@@ -1547,6 +1551,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "AppShell",
           "TopBar",
           "TopBarBrand",
+          "TopBarNav",
           "PageContents",
           "PageContentsLayout",
           "ThemeToggle",
@@ -2056,6 +2061,12 @@ export const GROUPS: ShowcaseGroup[] = [
           "dateRangePresets",
           "calendarMonthPresets",
           "lastFullMonthsRange",
+          "monthStartOf",
+          "addMonthsIso",
+          "monthsBetweenIso",
+          "weekStartOf",
+          "daysBetweenIso",
+          "isoWeekNumber",
           "evaluateExpression",
           "CURRENCIES",
           "FIELD_BASE",
@@ -2144,6 +2155,8 @@ export const GROUPS: ShowcaseGroup[] = [
           "isOfflineError",
           "readLocalFirst",
           "writeLocalFirst",
+          "randomUuid",
+          "uuid5Sync",
         ],
         Body: () => <SyncDemo />,
       },

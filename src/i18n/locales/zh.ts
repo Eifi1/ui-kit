@@ -604,6 +604,17 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       taken: (count) => `已拍摄 ${n(count)} 张照片。`,
       done: (count) => `使用 ${n(count)} 张照片`,
     },
+    // 0.66: AttachButton (zh wants a native read, as the draft says).
+    attach: {
+      trigger: "附加",
+      title: "添加附件",
+      camera: "相机",
+      photos: "照片",
+      files: "文件",
+      screenshot: "截图",
+      close: "关闭",
+      anotherPage: "再拍一页",
+    },
     wizard: {
       done: "完成",
       cancel: "取消",
@@ -1506,7 +1517,6 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       choose: "选择账户…",
       chooseFirst: "请选择接收工作的人",
       confirm: "移交",
-      customer: "客户",
       deactivated: "已停用",
       self: "同一账户",
       unavailable: (account, reason) => `${account}（${reason}）`,
@@ -2009,6 +2019,12 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         backTo: (role) => `返回 ${role}`,
         billingOff: "本地已关闭计费：切换套餐不会改变任何内容",
       },
+    },
+    // 0.66: TopBarNav — the page links' landmark (no word for "navigation": a screen
+    // reader adds the role) and the menu button they fold into.
+    topBarNav: {
+      navigation: "页面",
+      menu: "菜单",
     },
     // 0.45.0 — docs/local-first-harmonization.md §1.6 (`@eifi1/ui-kit/offline`): keksdose's
     // reviewed words (nav.logout_queued_*, pwa.*) where it has the language.

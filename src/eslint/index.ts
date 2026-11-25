@@ -18,6 +18,11 @@
 // Plain Node, like the rest of an ESLint config: no React, no stylesheet, and no import of
 // `eslint` itself, which is the app's (packaging-contract.test.ts refuses an undeclared
 // package in src/), so the few types it needs are written out below.
+//
+// A second rule, `pending-not-disabled` (0.66, refactor audit 2026-11-22 INP-1), is offered
+// but not in `recommended`, so a kit update does not fail an app's lint on its own: an app
+// turns it on with `"@eifi1/ui-kit/pending-not-disabled": "error"`. See its module.
+import { pendingNotDisabled, type PendingNotDisabledRule } from "./pending-not-disabled";
 import { findRoleClasses } from "./role-utilities";
 import { ROLE_UTILITIES } from "./role-utilities.generated";
 
@@ -129,7 +134,7 @@ const VERSION = typeof __UI_KIT_VERSION__ === "string" ? __UI_KIT_VERSION__ : "0
 /** Spelled out, self-reference included, so a typed config (`defineConfig`, `tseslint.config`) takes it. */
 interface UiKitEslintPlugin {
   meta: { name: string; version: string; namespace: string };
-  rules: { "role-utilities": RoleUtilitiesRule };
+  rules: { "role-utilities": RoleUtilitiesRule; "pending-not-disabled": PendingNotDisabledRule };
   configs: {
     /** The rule as an error, on every file the app's other config objects lint but its tests. */
     recommended: {
@@ -153,7 +158,7 @@ const recommended: UiKitEslintPlugin["configs"]["recommended"] = {
 /** The flat-config plugin: add `configs.recommended`, or register it under `@eifi1/ui-kit`. */
 const plugin: UiKitEslintPlugin = {
   meta: { name: "@eifi1/ui-kit", version: VERSION, namespace: "@eifi1/ui-kit" },
-  rules: { "role-utilities": roleUtilities },
+  rules: { "role-utilities": roleUtilities, "pending-not-disabled": pendingNotDisabled },
   configs: { recommended },
 };
 recommended.plugins["@eifi1/ui-kit"] = plugin;

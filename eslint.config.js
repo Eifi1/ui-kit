@@ -5,6 +5,10 @@ import reactHooks from "eslint-plugin-react-hooks";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import importX from "eslint-plugin-import-x";
 import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
+// From source, under Node's type stripping (erasable TypeScript, importing nothing), as
+// scripts/gen-role-utilities.mjs reads role-utilities.ts: the plugin's index imports
+// without extensions, which Node does not resolve.
+import { pendingNotDisabled } from "./src/eslint/pending-not-disabled.ts";
 
 /**
  * The package had no linter at all — and seven inert `eslint-disable` comments in `src`,
@@ -36,6 +40,11 @@ const SLEEP_STATEMENT =
   "NewExpression[callee.name='Promise'] > :function > BlockStatement > ExpressionStatement > CallExpression.expression[callee.name='setTimeout'][arguments.1]:not([arguments.1.value=0])";
 const SLEEP_MESSAGE =
   "A fixed sleep passes under load whether or not the bug is there (TST-3). Wait for the decision point (waitFor, the promise, a spy), use fake timers, or src/test/tasks.ts (drainTasks, settleMacrotask, flushMicrotasks). Where real time is the point, disable this line with the reason.";
+/** `x.mutate(vars, { onSuccess, onError })` — TanStack's per-call callbacks. */
+const MUTATE_CALLBACKS =
+  "CallExpression[callee.property.name='mutate'][arguments.length=2][arguments.1.type='ObjectExpression']";
+const MUTATE_CALLBACKS_MESSAGE =
+  "TanStack calls mutate()'s per-call callbacks for the LATEST call on the observer only, and only while it is mounted: a second call before the first answers loses the first one's toast (FLW-3 2026-10-30, FLW-1 2026-11-22). Use mutateAsync(vars).then(onSuccess, onError), or runMutation (feedback/feedback-mutation.ts).";
 
 export default tseslint.config(
   // ESLint's flat config reads no ignore file, so this repeats .gitignore's build output,
@@ -131,14 +140,31 @@ export default tseslint.config(
       // And a px font size (§3.2): `text-[11px]` stays 11 px at 150 %, beside text that
       // grew. The kit's 10 and 11 px are `text-micro` / `text-caption` in rem; 0 in src/
       // and the showcase since 0.32. Class strings only — a comment may still name one.
+      //
+      // And no per-call mutation callbacks (refactor audit 2026-11-22, FLW-1). 0.52 took them
+      // out of the feedback parts (2026-10-30 FLW-3); 0.63's accounts layer brought back 13,
+      // and Staunlabor's admin roster lost a reset mail's toast and its one-time link to a
+      // second row's send. Tests are left free: they may pin TanStack's own behaviour.
       "no-restricted-syntax": [
         "error",
         { selector: `Literal[value=${ARBITRARY_PX_MEDIA}]`, message: ARBITRARY_PX_MEDIA_MESSAGE },
         { selector: `TemplateElement[value.raw=${ARBITRARY_PX_MEDIA}]`, message: ARBITRARY_PX_MEDIA_MESSAGE },
         { selector: `Literal[value=${PX_FONT_SIZE}]`, message: PX_FONT_SIZE_MESSAGE },
         { selector: `TemplateElement[value.raw=${PX_FONT_SIZE}]`, message: PX_FONT_SIZE_MESSAGE },
+        { selector: MUTATE_CALLBACKS, message: MUTATE_CALLBACKS_MESSAGE },
       ],
     },
+  },
+
+  // The kit's own `@eifi1/ui-kit/pending-not-disabled` (refactor audit 2026-11-22, INP-1):
+  // a Button whose own click starts the `busy`/`pending` that natively disables it drops
+  // the focus of the pressed button to <body>. 0 in src/ since 0.66. Not the tests, which
+  // render such a button to prove the rule's point.
+  {
+    files: ["src/**/*.tsx", "showcase/src/**/*.tsx"],
+    ignores: ["**/__tests__/**", "**/*.test.tsx"],
+    plugins: { "ui-kit": { rules: { "pending-not-disabled": pendingNotDisabled } } },
+    rules: { "ui-kit/pending-not-disabled": "error" },
   },
 
   {

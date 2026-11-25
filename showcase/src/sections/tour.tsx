@@ -90,17 +90,11 @@ export function GuidedTour() {
                 "awaitInput?: boolean",
                 "Advance once a value was entered in the target's field (blur or Enter). Implies interactive.",
               ],
-              [
-                "gate?: string",
-                "0.50: Next stays locked until the form's useTourGate(key, true). Implies interactive.",
-              ],
-              ["optional?: boolean", "0.50: an Optional chip, and Leave empty while the gate is unsatisfied."],
-              ["when?: (ctx) => boolean", "0.50: shown only if true on arrival; ctx.gate(key) reads a published fact."],
-              [
-                "awaitGate?: string",
-                "0.50: advances only on useTourGateRelease().release(key), e.g. a save's onSuccess.",
-              ],
-              ["beforeStep?", "Sync or async; awaited before the target is located. Receives { gate, via } (0.50)."],
+              ["gate?: string", "Next stays locked until the form's useTourGate(key, true). Implies interactive."],
+              ["optional?: boolean", "An Optional chip, and Leave empty while the gate is unsatisfied."],
+              ["when?: (ctx) => boolean", "Shown only if true on arrival; ctx.gate(key) reads a published fact."],
+              ["awaitGate?: string", "Advances only on useTourGateRelease().release(key), e.g. a save's onSuccess."],
+              ["beforeStep?", "Sync or async; awaited before the target is located. Receives { gate, via }."],
             ]}
           />
         </div>

@@ -26,6 +26,7 @@ import { DEFAULT_ICON_PICKER_LABELS } from "../components/icon-picker-labels";
 import { DEFAULT_DIALOG_FRAME_LABELS } from "../components/dialog-frame-labels";
 import { DEFAULT_FILE_PICKER_LABELS } from "../hooks/use-file-picker-labels";
 import { DEFAULT_CAMERA_LABELS } from "../components/camera-labels";
+import { DEFAULT_ATTACH_LABELS } from "../components/attach-button-labels";
 import { DEFAULT_MEASURED_GRID_LABELS } from "../components/measured-grid-labels";
 import { DEFAULT_CONFIRM_DIALOG_LABELS } from "../components/confirm-dialog-labels";
 import { DEFAULT_FLOATING_PANEL_LABELS } from "../components/floating-panel-labels";
@@ -90,7 +91,7 @@ import { DEFAULT_SETTINGS_LABELS } from "../settings/settings-labels";
 import { DEFAULT_LANDING_LABELS } from "../landing/landing-labels";
 import { DEFAULT_DEMO_LABELS } from "../demo/demo-labels";
 import { DEFAULT_BILLING_LABELS } from "../billing/billing-labels";
-import { DEFAULT_PLAN_CHANGE_LABELS } from "../admin/plan-change-labels";
+import { DEFAULT_PLAN_CHANGE_LABELS } from "../billing/plan-change-labels";
 import { DEFAULT_APPEARANCE_LABELS } from "../components/appearance-labels";
 import { DEFAULT_SWIPE_SETTING_LABELS } from "../settings/swipe-setting-labels";
 import { DEFAULT_DEVICE_RESET_LABELS } from "../settings/device-reset-setting-labels";
@@ -103,6 +104,7 @@ import { DEFAULT_SIGN_OUT_PENDING_DIALOG_LABELS } from "../offline/sign-out-pend
 import { DEFAULT_PWA_UPDATE_PROMPT_LABELS } from "../offline/pwa-update-prompt-labels";
 import { DEFAULT_SHARED_COMPUTER_LABELS } from "../offline/shared-computer-labels";
 import { DEFAULT_TOP_BAR_PARTS_LABELS } from "../shell/top-bar-parts-labels";
+import { DEFAULT_TOP_BAR_NAV_LABELS } from "../shell/top-bar-nav-labels";
 import { DEFAULT_HELD_CHANGES_BANNER_LABELS } from "../shell/held-changes-banner-labels";
 import { DEFAULT_FIELD_SUGGESTION_LABELS } from "../components/field-suggestion-labels";
 import { DEFAULT_CONSENT_AGAIN_LABELS } from "../components/consent-again-notice-labels";
@@ -195,6 +197,7 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   dialogFrame: DEFAULT_DIALOG_FRAME_LABELS,
   filePicker: DEFAULT_FILE_PICKER_LABELS,
   camera: DEFAULT_CAMERA_LABELS,
+  attach: DEFAULT_ATTACH_LABELS,
   measuredGrid: DEFAULT_MEASURED_GRID_LABELS,
   feedbackAttachment: DEFAULT_FEEDBACK_ATTACHMENT_LABELS,
   feedbackDialog: DEFAULT_FEEDBACK_DIALOG_LABELS,
@@ -276,6 +279,7 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   notifications: DEFAULT_NOTIFICATIONS_LABELS,
   adminArea: DEFAULT_ADMIN_AREA_LABELS,
   topBarParts: DEFAULT_TOP_BAR_PARTS_LABELS,
+  topBarNav: DEFAULT_TOP_BAR_NAV_LABELS,
   mailTestCard: DEFAULT_MAIL_TEST_CARD_LABELS,
   signOutPending: DEFAULT_SIGN_OUT_PENDING_DIALOG_LABELS,
   pwaUpdate: DEFAULT_PWA_UPDATE_PROMPT_LABELS,

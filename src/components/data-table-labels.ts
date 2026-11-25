@@ -59,10 +59,10 @@ export interface DataTableLabels extends DataTableSortLabels {
   presets: Record<string, string>;
 
   /**
-   * The table's own accessible name. Deliberately a label rather than a second,
-   * parallel `tableLabel` prop: the audit already records "three different prop
-   * names for the accessible name" as a finding, and a table that is not "Data
-   * table" says so with `labels={{ table: "Transactions" }}` at the call site.
+   * The accessible name of a table nothing else names. A call site names its table with
+   * the kit's names for that (CONTRIBUTING §4): `aria-labelledby` (a heading on the
+   * page), `caption`, or `aria-label`, each of which wins over this; an app may still set
+   * this one app-wide, in its catalogue.
    */
   table: string;
 

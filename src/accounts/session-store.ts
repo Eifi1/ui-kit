@@ -8,7 +8,7 @@ import {
   writeSessionStored,
   writeStored,
 } from "../lib/safe-storage";
-import { isSharedComputer } from "../offline/shared-computer";
+import { isSharedComputer } from "../offline/shared-computer-store";
 
 /**
  * Where the session lives, and the zustand store that shows it (docs/auth-harmonization.md

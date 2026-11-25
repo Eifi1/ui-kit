@@ -73,6 +73,7 @@ function DataTableSection() {
       <MainTable />
       <ControlledTable />
       <ShortTable />
+      <NamedTable />
       <DensityTable />
       <ReportTable />
       <PrivateCellsTable />
@@ -490,6 +491,57 @@ function ShortTable() {
           <code className="font-mono">ltr:text-right rtl:text-right</code> for a truly physical side).
         </Note>
       </div>
+    </Example>
+  );
+}
+
+/* ── the table's name ────────────────────────────────────────────────────── */
+
+function NamedTable() {
+  const [how, setHow] = useState<"heading" | "caption" | "hidden" | "label">("heading");
+  const rows = SMALL_ROWS.slice(0, 4);
+  const named = {
+    heading: { "aria-labelledby": "named-table-heading" },
+    caption: { caption: "Invoices still open" },
+    hidden: { caption: "Invoices still open", hideCaption: true },
+    label: { "aria-label": "Open invoices" },
+  }[how];
+  return (
+    <Example
+      label="Naming the table — aria-labelledby, caption, aria-label"
+      hint="the same name on the desktop table and on the phone's card list"
+    >
+      <Row className="mb-3">
+        <ToggleGroup
+          aria-label="Name the table by"
+          value={how}
+          onChange={setHow}
+          options={[
+            { value: "heading", label: "Heading" },
+            { value: "caption", label: "Caption" },
+            { value: "hidden", label: "Hidden caption" },
+            { value: "label", label: "aria-label" },
+          ]}
+        />
+      </Row>
+      <h4 id="named-table-heading" className="mb-2 text-sm font-semibold text-primary">
+        Open invoices
+      </h4>
+      <DataTable
+        rows={rows}
+        columns={SMALL_COLUMNS}
+        rowKey={(r) => r.id}
+        paginated={false}
+        chrome="minimal"
+        {...named}
+      />
+      <Note>
+        A page with several tables names each, or every one is &ldquo;Data table&rdquo; in a screen reader&apos;s list
+        of tables. Where the name is already on screen, point at it: {code('aria-labelledby="…"')} with the id of the
+        section&apos;s heading. Else {code("caption")}, drawn above the rows in the caption type (it scrolls away under
+        the sticky header), or with {code("hideCaption")} for screen readers only; else {code("aria-label")}. That is
+        also the order in which they win. {code("labels.table")} stays the name of a table nothing names.
+      </Note>
     </Example>
   );
 }
@@ -999,7 +1051,12 @@ function bandTotals(rows: LedgerRow[]) {
 
 const LEDGER_PERIOD: DataTableGroupBy<LedgerRow> = {
   key: (r) => r.date.slice(0, 7),
-  label: (k) => MONTH_NAME[k] ?? k,
+  // A month the demo has no rows in (the empty days' October) is named all the same.
+  label: (k) =>
+    MONTH_NAME[k] ??
+    new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }).format(
+      new Date(`${k}-01T12:00:00Z`),
+    ),
   // The month's totals over ALL its rows — the app's own figure, not just the loaded rows.
   end: (k) => bandTotals(LEDGER.filter((r) => r.date.startsWith(k))),
 };
@@ -1067,6 +1124,20 @@ const BIG_PERIOD: DataTableGroupBy<LedgerRow> = {
 };
 type LedgerSize = "months" | "1000" | "3000";
 
+/** 0.66 (`headGroups`, keksdose live #536): the demo's "today", three days after the newest
+ *  booked day, and the paths from it back to that day — the newest one, which has rows,
+ *  anchors the empty ones. */
+function headPaths(newest: string | undefined, twoLevels: boolean): string[][] {
+  if (!newest) return [];
+  const days: string[] = [];
+  for (let back = 3; back >= 0; back--) {
+    const d = new Date(`${newest}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + back);
+    days.push(d.toISOString().slice(0, 10));
+  }
+  return days.map((day) => (twoLevels ? [day.slice(0, 7), day] : [day.slice(0, 7)]));
+}
+
 function PeriodGroupsTable() {
   const [months, setMonths] = useState(1);
   // 0.48.2: the long ledger and `virtualize`, for keksdose dev #632's register.
@@ -1079,6 +1150,7 @@ function PeriodGroupsTable() {
   const [twoLevels, setTwoLevels] = useState(true);
   const [stickyLead, setStickyLead] = useState(true);
   const [dayAdd, setDayAdd] = useState(true);
+  const [emptyDays, setEmptyDays] = useState(false);
   const [addedOn, setAddedOn] = useState<string | null>(null);
   const day = useMemo(() => (dayAdd ? ledgerDayWithAdd(setAddedOn) : LEDGER_DAY), [dayAdd]);
   const [loads, setLoads] = useState(0);
@@ -1091,6 +1163,10 @@ function PeriodGroupsTable() {
   }, [months, big]);
   const next = big ? undefined : LEDGER_MONTHS[months];
   const period = big ? BIG_PERIOD : LEDGER_PERIOD;
+  const heads = useMemo(
+    () => (emptyDays ? headPaths(rows[0]?.date, twoLevels) : undefined),
+    [emptyDays, rows, twoLevels],
+  );
   return (
     <Example
       label="Period groups and load more — groupBy, loadMore"
@@ -1105,6 +1181,7 @@ function PeriodGroupsTable() {
       <Row>
         <Switch label="Day bands under the month" checked={twoLevels} onCheckedChange={setTwoLevels} />
         <Switch label="“+” on each day band" checked={dayAdd} onCheckedChange={setDayAdd} />
+        <Switch label="Empty days up to today" checked={emptyDays} onCheckedChange={setEmptyDays} />
         <Switch label="Sticky leading row" checked={stickyLead} onCheckedChange={setStickyLead} />
         <ToggleGroup<LedgerSize>
           aria-label="Rows"
@@ -1143,6 +1220,7 @@ function PeriodGroupsTable() {
           rowKey={(r) => r.id}
           groupBy={twoLevels ? [period, day] : period}
           mobileGroupBy={period}
+          headGroups={heads}
           virtualize={virtual}
           onRowClick={big ? (r) => setOpenId((id) => (id === r.id ? null : r.id)) : undefined}
           isExpanded={big ? (r) => r.id === openId : undefined}
@@ -1229,16 +1307,23 @@ function PeriodGroupsTable() {
           the band already names the day. On a phone the same slot ends {code("mobileGroupBy")}&apos;s section header.
         </Note>
         <Note>
+          {code("headGroups")}: “Empty days up to today” takes the demo&apos;s today as three days after the newest
+          booked one and draws the three days between as day bands with no rows, each with its “+”, under the month —
+          with more to load and under {code("virtualize")}, where a level&apos;s {code("keys")} draws nothing. The paths
+          run from today back to the newest booked day, which has rows and anchors the others. Not under a column
+          filter.
+        </Note>
+        <Note>
           The footer is observed: it calls {code("onLoadMore")} once as it nears the view, not again while{" "}
           {code("loading")} or until the rows arrive. The button is there for the keyboard — Tab reaches it after the
           rows — and says what it loads; at the end the app&apos;s {code("endLabel")} (default “All rows loaded”).
         </Note>
         <Note>
-          0.48.2: {code("virtualize")} renders only the rows near the view (and 12 more each side), spacer rows standing
-          in for the rest inside each day&apos;s {code("<tbody>")} — the bands stay sticky and stacked. Switch to 1000
-          or 3000 rows and compare: the columns hold still while the rows come and go, End on a focused row reaches the
-          last one, a Shift+click range covers the rows not drawn, and an open row stays. Find-in-page only sees the
-          rows drawn.
+          {code("virtualize")} renders only the rows near the view (and 12 more each side), spacer rows standing in for
+          the rest inside each day&apos;s {code("<tbody>")} — the bands stay sticky and stacked. Switch to 1000 or 3000
+          rows and compare: the columns hold still while the rows come and go, End on a focused row reaches the last
+          one, a Shift+click range covers the rows not drawn, and an open row stays. Find-in-page only sees the rows
+          drawn.
         </Note>
       </div>
     </Example>
@@ -1542,8 +1627,8 @@ function DataTableActionsDemo() {
           {code("disabledReason")} for Kemal, who owes rent. The delete runs only after {code("useConfirm()")} says yes.
           A press on an action never opens the row. On a phone the column disappears and the same actions become the
           card&apos;s swipes. Archive or delete a row from the keyboard: the focus moves to the row now in its place
-          (the last row, or the table once none is left) and the remaining count is spoken — it no longer falls to the
-          top of the page (0.52).
+          (the last row, or the table once none is left) and the remaining count is spoken, never falling to the top of
+          the page.
         </Note>
         <Note>
           The search lives in the {code("toolbar")}, inside the table&apos;s frame. Type {code("nobody")} — the empty

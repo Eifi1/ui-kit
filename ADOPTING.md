@@ -22,7 +22,8 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
    `recharts` (`>=3.8`; the main barrel re-exports the chart kit) and `lucide-react`.
    **Optional:** `sonner` (the kit's `toast` / `<Toaster>`), `react-hook-form` (only for
    `@eifi1/ui-kit/rhf`), `modern-screenshot` (the feedback dialog's screenshot
-   capture); for `@eifi1/ui-kit/offline`, `@tanstack/react-query`, and for its persisted
+   capture); for `@eifi1/ui-kit/offline` and `@eifi1/ui-kit/accounts`,
+   `@tanstack/react-query`, and for the offline entry's persisted
    cache `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister`
    and `idb-keyval`; `dexie` for `@eifi1/ui-kit/sync`; and `@testing-library/react` for
    `@eifi1/ui-kit/testing/react`. Each is needed only by the entry that names it.
@@ -118,11 +119,17 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
    `useUiKitLabels(code)` does the same from inside a render (it keeps the previous
    language through a switch). To change a few words, spread over the catalogue rather
    than copying it; a component's own `labels` prop still wins for one call site.
+   Import one catalogue statically at most (the first-paint fallback); every other
+   language comes through `loadUiKitLabels`, read with `peekUiKitLabels`. Each static
+   catalogue is in every reader's entry chunk: three of them cost keksdose 56 KB gzip.
    README → i18n has the language registry and the precedence.
 
 6. **Replace local primitives.** Swap your own `Button`/`Input`/`Select`/`Card`/
    `Modal`/dropdowns/etc. for the `@eifi1/ui-kit` exports and delete the local copies.
-   Keep app-specific things local (your data formatting, domain selects, auth).
+   Accounts too: sign-in, sign-up, the session, the account's settings and user admin are
+   the kit's `@eifi1/ui-kit/accounts` on server-kit's `auth_router` (README → Accounts,
+   docs/auth-harmonization.md §12.9), so the app writes no account wiring of its own.
+   Keep only your domain's own parts local (your data formatting, domain selects).
 
 7. **Styling.** Paint with the role utilities — `text-muted`, `bg-surface`,
    `border-subtle`, `bg-danger-soft` — never `text-[var(--text-muted)]` and never a
@@ -132,7 +139,7 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
    `truncate`, and named breakpoints (they scale with the text size; `min-[…]` does
    not). README → Styling lists every utility and the token it reads. Turn on the kit's
    lint rule, which reports a `[var(--role)]` class where a role utility exists and
-   fixes it (all three apps run it):
+   fixes it (the apps run it):
    ```js
    // eslint.config.js
    import uiKit from "@eifi1/ui-kit/eslint";
@@ -175,8 +182,8 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
 
 ## Every later bump
 
-Read that release's `docs/adopt-0.NN.md` (the CHANGELOG points to it; once all three apps
-have adopted a release its note moves to `docs/archive/adopt/`, and `docs/README.md` lists
+Read that release's `docs/adopt-0.NN.md` (the CHANGELOG points to it; once every active consumer
+has adopted a release its note moves to `docs/archive/adopt/`, and `docs/README.md` lists
 every one), and **restart the Vite dev server after `npm install`**: Vite pre-bundles dependencies into `node_modules/.vite/deps`
 and keeps serving that copy while it runs, so an open dev server goes on running the OLD kit
 with no error. If a change still does not show, start it once with `vite --force` (or delete
@@ -188,7 +195,7 @@ with no error. If a change still does not show, start it once with `vite --force
 |---|---|
 | <https://github.com/Eifi1/ui-kit#readme> | Full wiring detail, the styling utilities, the colour and i18n contracts, and the complete generated export inventory. Also at `node_modules/@eifi1/ui-kit/README.md` once installed. |
 | <https://eifi1.github.io/ui-kit/> | The kit rendered page by page, one component family per page, with the theme, palette, text-size, contrast and language switchers live. Equivalently `npm run dev:showcase` from a checkout. |
-| <https://github.com/Eifi1/ui-kit/blob/main/docs/README.md> | The contracts the three apps build to (auth, settings, billing, colour roles, text size …), and each release's adoption notes. |
+| <https://github.com/Eifi1/ui-kit/blob/main/docs/README.md> | The contracts the apps build to (auth and its `/accounts` layer in §12, settings, billing, colour roles, text size …), and each release's adoption notes. |
 | <https://github.com/Eifi1/ui-kit/blob/main/CHANGELOG.md> | What changed, and the semver contract the package keeps below 1.0. |
 | <https://github.com/Eifi1/ui-kit/issues> | Anything this brief does not cover, and anything that turns out to be wrong in it. |
 
@@ -196,7 +203,7 @@ Only the README ships inside the npm tarball, so the rest are URLs rather than p
 
 ## Definition of done
 
-App builds and runs consuming `@eifi1/ui-kit`; the light/dark, palette, text-size and
-contrast switches work with no flash on reload; the kit's words follow the app's language
+App builds and runs consuming `@eifi1/ui-kit`; the light/dark, text-size and contrast
+switches work with no flash on reload; the kit's words follow the app's language
 through one `UiKitProvider`; the CSS-variable guard passes; this app's duplicated generic
 primitives are deleted (domain-specific ones stay).

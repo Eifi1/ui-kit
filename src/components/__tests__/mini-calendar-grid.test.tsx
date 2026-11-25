@@ -210,6 +210,31 @@ describe("what the grid says about each day", () => {
   });
 });
 
+/** What a click in range mode hands `onSelect` (lifted from keksdose's suite, FS-7 of its
+ *  2026-11-22 audit). */
+describe("range mode's clicks", () => {
+  it("restart the selection when a full range is already set", () => {
+    const onSelect = vi.fn();
+    render(<MiniCalendar from="2026-09-10" to="2026-09-20" locale={LOCALE} onSelect={onSelect} />);
+    fireEvent.click(day("2026-09-05"));
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith("2026-09-05", "");
+  });
+
+  it("complete the range when only the start is set", () => {
+    const onSelect = vi.fn();
+    render(<MiniCalendar from="2026-09-10" to="" locale={LOCALE} onSelect={onSelect} />);
+    fireEvent.click(day("2026-09-20"));
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith("2026-09-10", "2026-09-20");
+  });
+
+  it("order the range when the second click precedes the start", () => {
+    const onSelect = vi.fn();
+    render(<MiniCalendar from="2026-09-10" to="" locale={LOCALE} onSelect={onSelect} />);
+    fireEvent.click(day("2026-09-05"));
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith("2026-09-05", "2026-09-10");
+  });
+});
+
 describe("range mode says which end the next click sets", () => {
   // The calendar opens on TODAY's month when nothing is selected, and these clicks are
   // September 2026 days: pinned, or the test fails every month but one (it did on

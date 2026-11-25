@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { toast } from "../../components/toast";
 import { DESKTOP_WIDTH, stubPhone, stubViewportWidth } from "../../test/viewport";
+import { isFeedbackBulkPatch } from "../feedback-inbox-bulk";
 import { FeedbackInbox, useFeedbackInbox, type FeedbackInboxProps } from "../feedback-inbox-page";
 import type { FeedbackRecord } from "../feedback-record";
 import type { FeedbackDetailPatch } from "../feedback-row-detail";
@@ -191,6 +192,19 @@ describe("the selection", () => {
 describe("a bulk status change", () => {
   beforeEach(() => {
     restore = stubViewportWidth(DESKTOP_WIDTH);
+  });
+
+  it("marks each patch it sends, and its Undo's, for the mutation's onError to leave to the bar (FLW-2)", async () => {
+    const { update } = renderInbox();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select all rows" }));
+    await bulkSet("Set status", "Won't do");
+    await pressUndo();
+    const sent = update.mutateAsync.mock.calls.map(([patch]) => patch);
+    expect(sent).toHaveLength(6);
+    expect(sent.every(isFeedbackBulkPatch)).toBe(true);
+    // A patch of the same shape the bar did not send — a status cell's — is the mutation's own.
+    expect(isFeedbackBulkPatch({ ...sent[0] })).toBe(false);
+    expect(isFeedbackBulkPatch(undefined)).toBe(false);
   });
 
   it("sends the page's PATCH once per report, with each report's own patch", async () => {

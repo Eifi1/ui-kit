@@ -54,7 +54,7 @@ import type { AccountRosterLabels } from "./account-roster-labels";
 import type { AccountAdminActionRow, AccountAdminConfirmation, AccountAdminUser, AccountMe } from "./accounts-api";
 import { useAccountsClient } from "./accounts-context";
 import {
-  useAdminActions,
+  useAdminActionLog,
   useAdminAttention,
   useAdminMail,
   useAdminRoster,
@@ -237,7 +237,7 @@ export function AccountAdminLogSection({
   // An account by its id; an address with no account (an invitation, an erasure) by itself.
   const targetId = typeof target?.id === "number" ? target.id : undefined;
   const targetEmail = target && targetId === undefined ? (target.email ?? undefined) : undefined;
-  const log = useAdminActions({
+  const log = useAdminActionLog({
     limit: pageSize,
     offset: page * pageSize,
     target: targetId,
@@ -463,17 +463,33 @@ export function AccountUserRosterSection<R extends string = string, Row extends 
   });
   const ask = (pending: Pending) => setDialog({ kind: "confirm", pending });
 
+  // A row's mail or withdrawal, held while it is out (refactor audit 2026-11-22, FLW-1): the
+  // row's actions show `pending`, so the same send is not started twice. Each call answers
+  // through its own promise: with `mutate(vars, { onSuccess })`, TanStack calls the per-call
+  // callbacks of the LATEST call on the observer only, so a reset sent to a second row before
+  // the first answered lost the first one's toast, its console link and its `mail_not_sent`.
+  const [out, setOut] = useState<ReadonlySet<number>>(() => new Set());
+  const hold = (id: number, on: boolean) =>
+    setOut((current) => {
+      const next = new Set(current);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  const run = <T,>(row: AccountAdminUser, call: () => Promise<T>, landed: (answer: T) => void) => {
+    hold(row.id, true);
+    void call()
+      .then(landed, (error: unknown) => toast.error(say(error)))
+      .finally(() => hold(row.id, false));
+  };
   const sendMail = (row: AccountAdminUser, kind: "verification" | "password_reset") =>
-    actions.sendMail.mutate(
-      { id: row.id, kind },
-      {
-        onSuccess: (answer) => {
-          if (answer.link) setMailLink({ email: row.email, link: answer.link });
-          if (!answer.sent) toast.error(failures.codes.mail_not_sent);
-          else
-            toast.success(kind === "verification" ? labels.verificationSent(row.email) : labels.resetSent(row.email));
-        },
-        onError: (error) => toast.error(say(error)),
+    run(
+      row,
+      () => actions.sendMail.mutateAsync({ id: row.id, kind }),
+      (answer) => {
+        if (answer.link) setMailLink({ email: row.email, link: answer.link });
+        if (!answer.sent) toast.error(failures.codes.mail_not_sent);
+        else toast.success(kind === "verification" ? labels.verificationSent(row.email) : labels.resetSent(row.email));
       },
     );
 
@@ -486,12 +502,14 @@ export function AccountUserRosterSection<R extends string = string, Row extends 
           key: "verification",
           label: labels.sendVerification,
           icon: MailCheck,
+          pending: out.has(row.id),
           onSelect: () => sendMail(row, "verification"),
         },
       row.is_active && {
         key: "reset",
         label: labels.sendReset,
         icon: Inbox,
+        pending: out.has(row.id),
         onSelect: () => sendMail(row, "password_reset"),
       },
       row.password_change_required_at
@@ -499,13 +517,12 @@ export function AccountUserRosterSection<R extends string = string, Row extends 
             key: "withdraw",
             label: labels.withdrawPasswordChange,
             icon: Undo2,
+            pending: out.has(row.id),
             onSelect: () =>
-              actions.withdrawPasswordChange.mutate(
-                { id: row.id },
-                {
-                  onSuccess: () => toast.success(labels.passwordChangeWithdrawn(row.email)),
-                  onError: (error) => toast.error(say(error)),
-                },
+              run(
+                row,
+                () => actions.withdrawPasswordChange.mutateAsync({ id: row.id }),
+                () => toast.success(labels.passwordChangeWithdrawn(row.email)),
               ),
           }
         : {

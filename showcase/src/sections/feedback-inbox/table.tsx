@@ -375,7 +375,10 @@ export function FeedbackInboxDemo() {
           server&apos;s own rules — no bulk endpoint. It notifies nobody: a status alone never does, only a reply. One
           Undo puts each report back to what it was. A report whose change fails stays ticked, to try again;{" "}
           {code("selectable={false}")} turns it off. At &ldquo;0 selected&rdquo; the desktop strip&apos;s Clear
-          selection is refused: there it would clear nothing.
+          selection is refused: there it would clear nothing. The list is read again once per batch, not once per
+          report, and a failure is said once, in the bar&apos;s summary: an app&apos;s own {code("update")} refetches in{" "}
+          {code("onSettled")} only while {code("queryClient.isMutating({ mutationKey }) <= 1")}, and leaves a patch that{" "}
+          {code("isFeedbackBulkPatch(patch)")} marks to the bar instead of toasting it.
         </Note>
         <Note>
           <strong>A notice&apos;s reports</strong>: {code("?ids=57,55")} — what a notification about several reports

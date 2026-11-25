@@ -115,15 +115,17 @@ export function CameraCapture({
 
   // Every way out but the finish button, and none of them while an upload is in flight:
   // the layer stays on the stack while `busy` (an Escape then does nothing, rather than
-  // reaching the dialog behind), and a Back mid-upload spends its entry and leaves the
-  // camera up, so a second Back still leaves. Both handlers are read live.
+  // reaching the dialog behind), and a Back mid-upload is `held` — its entry is put back,
+  // as a busy Modal's is, so the Back after the upload closes the camera rather than
+  // leaving the page under it (INP-5, refactor audit 2026-11-22). Both handlers are read
+  // live.
   const leave = () => {
     if (!busy) onCancel();
   };
   useDismissLayer(true, leave);
   useFocusTrap(dialogRef);
   useBodyScrollLock(true);
-  useOverlayHistory(true, leave);
+  useOverlayHistory(true, leave, { held: busy });
 
   // Held in a ref so the open-the-camera effect can depend on NOTHING: a caller passes an
   // inline arrow and re-renders on every photo it keeps, and a dependency on it would stop
@@ -258,8 +260,11 @@ export function CameraCapture({
         <span className="min-w-0 text-sm" aria-live="polite">
           {shotCount > 0 ? labels.taken(shotCount) : labels.hint}
         </span>
-        {/* The overlay disc keeps its contrast whatever the frame behind it shows. */}
-        <IconButton variant="overlay" onClick={onCancel} disabled={busy} label={common.cancel}>
+        {/* The overlay disc keeps its contrast whatever the frame behind it shows. While
+            `busy` all three buttons are REFUSED, not `disabled`: whichever holds the focus
+            keeps it, inside the trap, where a native `disabled` drops it to <body> and so
+            out of the dialog (INP-1, refactor audit 2026-11-22). */}
+        <IconButton variant="overlay" onClick={onCancel} refused={busy} label={common.cancel}>
           <X />
         </IconButton>
       </div>
@@ -290,7 +295,8 @@ export function CameraCapture({
           variant="shutter"
           size="2xl"
           onClick={shoot}
-          disabled={!ready || busy}
+          disabled={!ready}
+          refused={busy}
           label={labels.shutter}
           tooltip={false}
         >
@@ -298,7 +304,7 @@ export function CameraCapture({
         </IconButton>
         <div className="flex justify-end">
           {onDone && shotCount > 0 && (
-            <Button type="button" disabled={busy} onClick={onDone}>
+            <Button type="button" refused={busy} onClick={onDone}>
               <Check aria-hidden className="size-4" />
               {labels.done(shotCount)}
             </Button>

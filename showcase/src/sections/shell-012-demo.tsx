@@ -1,7 +1,16 @@
 import { useState } from "react";
 import { Bell, CloudOff, MessageSquarePlus, RefreshCw } from "lucide-react";
-import { Switch, ToggleGroup, TopBar, TopBarActionMenu, TopBarBrand } from "@eifi1/ui-kit";
-import type { KitLinkComponent, StatusDotTone, TopBarMenuEntry } from "@eifi1/ui-kit";
+import {
+  LanguageMenu,
+  Switch,
+  ThemeToggle,
+  ToggleGroup,
+  TopBar,
+  TopBarActionMenu,
+  TopBarBrand,
+  TopBarNav,
+} from "@eifi1/ui-kit";
+import type { KitLinkComponent, NavPillLinkProps, StatusDotTone, TopBarMenuEntry, TopBarNavItem } from "@eifi1/ui-kit";
 import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
@@ -177,10 +186,119 @@ function IconBadgeSpecimen() {
   );
 }
 
+type NavWidth = "full" | "640" | "360";
+type NavSet = "three" | "four" | "long";
+
+const NAV_SETS: Record<NavSet, TopBarNavItem[]> = {
+  three: [
+    { href: "/plots", label: "Plots" },
+    { href: "/libraries", label: "Libraries" },
+    { href: "/about", label: "About" },
+  ],
+  four: [
+    { href: "/plots", label: "Plots" },
+    { href: "/libraries", label: "Libraries" },
+    { href: "/gallery", label: "Gallery" },
+    { href: "/about", label: "About" },
+  ],
+  // Hungarian, as a long translation arrives: the same three pages.
+  long: [
+    { href: "/plots", label: "Diagramtípusok" },
+    { href: "/libraries", label: "Programkönyvtárak" },
+    { href: "/about", label: "Rólunk" },
+  ],
+};
+
+function TopBarNavSpecimen() {
+  const [width, setWidth] = useState<NavWidth>("full");
+  const [set, setSet] = useState<NavSet>("three");
+  const [page, setPage] = useState("/plots");
+  const [mode, setMode] = useState<"light" | "dark">("light");
+  const [language, setLanguage] = useState("en");
+  // Stays on this page: a click marks the link as the open one instead of navigating.
+  const renderLink = ({ href, children, onClick, ...p }: NavPillLinkProps) => (
+    <a
+      {...p}
+      href={`#${href}`}
+      onClick={(e) => {
+        onClick(e);
+        e.preventDefault();
+        setPage(href);
+      }}
+    >
+      {children}
+    </a>
+  );
+  return (
+    <Example
+      label="TopBarNav — the page links between the brand and the actions"
+      hint="plain words; all of them fold into one menu when they do not fit"
+    >
+      <Row>
+        <ToggleGroup<NavSet>
+          aria-label="links"
+          value={set}
+          onChange={setSet}
+          options={[
+            { value: "three", label: "3 links" },
+            { value: "four", label: "4 links" },
+            { value: "long", label: "long labels" },
+          ]}
+        />
+        <ToggleGroup<NavWidth>
+          aria-label="bar width"
+          value={width}
+          onChange={setWidth}
+          options={[
+            { value: "full", label: "full" },
+            { value: "640", label: "640 px" },
+            { value: "360", label: "360 px" },
+          ]}
+        />
+      </Row>
+      <div
+        className="mt-4 max-w-full overflow-hidden rounded-md border border-subtle"
+        style={{ width: width === "full" ? undefined : `${width}px` }}
+      >
+        <TopBar
+          className="static"
+          brand={<TopBarBrand logo={<AcmeMark />} name="Acme Plots" to="/shell" />}
+          nav={<TopBarNav items={NAV_SETS[set]} isActive={(href) => href === page} renderLink={renderLink} />}
+          actions={
+            <>
+              <LanguageMenu
+                options={[
+                  { code: "en", label: "English", country: "gb" },
+                  { code: "hu", label: "Magyar", country: "hu" },
+                ]}
+                current={language}
+                onChange={setLanguage}
+              />
+              <ThemeToggle mode={mode} onChange={setMode} />
+            </>
+          }
+        />
+      </div>
+      <p className={`mt-3 ${READOUT}`}>open page: {page}</p>
+      <div className="mt-3">
+        <Note>
+          The open page is in the brand colour, underlined 2 px below the words, and {code('aria-current="page"')} — by
+          path prefix (the router&apos;s path), or by the caller&apos;s {code("isActive(href)")} as here. When the row
+          is wider than the room between the brand and the actions — always below {code("md")}, and whenever a fourth
+          link or a long translation does not fit — every link moves into the menu button&apos;s dropdown, never only
+          some. The room is measured, so a larger text size folds it sooner. {code("renderLink")} takes the props
+          NavPills hands its router.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
 export function ShellBrandDemo() {
   return (
     <>
       <TopBarBrandSpecimen />
+      <TopBarNavSpecimen />
       <IconBadgeSpecimen />
     </>
   );

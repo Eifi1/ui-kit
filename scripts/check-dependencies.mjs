@@ -7,7 +7,7 @@
  *
  * 1. GitHub's open Dependabot ALERTS (a vulnerable dependency) BLOCK the push: one
  *    `gh api` call. Offline, or without a `gh` login, it warns and lets the push through —
- *    `npm run check` still runs the audit (`eifi1-npm-audit`, npm-audit/cli.ts), which needs no GitHub.
+ *    `npm run check` still runs the audit (`eifi1-npm-audit`, npm-audit/bin.mjs), which needs no GitHub.
  * 2. Newer minor and patch versions of the DIRECT dependencies are a REPORT only:
  *    something upstream released this morning must not stop a push. Majors are left out,
  *    as dependabot.yml left them out (a major is taken by hand with its migration).

@@ -6,7 +6,7 @@ audit of 2026-11-02. Nothing breaks in the three apps; each addition replaces ap
 go when the app gets to it. The places are from keksdose, kastlan and Kurvenschmiede (KS) on
 2026-11-04 (`frontend/src`).
 
-**From 0.52, adopt 0.53 first:** its removals apply (docs/adopt-0.53.md).
+**From 0.52, adopt 0.53 first:** its removals apply (docs/archive/adopt/adopt-0.53.md).
 
 **Legal wording:** none.
 

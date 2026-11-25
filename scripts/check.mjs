@@ -3,7 +3,7 @@
  * `npm run check`: the three groups of checks, one after another, stopping at the first
  * that fails.
  *
- *   check:static  format:check · typecheck · lint · check:tokens · check:security · check:commit-rules · check:commits
+ *   check:static  format:check · typecheck · lint · check:tokens · check:security · check:commit-rules · check:commits · check:meta
  *   check:build   build · check:graph · check:package · export inventory · styling inventory · build:showcase · check:tailwind
  *   check:test    test:coverage
  *
@@ -21,7 +21,9 @@
  * Serial runs the quickest to fail first — static (~1 min), build (~1–1½ min), test
  * (~8–9 min; 0.51.3: 66 s, 91 s, 455 s; 0.51.7: 49 s, 45 s, 524 s) — and stops at the
  * first failure, naming the groups it did not run: a type error should not cost eight
- * minutes of tests before it is reported.
+ * minutes of tests before it is reported. For the same reason static ends with
+ * `check:meta`, the repository's bookkeeping tests (META_TESTS), which vitest's
+ * longest-first order ran last of all.
  *
  * The test group runs on at most 6 workers here (VITEST_MAX_WORKERS, unless you set it):
  * measured on this suite, 6 workers took 169 s at a 4.7 GB peak against 160 s at 5.1 GB
@@ -37,7 +39,7 @@
  * a passing group is one line with its time. Interleaving three live streams would be
  * unreadable, and a green run has nothing to say.
  */
-import { execFileSync, spawn } from "node:child_process";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { availableParallelism } from "node:os";
 import { join, resolve } from "node:path";
@@ -45,6 +47,33 @@ import { pathToFileURL } from "node:url";
 
 /** In the order serial mode runs them: the quickest to fail first. */
 export const GROUPS = ["check:static", "check:build", "check:test"];
+
+/**
+ * The tests a release commit can turn red, and so the ones the pre-push hook still runs
+ * for it (TST-1, refactor audit 2026-10-30): the readers of package.json's `version` and of
+ * CHANGELOG.md, the files `npm run release` writes. A MINOR bump can make a deprecation due
+ * (deprecations.test.ts), and the generated entry can hold an item changelog.test.ts rejects.
+ * The list once named only the first; changelog.test.ts began reading CHANGELOG.md four days
+ * after the shortcut landed, so a release entry it rejects passed the push and went red only
+ * in CI (refactor audit 2026-11-22, TST-1). gate-lists.test.ts finds every such reader and
+ * fails on one this list misses.
+ */
+export const RELEASE_TESTS = ["src/__tests__/deprecations.test.ts", "src/lib/__tests__/changelog.test.ts"];
+
+/**
+ * `check:meta`, the last step of check:static: the tests of the repository's own bookkeeping
+ * — the docs index and contracts, the showcase's component index, the gate lists,
+ * deprecations and the changelog. Each takes well under 2 s, but in the test group vitest
+ * schedules the longest files first, so they failed after a 7–10 minute run: the 0.54 adopt
+ * link (8921b88) and the 0.56 gate lists (aaffb5b5). Here they fail in the first minute, and
+ * run again, cheaply, in the test group (refactor audit 2026-11-22, TST-6).
+ */
+export const META_TESTS = [
+  ...RELEASE_TESTS,
+  "src/__tests__/contracts.test.ts",
+  "src/__tests__/gate-lists.test.ts",
+  "showcase/src/__tests__/component-index.test.ts",
+];
 const ROOT = resolve(import.meta.dirname, "..");
 export const STAMPS = join(ROOT, "node_modules", ".cache", "check");
 const STAMPS_KEPT = 20;
@@ -123,7 +152,19 @@ function run(script, env) {
   });
 }
 
+/** `npm exec vitest run` over `files`, with this terminal; its exit code. */
+function runTests(files) {
+  const result = spawnSync("npm", ["exec", "--no", "--", "vitest", "run", ...files], { cwd: ROOT, stdio: "inherit" });
+  return result.status ?? 1;
+}
+
+/** `--release`: the pre-push hook's release commit runs RELEASE_TESTS; `--meta` is check:meta. */
+const ONLY = { "--release": RELEASE_TESTS, "--meta": META_TESTS };
+
 async function main() {
+  const only = process.argv.slice(2).find((arg) => Object.hasOwn(ONLY, arg));
+  if (only) process.exit(runTests(ONLY[only]));
+
   const started = Date.now();
   // Ctrl-C stops every running group, not just the terminal's foreground one.
   for (const signal of ["SIGINT", "SIGTERM"]) {

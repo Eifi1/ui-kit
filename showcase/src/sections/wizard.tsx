@@ -442,7 +442,7 @@ function ImportWizard({
             Suggest rules
           </label>
           <Row className="mt-3">
-            <Button size="sm" variant="secondary" onClick={convert} disabled={converting || rulesWritten === 12}>
+            <Button size="sm" variant="secondary" onClick={convert} refused={converting || rulesWritten === 12}>
               Create 12 rules
             </Button>
             <span className="text-xs text-secondary" aria-live="polite">

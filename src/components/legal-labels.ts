@@ -90,7 +90,7 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
         // brings back with a reopened tab, while the sign-in itself is kept in page memory only.
         standardEntries: {
           recentData: (hours) =>
-            `Recently loaded data, so pages also open without a connection; what is older than ${hours} hours the app no longer uses and removes the next time it opens. None of it is kept when you sign in with “This is a shared computer”`,
+            `Recently loaded data, so pages also open without a connection; what is older than ${hours === 1 ? "1 hour" : `${hours} hours`} the app no longer uses and removes the next time it opens. None of it is kept when you sign in with “This is a shared computer”`,
           sharedComputer: "Whether you chose “This is a shared computer” at sign-in, kept with the tab",
           // 0.63 (auth §12.9): `@eifi1/ui-kit/accounts`' one key. "Only with the tab" holds on
           // both shared paths: the tab's storage, and page memory, where a reload signs out.

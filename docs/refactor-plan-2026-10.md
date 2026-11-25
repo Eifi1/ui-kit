@@ -11,8 +11,9 @@ API-6a/b/c/d/f, the `align` aliases), and the open ends: the overlays' own `onKe
 Escape stack's top-layer rule (after DUP-1), refs on the components phase C1 left (StatTile,
 the banners, PlanLimitNotice, Modal/DialogFrame, Tooltip, CopyButton, FieldStrip),
 `useKitLabelOverrides` as a deep partial (API-6a's follow-up). `docs/archive/adopt/adopt-0.35.md` has the
-apps' side. Still open: `gen-styling-inventory.mjs` keeps its own `@theme` parser beside
-`src/eslint/role-utilities.ts`.
+apps' side. ~~Still open: `gen-styling-inventory.mjs` keeps its own `@theme` parser beside
+`src/eslint/role-utilities.ts`.~~ Resolved by DUP-13 (2026-10-30 audit): the script imports
+`themeBlocks`/`parseThemeInline` from there (refactor audit 2026-11-22, DOC-6).
 
 ### History
 

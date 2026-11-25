@@ -131,7 +131,8 @@ function lastAbove(m: Model, y: number): number {
 }
 
 /** The `<tbody>`s to render: the groups holding a rendered row (or the period's first
- *  day, for its band), and one spacer for each run of groups in between. Pure. */
+ *  day, for its band; or no row, beside a rendered one), and one spacer for each run of
+ *  groups in between. Pure. */
 export function planBodies(
   m: Pick<Model, "n" | "tops" | "h" | "gTop">,
   groups: readonly VirtualGroup[],
@@ -172,7 +173,10 @@ export function planBodies(
       prevBottom = bottom(i);
       any = true;
     }
-    if (!any && gi !== anchor) {
+    // A group with no rows (0.66, `headGroups`: a day not booked yet) is drawn with the row
+    // it stands before — its band is a row of the table, not a spacer's worth of nothing.
+    const beside = g.start === g.end && (rendered.has(g.start) || rendered.has(g.start - 1));
+    if (!any && gi !== anchor && !beside) {
       if (skippedFrom < 0) skippedFrom = gi;
       return;
     }

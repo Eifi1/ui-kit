@@ -136,7 +136,8 @@ export const FLOATING_INPUT_CLASS = cn(FIELD_BASE, FIELD_FLOATING_PAD, "peer pla
  *    border-t-0 border-b`) so the rule can't hinge on utility order. On focus the
  *    line is doubled inward by an inset shadow on that edge alone — FIELD_BASE's
  *    inset ring, for the same reason (K5 follow-up: a 1px line reads half-strength at
- *    125 %) — where a ring would draw a box round the figure.
+ *    125 %) — where a ring would draw a box round the figure. Under More contrast the
+ *    shadow is 2px, a 3px line like FIELD_BASE's ring (refactor audit 2026-11-22, DOC-2).
  *  - The muted placeholder colour, because a display field is usually empty at
  *    the moment it matters most and has nothing else to show.
  *  - The label, moved to `sr-only` rather than dropped: display type is legible
@@ -146,7 +147,7 @@ export const FLOATING_INPUT_CLASS = cn(FIELD_BASE, FIELD_FLOATING_PAD, "peer pla
  * wants a heading — so each control adds its own on top.
  */
 export const FIELD_DISPLAY =
-  "block w-full border-x-0 border-t-0 border-b border-subtle bg-transparent px-0 pt-0 pb-1 text-primary shadow-none placeholder:text-placeholder focus:border-brand focus:shadow-[inset_0_-1px_0_var(--brand)] focus:outline-none focus:ring-0 disabled:opacity-60";
+  "block w-full border-x-0 border-t-0 border-b border-subtle bg-transparent px-0 pt-0 pb-1 text-primary shadow-none placeholder:text-placeholder focus:border-brand focus:shadow-[inset_0_-1px_0_var(--brand)] contrast:focus:shadow-[inset_0_-2px_0_var(--brand)] focus:outline-none focus:ring-0 disabled:opacity-60";
 
 // A field-styled button trigger for the custom dropdown controls (MultiSelect,
 // CurrencySelect) — the field look (border/bg) as a flex row for the value + chevron,

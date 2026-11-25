@@ -149,8 +149,8 @@ function DangerStates() {
         itself. <code>disabled</code> turns the arm button off without a reason — prefer <code>lockedReason</code> when
         the user can do something about it. The third tile takes every word from <code>labels</code>;{" "}
         <code>armLabel</code> and <code>confirmLabel</code> would win over them. The second passes the refusal as{" "}
-        <code>error</code> (0.54): under the phrase, which it marks invalid, announced as it appears, and gone again on
-        the next keystroke.
+        <code>error</code>: under the phrase, which it marks invalid, announced as it appears, and gone again on the
+        next keystroke.
       </Note>
     </Example>
   );
@@ -442,7 +442,8 @@ function DangerConfirm023Demo() {
           not {code("disabled")} — still focusable, with the first open guard named in its tooltip and description: the
           tick, then the phrase, then the password ({code("labels.needsAcknowledge")}, {code("needsPhrase")},{" "}
           {code("needsPassword")}). Pressing it, or Enter in a field, does nothing. A write lock&rsquo;s reason wins
-          over a guard&rsquo;s; while the action runs it is plainly disabled.
+          over a guard&rsquo;s. While the action runs it is held with no reason, its spinner the state, and keeps the
+          focus the press left on it.
         </Note>
       </Example>
       <Example

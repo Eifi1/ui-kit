@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { Treemap, type TreemapNode } from "../treemap";
+import { Modal } from "../modal";
 import { stubDesktop, stubResizeObserver, type ResizeObserverStub } from "../../test/viewport";
 import { cssValue } from "../../test/css";
 
@@ -144,6 +145,26 @@ describe("Treemap's bubble", () => {
     expect(bubble()).toBeNull();
     fireEvent.mouseEnter(named("Groceries"));
     expect(bubble()).not.toBeNull();
+  });
+
+  it("is a layer on the Escape stack: in a Modal the first Escape closes it, the next the dialog", () => {
+    // Refactor audit 2026-11-22, DUP-10: a raw document listener closed the bubble AND the
+    // dialog with one press, where every other floating layer goes first (WCAG 1.4.13).
+    const onClose = vi.fn();
+    render(
+      <Modal onClose={onClose} aria-label="Spending">
+        <Treemap data={DATA} />
+      </Modal>,
+    );
+    // The Modal is portalled out of the render container: the map's root is in <body>.
+    act(() => ro.resize(document.querySelector<HTMLElement>("[data-chart]")!, { width: 800, height: 300 }));
+    fireEvent.mouseEnter(named("Rent"));
+    expect(bubble()).not.toBeNull();
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+    expect(bubble()).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("moves with its node when the map is laid out again under a still pointer", () => {

@@ -48,6 +48,7 @@ import { createPortal } from "react-dom";
 import { usePlotArea, useXAxisInverseScale, useYAxisInverseScale, type InverseScaleFunction } from "recharts";
 import { Undo2, X } from "lucide-react";
 import { cn } from "../lib/cn";
+import { focusContainer, returnFocus, tabStops } from "../lib/focus-left";
 import {
   extentOf,
   isWholeRange,
@@ -684,6 +685,26 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
     // another chart of the column (see `leaveChart`). On the change, not in each handler,
     // so none of them can miss it.
     const root = useRef<HTMLDivElement>(null);
+    // Reset zoom, and the Back that ends the zoom, take the corner away with the focus on
+    // it, and the focus fell to <body> (refactor audit 2026-11-22, DSP-2). In the same
+    // handler, before the state change: the chart's keyboard stop (SeriesChart's roving
+    // `PointKeys`), else its first other stop, else the chart itself — by the kit's one
+    // rule (lib/focus-left `returnFocus`), which moves only a focus that is in the corner.
+    const corner = useRef<HTMLDivElement>(null);
+    const handFocusOn = () => {
+      const box = root.current;
+      const buttons = corner.current;
+      if (!box || !buttons) return;
+      // Not the corner, and not the overview strip's handles, which go with the zoom too.
+      const outside = tabStops(box).filter(
+        (stop) => !buttons.contains(stop) && !stop.closest("[data-zoom-overview-slot]"),
+      );
+      const moved = returnFocus({
+        closing: buttons,
+        fallback: [box.querySelector('[data-point-key][tabindex="0"]'), ...outside],
+      });
+      if (!moved && buttons.contains(document.activeElement)) focusContainer(box);
+    };
     const wasZoomed = useRef(zoomed);
     useEffect(() => {
       if (wasZoomed.current && !zoomed) leaveChart(root.current);
@@ -798,13 +819,28 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
       <div ref={root} className={cn("relative", pinching && "touch-none")}>
         <Chart {...props} zoom={binding} />
         {zoomed && !empty && (
-          <div className="absolute end-1 top-1 z-10 flex gap-1">
+          <div ref={corner} className="absolute end-1 top-1 z-10 flex gap-1">
             {history.back.length > 0 && (
-              <button type="button" onClick={back} className={CORNER_BUTTON}>
+              <button
+                type="button"
+                onClick={() => {
+                  // The last step back ends the zoom, and the corner goes with it.
+                  if (isUnzoomed(zoomBack(history))) handFocusOn();
+                  back();
+                }}
+                className={CORNER_BUTTON}
+              >
                 <Undo2 aria-hidden className="size-3 rtl:-scale-x-100" /> {labels.zoomBack}
               </button>
             )}
-            <button type="button" onClick={clear} className={CORNER_BUTTON}>
+            <button
+              type="button"
+              onClick={() => {
+                handFocusOn();
+                clear();
+              }}
+              className={CORNER_BUTTON}
+            >
               <X aria-hidden className="size-3" /> {labels.resetZoom}
             </button>
           </div>

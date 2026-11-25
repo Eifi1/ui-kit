@@ -636,6 +636,17 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       taken: (count) => `${n(count)} ${plural(count, "foto scattata", "foto scattate")}.`,
       done: (count) => `Usa ${n(count)} foto`,
     },
+    // 0.66: AttachButton. "Aggiungi allegato" is the feedback field's attachmentAdd.
+    attach: {
+      trigger: "Allega",
+      title: "Aggiungi allegato",
+      camera: "Fotocamera",
+      photos: "Foto",
+      files: "File",
+      screenshot: "Screenshot",
+      close: "Chiudi",
+      anotherPage: "Altra pagina",
+    },
     wizard: {
       done: "Fine",
       cancel: "Annulla",
@@ -1044,7 +1055,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
             // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
             standardEntries: {
               recentData: (hours) =>
-                `I dati caricati di recente, perché le pagine si aprano anche senza connessione; ciò che ha più di ${hours} ore l’app non lo usa più e lo rimuove alla successiva apertura. Non ne resta nulla se accede con «Questo è un computer condiviso»`,
+                `I dati caricati di recente, perché le pagine si aprano anche senza connessione; ciò che ha più di ${hours === 1 ? "1 ora" : `${hours} ore`} l’app non lo usa più e lo rimuove alla successiva apertura. Non ne resta nulla se accede con «Questo è un computer condiviso»`,
               sharedComputer:
                 "Se all’accesso ha scelto «Questo è un computer condiviso», conservato insieme alla scheda",
               // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.
@@ -1578,7 +1589,6 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       choose: "Scelga un account…",
       chooseFirst: "Scelga chi riceve il lavoro",
       confirm: "Passa il lavoro",
-      customer: "cliente",
       deactivated: "disattivato",
       self: "lo stesso account",
       unavailable: (account, reason) => `${account} (${reason})`,
@@ -2122,6 +2132,12 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         backTo: (role) => `Torna a ${role}`,
         billingOff: "La fatturazione è disattivata in locale: i piani non cambiano nulla",
       },
+    },
+    // 0.66: TopBarNav — the page links' landmark (no word for "navigation": a screen
+    // reader adds the role) and the menu button they fold into.
+    topBarNav: {
+      navigation: "Pagine",
+      menu: "Menu",
     },
     // 0.45.0 — docs/local-first-harmonization.md §1.6 (`@eifi1/ui-kit/offline`): keksdose's
     // reviewed words (nav.logout_queued_*, pwa.*) where it has the language.

@@ -18,7 +18,15 @@ import { MOUNT_TIMEOUT_MS, renderShowcase as renderAt, useShowcaseEnvironment } 
  *   - Back did not return you to where you had been reading.
  */
 
-useShowcaseEnvironment();
+/**
+ * Only the sections of the pages this file renders (refactor audit 2026-11-22, TST-5):
+ * preloading all of them took it to 45.7 s for a dozen pages. The redirect targets are
+ * here, and the overview a sidebar link lands on; a page left off still renders, its
+ * sections behind their Suspense fallback.
+ */
+useShowcaseEnvironment({
+  pages: ["tokens", "buttons", "inputs", PAGES[0].slug, PAGES[1].slug, ...new Set(Object.values(RETIRED_SLUGS))],
+});
 
 /** Every page mounts — and its examples match the search index — in the four
  *  pages-shard-*.test.tsx files (0.28.1), one page per test, each page once. This checks

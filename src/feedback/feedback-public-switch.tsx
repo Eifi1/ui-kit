@@ -92,10 +92,16 @@ export function FeedbackPublicSwitch({
       label={labels.visibleToOthers}
       description={labels.visibleHint}
       checked={row.public === true}
-      disabled={pending}
+      // Held the focusable way while the change runs: the switch just flipped has the focus,
+      // and a native `disabled` dropped it to <body> (INP-1). A flip meanwhile is ignored;
+      // the switch is controlled, so its thumb stays.
+      aria-disabled={pending || undefined}
+      aria-busy={pending || undefined}
       disabledReason={allowed ? undefined : labels.visibleLocked}
       commit={commit}
-      onCheckedChange={(next) => onChange(next)}
+      onCheckedChange={(next) => {
+        if (!pending) onChange(next);
+      }}
       data-feedback-public={row.public ? "on" : "off"}
     />
   );
