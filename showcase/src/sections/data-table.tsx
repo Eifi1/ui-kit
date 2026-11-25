@@ -1119,6 +1119,20 @@ const BIG_PERIOD: DataTableGroupBy<LedgerRow> = {
 };
 type LedgerSize = "months" | "1000" | "3000";
 
+/** 0.66 (`headGroups`, keksdose live #536): the demo's "today", three days after the newest
+ *  booked day, and the paths from it back to that day — the newest one, which has rows,
+ *  anchors the empty ones. */
+function headPaths(newest: string | undefined, twoLevels: boolean): string[][] {
+  if (!newest) return [];
+  const days: string[] = [];
+  for (let back = 3; back >= 0; back--) {
+    const d = new Date(`${newest}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + back);
+    days.push(d.toISOString().slice(0, 10));
+  }
+  return days.map((day) => (twoLevels ? [day.slice(0, 7), day] : [day.slice(0, 7)]));
+}
+
 function PeriodGroupsTable() {
   const [months, setMonths] = useState(1);
   // 0.48.2: the long ledger and `virtualize`, for keksdose dev #632's register.
@@ -1131,6 +1145,7 @@ function PeriodGroupsTable() {
   const [twoLevels, setTwoLevels] = useState(true);
   const [stickyLead, setStickyLead] = useState(true);
   const [dayAdd, setDayAdd] = useState(true);
+  const [emptyDays, setEmptyDays] = useState(false);
   const [addedOn, setAddedOn] = useState<string | null>(null);
   const day = useMemo(() => (dayAdd ? ledgerDayWithAdd(setAddedOn) : LEDGER_DAY), [dayAdd]);
   const [loads, setLoads] = useState(0);
@@ -1143,6 +1158,10 @@ function PeriodGroupsTable() {
   }, [months, big]);
   const next = big ? undefined : LEDGER_MONTHS[months];
   const period = big ? BIG_PERIOD : LEDGER_PERIOD;
+  const heads = useMemo(
+    () => (emptyDays ? headPaths(rows[0]?.date, twoLevels) : undefined),
+    [emptyDays, rows, twoLevels],
+  );
   return (
     <Example
       label="Period groups and load more — groupBy, loadMore"
@@ -1157,6 +1176,7 @@ function PeriodGroupsTable() {
       <Row>
         <Switch label="Day bands under the month" checked={twoLevels} onCheckedChange={setTwoLevels} />
         <Switch label="“+” on each day band" checked={dayAdd} onCheckedChange={setDayAdd} />
+        <Switch label="Empty days up to today" checked={emptyDays} onCheckedChange={setEmptyDays} />
         <Switch label="Sticky leading row" checked={stickyLead} onCheckedChange={setStickyLead} />
         <ToggleGroup<LedgerSize>
           aria-label="Rows"
@@ -1195,6 +1215,7 @@ function PeriodGroupsTable() {
           rowKey={(r) => r.id}
           groupBy={twoLevels ? [period, day] : period}
           mobileGroupBy={period}
+          headGroups={heads}
           virtualize={virtual}
           onRowClick={big ? (r) => setOpenId((id) => (id === r.id ? null : r.id)) : undefined}
           isExpanded={big ? (r) => r.id === openId : undefined}
@@ -1279,6 +1300,13 @@ function PeriodGroupsTable() {
           names its day and gives no size: the band sizes it (28px, 24px in a compact table) and lets it overhang the
           band&apos;s padding, so a band with a “+” is as tall as one without. At Large text it keeps its glyph alone —
           the band already names the day. On a phone the same slot ends {code("mobileGroupBy")}&apos;s section header.
+        </Note>
+        <Note>
+          {code("headGroups")} (0.66): “Empty days up to today” takes the demo&apos;s today as three days after the
+          newest booked one and draws the three days between as day bands with no rows, each with its “+”, under the
+          month — with more to load and under {code("virtualize")}, where a level&apos;s {code("keys")} draws nothing.
+          The paths run from today back to the newest booked day, which has rows and anchors the others. Not under a
+          column filter.
         </Note>
         <Note>
           The footer is observed: it calls {code("onLoadMore")} once as it nears the view, not again while{" "}

@@ -32,6 +32,7 @@ import {
   placeEmptyGroups,
   useGroupBandTops,
   withEmptyGroups,
+  withHeadGroups,
   type DataTableGroupBy,
   type DataTableLoadMore,
   type RowGroup,
@@ -778,6 +779,38 @@ export interface DataTableProps<T> {
    */
   loadMore?: DataTableLoadMore;
   /**
+   * 0.66 (keksdose live #536, Marcel: "Einverstanden. Bereite es auf"): groups to draw with
+   * no rows at the HEAD of the list — the days between the newest booked one and today, so a
+   * day band's "+" (`groupBy`'s `action`) books on a day nothing is booked on yet. Each entry
+   * is a path through `groupBy`'s levels, `[period, day]` with two, `[key]` with one, in the
+   * order they are shown.
+   *
+   * **The anchor.** End the list with the newest group that HAS rows (the newest booked
+   * day): the first path with rows anchors the others, which are drawn before it — a day of
+   * its period inside that period, before its day; a day of a period with no rows yet (the
+   * 1st of a month) under that period's own band, before the anchor's. So rows above the
+   * head (keksdose's "Upcoming" block) stay above it. Without an anchor they go before the
+   * first row; paths after the anchor are not drawn.
+   *
+   * **Where `keys` cannot go.** A level's {@link DataTableGroupBy.keys} is read only on the
+   * first level and never under `virtualize` or a `loadMore` with more to come, because a
+   * group the rows have not reached may yet have rows. The head is certain: the newest
+   * rows are loaded first. So these are drawn on the second level, under `virtualize` (each
+   * band is drawn with the row it stands before) and with more to load.
+   *
+   * **When:** not while a column filter or {@link keyFilter} narrows the rows (an empty day
+   * there would be untrue), and only on the page that holds the anchor (the first, without
+   * one). A narrowing of the app's own — a search box, a sort that does not put the newest
+   * first — is the app's to know: pass none while it is on.
+   *
+   * Like `keys`' groups they are not rows: no count, pager, box, swipe or arrow-key stop.
+   * Each band gets its level's `label`, `end` and `action` called with no rows, and its
+   * `empty` line under it — except under `virtualize`, where the band stands alone (pass
+   * `empty: () => null` to have the same on every layout). On a phone, the paths' key at
+   * `mobileGroupBy`'s level (its own `groupBy` level, else the innermost) makes the sections.
+   */
+  headGroups?: readonly (readonly string[])[];
+  /**
    * 0.48.2 (keksdose dev #632, Marcel: "The table is extremely slow. Is it virtualised…?"):
    * render only the desktop rows near the visible part of the scroller, plus `overscan`
    * rows each side ({@link DataTableVirtualize}), with spacer rows standing in for the
@@ -1072,6 +1105,9 @@ export const DEFAULT_DATA_TABLE_SORT_LABELS: DataTableSortLabels = {
 
 const flipDir = (d: SortDir): SortDir => (d === "asc" ? "desc" : "asc");
 
+/** `headGroups`' development warnings already given, so a render does not repeat one. */
+const headWarnings = new Set<string>();
+
 // `virtualize`'s constants (0.48.2): the band levels a group's `<tbody>` opens with.
 const NO_BANDS: readonly (1 | 2)[] = [];
 const BAND_1: readonly (1 | 2)[] = [1];
@@ -1151,6 +1187,7 @@ export function DataTable<T>({
   leadingRowSticky = false,
   groupBy,
   loadMore,
+  headGroups,
   virtualize = false,
   density = "comfortable",
   sortCycle = "tri",
@@ -1979,15 +2016,36 @@ export function DataTable<T>({
       ? emptyGroupsIn(placeEmptyGroups(sorted, level.key, level.keys), from, to, sorted.length)
       : [];
   const pageFrom = wholeList ? 0 : safePage * effectivePageSize;
+  // `headGroups` (0.66, live #536): unless the rows are narrowed; on the page with the anchor,
+  // or the first. Development builds name the paths not drawn.
+  const heads = !narrowed && headGroups?.length ? headGroups : null;
+  const withHeads = (groups: RowGroup<T>[], paths: readonly (readonly string[])[], depth: 1 | 2) => {
+    const placed = withHeadGroups(groups, paths, depth);
+    if (!placed.anchored && pageFrom > 0) return groups;
+    const warning = `[ui-kit] DataTable headGroups not drawn (after the anchor, or a group with rows elsewhere): ${placed.ignored.join(", ")}`;
+    if (
+      Boolean(import.meta.env?.DEV) &&
+      !import.meta.env?.VITEST &&
+      placed.ignored.length > 0 &&
+      !headWarnings.has(warning)
+    ) {
+      headWarnings.add(warning);
+      console.warn(warning);
+    }
+    return placed.groups;
+  };
   const desktopGroups =
     isMdUp && levels.length > 0
-      ? withEmptyGroups(
-          groupRows(slice, levels),
-          virtualize ? [] : emptyGroupsOf(levels[0], pageFrom, pageFrom + slice.length),
-          pageFrom,
-        )
+      ? (() => {
+          const groups = withEmptyGroups(
+            groupRows(slice, levels),
+            virtualize ? [] : emptyGroupsOf(levels[0], pageFrom, pageFrom + slice.length),
+            pageFrom,
+          );
+          return heads ? withHeads(groups, heads, levels.length as 1 | 2) : groups;
+        })()
       : null;
-  const desktopEmptyGroups = !!desktopGroups?.some((g) => g.empty);
+  const desktopEmptyGroups = !!desktopGroups?.some((g) => g.empty || !!g.children?.some((c) => c.empty));
   // Each group's `<tbody>` keys: its key and run, not its first row's index (DSP-1).
   const bodyKeys = desktopGroups ? groupBodyKeys(desktopGroups) : null;
   // An empty declared group's line: the level's words, the table's "No entries" by
@@ -2070,7 +2128,7 @@ export function DataTable<T>({
   const mobileKey = typeof mobileGroupBy === "function" ? mobileGroupBy : mobileGroupBy?.key;
   // `start`: the section's first card's place in the list (its `data-row-index`, DSP-4).
   // A level's declared empty sections (0.59, live #504), over the cards revealed so far.
-  const mobileGroups: RowGroup<T>[] | null = mobileKey
+  const mobileRuns: RowGroup<T>[] | null = mobileKey
     ? withEmptyGroups(
         mobileSlice.reduce<RowGroup<T>[]>((acc, row, i) => {
           const key = mobileKey(row);
@@ -2083,6 +2141,17 @@ export function DataTable<T>({
         0,
       )
     : null;
+  // `headGroups` on the phone (0.66): each path's key at the sections' level — the
+  // `groupBy` level `mobileGroupBy` is, else the innermost.
+  const mobileDepth = mobileLevel && levels.includes(mobileLevel) ? levels.indexOf(mobileLevel) : -1;
+  const mobileGroups =
+    mobileRuns && heads && !isMdUp
+      ? withHeads(
+          mobileRuns,
+          heads.map((p) => [p[mobileDepth >= 0 ? mobileDepth : p.length - 1]]),
+          1,
+        )
+      : mobileRuns;
   const mobileEmptyGroups = !!mobileGroups?.some((g) => g.empty);
 
   // `frame={false}` swaps the Card for a bare wrapper carrying the same hooks and
@@ -2663,7 +2732,8 @@ export function DataTable<T>({
                             <tbody key={`g:${bodyKeys![i][j]}`} className={bodyClass}>
                               {j === 0 && band(1, levels[0], g1)}
                               {band(2, levels[1], g2)}
-                              {rowsOf(g2)}
+                              {/* A head day with no rows (0.66, `headGroups`): its line. */}
+                              {g2.empty ? emptyLineRow(levels[1], g2.key) : rowsOf(g2)}
                             </tbody>
                           ))
                         ) : (

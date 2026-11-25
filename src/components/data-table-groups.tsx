@@ -84,6 +84,9 @@ export interface DataTableGroupBy<T> {
    * of `groupBy` and on `mobileGroupBy`; a second level's are not read (a period's days are
    * its rows). Paged, an empty group is drawn on the page whose first row follows it, the
    * ones after the last row on the last page.
+   *
+   * The days up to today at the head of a register — second level, windowed, with more to
+   * load — are {@link DataTableProps.headGroups}' (0.66), which the head's certainty allows.
    */
   keys?: readonly string[];
   /**
@@ -216,6 +219,75 @@ export function withEmptyGroups<T>(
   for (; e < empties.length; e++)
     out.push({ key: empties[e].key, rows: [], start: empties[e].at - offset, children: null, empty: true });
   return out;
+}
+
+/**
+ * {@link DataTableProps.headGroups} (0.66, keksdose live #536) put among `groups` — one
+ * level's runs, or two levels' (`depth` 2: `[period, day]` paths). Pure; `groups` is not
+ * changed.
+ *
+ * The first path whose group has rows is the ANCHOR — the newest booked day. The paths
+ * before it are drawn as groups with no rows, before it: a day of the anchor's period goes
+ * into that period, before the anchor's day; a day of a period with no rows yet opens that
+ * period, before the anchor's. With no anchor (no path has rows) they go before the first
+ * row. Paths after the anchor, and a path whose period has rows elsewhere, are not drawn:
+ * they come back in `ignored` (`"period/day"`), for the table's development warning.
+ * `anchored`: a path had rows here (a page without the anchor draws none).
+ */
+export function withHeadGroups<T>(
+  groups: readonly RowGroup<T>[],
+  paths: readonly (readonly string[])[],
+  depth: 1 | 2,
+): { groups: RowGroup<T>[]; ignored: string[]; anchored: boolean } {
+  const out = groups.slice();
+  const ignored: string[] = [];
+  if (paths.length === 0) return { groups: out, ignored, anchored: false };
+  const name = (p: readonly string[]) => p.slice(0, depth).join("/");
+  const real = (g: RowGroup<T>) => !g.empty && g.rows.length > 0;
+  const find = (p: readonly string[]): [number, number] | null => {
+    const i = out.findIndex((g) => real(g) && g.key === p[0]);
+    if (i < 0) return null;
+    if (depth === 1) return [i, 0];
+    const j = out[i].children?.findIndex((c) => real(c) && c.key === p[1]) ?? -1;
+    return j < 0 ? null : [i, j];
+  };
+  let a = paths.findIndex((p) => find(p) !== null);
+  const at = a < 0 ? null : find(paths[a])!;
+  if (a < 0) a = paths.length;
+  for (const p of paths.slice(a + 1)) ignored.push(name(p));
+  const [i0, j0] = at ?? [0, 0];
+  const first = out[i0];
+  const start = at ? (depth === 2 ? first.children![j0].start : first.start) : 0;
+  const empty = (key: string): RowGroup<T> => ({ key, rows: [], start, children: null, empty: true });
+  const seen = new Set<string>();
+  let before = i0; // where the next new first-level group goes
+  let joined: RowGroup<T>[] | null = null; // the anchor period's children, copied once
+  let into = j0;
+  for (const p of paths.slice(0, a)) {
+    const n = name(p);
+    if (seen.has(n)) continue;
+    seen.add(n);
+    if (depth === 1) {
+      out.splice(before++, 0, empty(p[0]));
+      continue;
+    }
+    if (first && p[0] === first.key) {
+      if (!joined) {
+        joined = first.children ? first.children.slice() : [];
+        out[out.indexOf(first)] = { ...first, children: joined };
+      }
+      joined.splice(into++, 0, empty(p[1]));
+      continue;
+    }
+    if (out.some((g) => real(g) && g.key === p[0])) {
+      ignored.push(n);
+      continue;
+    }
+    const prev = out[before - 1];
+    if (prev && prev.key === p[0] && prev.rows.length === 0 && !prev.empty) prev.children!.push(empty(p[1]));
+    else out.splice(before++, 0, { key: p[0], rows: [], start, children: [empty(p[1])] });
+  }
+  return { groups: out, ignored, anchored: at !== null };
 }
 
 /**
