@@ -1302,11 +1302,11 @@ function PeriodGroupsTable() {
           the band already names the day. On a phone the same slot ends {code("mobileGroupBy")}&apos;s section header.
         </Note>
         <Note>
-          {code("headGroups")} (0.66): “Empty days up to today” takes the demo&apos;s today as three days after the
-          newest booked one and draws the three days between as day bands with no rows, each with its “+”, under the
-          month — with more to load and under {code("virtualize")}, where a level&apos;s {code("keys")} draws nothing.
-          The paths run from today back to the newest booked day, which has rows and anchors the others. Not under a
-          column filter.
+          {code("headGroups")}: “Empty days up to today” takes the demo&apos;s today as three days after the newest
+          booked one and draws the three days between as day bands with no rows, each with its “+”, under the month —
+          with more to load and under {code("virtualize")}, where a level&apos;s {code("keys")} draws nothing. The paths
+          run from today back to the newest booked day, which has rows and anchors the others. Not under a column
+          filter.
         </Note>
         <Note>
           The footer is observed: it calls {code("onLoadMore")} once as it nears the view, not again while{" "}
