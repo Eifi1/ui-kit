@@ -21,6 +21,80 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.66.0](https://github.com/Eifi1/ui-kit/compare/v0.65.1...v0.66.0) (2026-11-25)
+
+### ⚠ BREAKING CHANGES
+
+* **admin:** `TransferUnavailable` is `"deactivated" | "self"`; the `"customer"` member
+  and `TransferOwnershipLabels.customer` are removed. A candidate still marked "customer" is
+  shown with the app's own words, the string as passed ("(customer)"); drop the case, or
+  pass the words you want. An app's own `transferOwnership.customer` label no longer
+* **offline:** createQueryPersistence's persistMutations now defaults to false. An app that
+  wants paused mutations kept across a reload passes persistMutations: true. No app relies on the
+  old default (kastlan and Kurvenschmiede pass false; keksdose and Staunlabor do not use it).
+
+### Added
+
+* **accounts:** AccountFeedbackPage takes onCaptureScreenshot={null} ([da891d5](https://github.com/Eifi1/ui-kit/commit/da891d54517342dfdb0bea11311344d983d334de))
+* **accounts:** the wire check covers /accounts; one user type by every door ([a562b2e](https://github.com/Eifi1/ui-kit/commit/a562b2e1d8fce2942de8575c4f9f1b785af2f973))
+* **admin:** remove the transfer dialog's deprecated "customer" reason and label ([87debbc](https://github.com/Eifi1/ui-kit/commit/87debbc777ba72be712e7afcdc8f03f3340c8775))
+* **attach:** AttachButton, one way in for attachments ([22ae7f2](https://github.com/Eifi1/ui-kit/commit/22ae7f2f8925854143f73d894a8fac6ceb2de29e))
+* **data-table:** aria-label, aria-labelledby and caption name the table and the phone list ([7447807](https://github.com/Eifi1/ui-kit/commit/7447807f0094574bc216a0978f4e26f358a1daec))
+* **data-table:** headGroups, the days up to today drawn with no rows at the head ([1343add](https://github.com/Eifi1/ui-kit/commit/1343add2c9a5aa529fff2e431c1d5f4bc9d4ec4b))
+* **eslint:** pending-not-disabled also reads "-ing" states (capturing, saving) ([f4fd06c](https://github.com/Eifi1/ui-kit/commit/f4fd06ca0cefc2a5c809cda17cdf5f8d6e4b9c4d))
+* **eslint:** pending-not-disabled, a pressed button its own click turns disabled ([d9b6b03](https://github.com/Eifi1/ui-kit/commit/d9b6b03653db3bef212d7e1e953af7bfa4f9d070))
+* **feedback:** FeedbackAttachmentField picker="sheet", one AttachButton (opt-in) ([08ad30d](https://github.com/Eifi1/ui-kit/commit/08ad30d10cfea9149fa5f5d566c44c330038e396))
+* **feedback:** FeedbackDialog hands the attachment field its picker and sources ([73cc770](https://github.com/Eifi1/ui-kit/commit/73cc770825af824ac9b4b96830b678c73d7283ea))
+* **page-contents:** a bar variant, one sticky row of sections at every width ([2b6cb1c](https://github.com/Eifi1/ui-kit/commit/2b6cb1cc1b0eba1cca2f2885492bac8222a6c309))
+* plain-http UUIDs and ISO-day arithmetic from a given day ([7bfb26c](https://github.com/Eifi1/ui-kit/commit/7bfb26cc13d8ef89011110ab856ad4e1c0ab5d9f))
+* **shell:** TopBarNav, the page links in TopBar's new nav slot ([89e0b1a](https://github.com/Eifi1/ui-kit/commit/89e0b1a3258672677fe5defc081542f4e9438528))
+* **sort-strip:** onChange(value) and a ref, onPick kept as its deprecated alias ([deaf282](https://github.com/Eifi1/ui-kit/commit/deaf28270e3d7c2838f7b7970868712aca83ece0))
+* **stat-tile:** StatStrip, a quiet row of three to six figures ([9b53c65](https://github.com/Eifi1/ui-kit/commit/9b53c655d9d083c9ee211144dfff165b31407664))
+
+### Fixed
+
+* **a11y:** a lock arriving or lifting no longer remounts the focused field ([f9d1ef3](https://github.com/Eifi1/ui-kit/commit/f9d1ef3ce588a991c3c9a31d4afe154730396e22))
+* **a11y:** a pressed button keeps the focus while its request runs ([b10ac83](https://github.com/Eifi1/ui-kit/commit/b10ac834313549288a96ebd3f7fa2dd2e5f42ec7))
+* **a11y:** a zoomed chart's Reset zoom and last Back hand the focus on ([a4f6c90](https://github.com/Eifi1/ui-kit/commit/a4f6c908f86a9e231aa1ca0dd017a2d527f14442))
+* **a11y:** FieldSuggestion's Clear gives the focus to its field first ([be2e9bf](https://github.com/Eifi1/ui-kit/commit/be2e9bf8907ca260193f2ee45b13879503e760df))
+* **a11y:** the display field's focus line thickens under More contrast ([abaf272](https://github.com/Eifi1/ui-kit/commit/abaf2720aa14f8dfd7a8a339a62e542b5095bcc2))
+* **a11y:** the typed comboboxes' phone sheet gives the focus back to the field ([badd478](https://github.com/Eifi1/ui-kit/commit/badd4781b701e894de9d50acc79f4d57c2e1aaeb))
+* **a11y:** Treemap's tile bubble joins the Escape stack ([9b7b158](https://github.com/Eifi1/ui-kit/commit/9b7b1589d9f771f3b4022ab26b62fa9c3af13d67))
+* **accounts:** a pressed control keeps its focus while its request runs ([4c2d46d](https://github.com/Eifi1/ui-kit/commit/4c2d46d7250c282966bbbade0477906c7ed820e2))
+* **accounts:** another host's 401 is judged by the request's base URL too ([ef3443a](https://github.com/Eifi1/ui-kit/commit/ef3443af9b08628990b9273bb1ed57ce3ae4c18d))
+* **accounts:** each mutation answers through its own call, not the latest one's callbacks ([8d0d7b9](https://github.com/Eifi1/ui-kit/commit/8d0d7b9dd3b117726add4254a8427b274be7dc47))
+* **accounts:** the review and profile pages print days through the kit's day ladder ([63a84f1](https://github.com/Eifi1/ui-kit/commit/63a84f190a4fa9400ac023427136d11002efd40d))
+* **accounts:** the teams' add row asks the address as InvitationsPanel does ([43729f7](https://github.com/Eifi1/ui-kit/commit/43729f769aeaadadfa81f6db0499e66fa1b38442))
+* **buttons:** a focused Button, IconButton or Chip keeps the focus when its lock flips ([8fed75a](https://github.com/Eifi1/ui-kit/commit/8fed75a077b988a6dd6ee6b6a9c0fb7675fded18))
+* **check-api:** compare a generic function or class through an instantiation expression ([903b70b](https://github.com/Eifi1/ui-kit/commit/903b70b1c5a238ced4e2c4a7a558b9c649e42199))
+* **data-table:** the focus returns to a row that stays while its focused element leaves ([7072654](https://github.com/Eifi1/ui-kit/commit/707265405b8c5030a3cccb689d6475601ff4f34a))
+* **eslint:** pending-not-disabled's types take ESLint's own rule type ([d5ea9fa](https://github.com/Eifi1/ui-kit/commit/d5ea9fa2dbe1ce3c91c198cc02d982f800321465))
+* **feedback,shell:** FeedbackThread and SyncStatusIndicator print and count in the provider's zone ([c8cfd99](https://github.com/Eifi1/ui-kit/commit/c8cfd99b5a29456e5d1113190598df1a1c0ee990))
+* **feedback:** a bulk edit refetches the inbox once and says its failures once ([7bd655f](https://github.com/Eifi1/ui-kit/commit/7bd655fe1558c06d012fd9ee70c1b728b0d7bd13))
+* **feedback:** the dialog, the inbox note and the chat send on the kit's one submit chord ([c09167e](https://github.com/Eifi1/ui-kit/commit/c09167eaaba998ac99a5745e4dffc2d2e3170465))
+* **feedback:** the screenshot button keeps its focus and its name while it captures ([75eacd6](https://github.com/Eifi1/ui-kit/commit/75eacd686ef0a868820b4fdcd44409b9d3e52da5))
+* **feedback:** the screenshot crops to the screen's width, not the layout viewport's ([c013bd5](https://github.com/Eifi1/ui-kit/commit/c013bd5b69a4a628665ec05410466f23738aeeee))
+* **feedback:** the screenshot shows the page as scrolled, not its top ([15bad66](https://github.com/Eifi1/ui-kit/commit/15bad6625d3c119f5c93053c5327581e92b8de90))
+* **fields:** a field's first lock by disabledReason hands the focus to its new control ([232d0dc](https://github.com/Eifi1/ui-kit/commit/232d0dc0861dbadaf43af0ec543f6f12c66a017a))
+* **fields:** only a field a lock can reach keeps LockFrame's frame ([aee8867](https://github.com/Eifi1/ui-kit/commit/aee8867a9a9aee9ac6aec5fd357a730674dadfe1))
+* **i18n:** French "Il reste 0 code de secours", and a no-break space before every ":" and ";" ([4bb188c](https://github.com/Eifi1/ui-kit/commit/4bb188c4cad0b173050380512f65d8546a921844))
+* **input:** one Enter rule family — IME, the tour's field Enter, the submit chord ([78acf54](https://github.com/Eifi1/ui-kit/commit/78acf548d7be1b5de525a4098f06dbae10c525d4))
+* **legal:** the recent-data line says one hour in the singular ([58d5d08](https://github.com/Eifi1/ui-kit/commit/58d5d08706d6af7f31ce79374536e3b5c4ec3c42))
+* **menus:** a HoverMenu opened by a tap stays open through the emulated mouseleave ([28ef9b9](https://github.com/Eifi1/ui-kit/commit/28ef9b91856eba5b9a689e84e572e3a16c2a80e9))
+* **npm-audit:** the bin runs its main unconditionally, and the package check runs it ([960d0da](https://github.com/Eifi1/ui-kit/commit/960d0da7a067ff3e660153fb62ca98bc4d5b8429))
+* **offline:** no password reaches the disk with a paused write queue ([273e354](https://github.com/Eifi1/ui-kit/commit/273e3547d70d2d717c09096e455e2c40644d1d94))
+* **readme:** drop the stale second inventory tail, and refuse doubled markers ([6aed4af](https://github.com/Eifi1/ui-kit/commit/6aed4af9be70cb17361fff157e615dedfdc4b5ce))
+* **showcase:** the ledger names a month it has no rows in, as the empty days' October ([e7ce4af](https://github.com/Eifi1/ui-kit/commit/e7ce4af3d09de9d30ce3d5aebc3a571f0cfa4446))
+
+### Changed
+
+* **accounts:** the signed-out pages load when the first one is drawn ([89e679b](https://github.com/Eifi1/ui-kit/commit/89e679b80bb1194661fc860f438eb87ff99a0218))
+* **camera:** CameraButton's viewfinder flow becomes an internal useCameraFlow ([228e689](https://github.com/Eifi1/ui-kit/commit/228e689ca05222023e56d82af4fd88b8665cb524))
+* **data-table:** the focus return leaves the DataTable function for useTableFocusReturn ([5cd1945](https://github.com/Eifi1/ui-kit/commit/5cd1945f43d69e012a6a2eab508a9bef70604e8b))
+* deprecate the four groups added for an app that never read them ([a379bf2](https://github.com/Eifi1/ui-kit/commit/a379bf21ac3c1ea0ac884b4bff95f56e1db51c9f))
+* drop the floating stack nobody reads and the plan-change-labels shim ([b6a1c26](https://github.com/Eifi1/ui-kit/commit/b6a1c263103bf23992948153c6822463b39b7338))
+* **numpad:** NumberPadSheet stands in an internal BottomSheet frame ([fc2c222](https://github.com/Eifi1/ui-kit/commit/fc2c22268184c22c0348cba6e79daf97f3dee1db))
+
 ## [0.65.1](https://github.com/Eifi1/ui-kit/compare/v0.65.0...v0.65.1) (2026-11-17)
 
 ### Added
