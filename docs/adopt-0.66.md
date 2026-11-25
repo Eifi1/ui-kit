@@ -9,6 +9,10 @@ found no live defect; most of what it fixed is the keyboard focus falling to `<b
 `InlineEntityCombobox` (keksdose's category and account pickers) left the old label showing, and the blur
 chose it again, so Clear did not clear. Take 0.66.1 rather than 0.66.0 (keksdose's full check found it).
 
+**0.66.2** extends DataTable `headGroups` (keksdose #536, Marcel: "Last 7 days, always"): a path with no
+rows is also drawn BETWEEN booked days, when a later path has rows. Paths after the last one with rows are
+still not drawn. Nothing changes for a list of head days only.
+
 **From 0.65.1.** Restart the Vite dev server after the bump (`vite --force` if a change still does not show).
 
 **Legal wording: Privacy Policy (fr only).** Two French strings on the privacy page gained a no-break space
@@ -53,7 +57,8 @@ before ":" (DOC-5). Move the page's `updated` date in the French text.
   Words: namespace `topBarNav`.
 - **`StatStrip`** — a quiet row of three to six `StatTile`s between hairlines.
 - **DataTable `headGroups`** — groups drawn with no rows at the head of the list: the days between the newest
-  booked one and today, each day band with its `action` "+" (keksdose live #536). Paths through `groupBy`'s
+  booked one and today, each day band with its `action` "+" (keksdose live #536); from 0.66.2 also the days
+  between booked ones. Paths through `groupBy`'s
   levels (`[period, day]`), from today back to the newest booked day, which has rows and anchors the rest: they go
   before it, inside its period (a new month gets its own band), so an "Upcoming" block above stays above. Unlike a
   level's `keys`, drawn on the second level, under `virtualize` and with `loadMore.hasMore`; not under a column
@@ -114,9 +119,12 @@ before ":" (DOC-5). Move the page's `updated` date in the French text.
   `swipeable-row.test.tsx`, `calculator.test.tsx`, `mini-calendar.test.tsx`, `modal.test.tsx`,
   `dropdown.test.tsx`, `multi-select.test.tsx` and `number-input.test.tsx` from
   `frontend/src/shared/components/__tests__/`.
-- #536 (empty days up to today): `headGroups={unfiltered && !search ? daysFromTodayTo(newestBooked).slice(0, 8)
-  .map((d) => [periodKeyOf(d, unit, todayIso), d]) : undefined}` on the register's DataTable, the day level's
-  `empty: () => null`.
+- #536 (the last 7 days, always; 0.66.2): `headGroups={unfiltered && !search ? [...lastSevenDays(todayIso),
+  ...(olderBooked ? [olderBooked] : [])].map((d) => [periodKeyOf(d, unit, todayIso), d]) : undefined}` on the
+  register's DataTable, with the day level's `empty: () => null`. `lastSevenDays` is today and the six days
+  before. `olderBooked` is the newest LOADED booked day older than them: it lets the kit draw the days between,
+  since the rows reach past them. Without it (not loaded yet), the days after the last booked one in the week
+  wait for the next load.
 - Persistence: nothing (see "Must change"); `shouldDehydrateMutation: () => false` is in (keksdose FS-13,
   2026-11-23).
 

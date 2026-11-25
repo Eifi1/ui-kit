@@ -226,18 +226,24 @@ export function withEmptyGroups<T>(
  * level's runs, or two levels' (`depth` 2: `[period, day]` paths). Pure; `groups` is not
  * changed.
  *
- * The first path whose group has rows is the ANCHOR — the newest booked day. The paths
- * before it are drawn as groups with no rows, before it: a day of the anchor's period goes
- * into that period, before the anchor's day; a day of a period with no rows yet opens that
- * period, before the anchor's. With no anchor (no path has rows) they go before the first
- * row. Paths after the anchor, and a path whose period has rows elsewhere, are not drawn:
+ * A path whose group has rows is an ANCHOR. A path with no rows is drawn when an anchor
+ * comes after it in the list (0.66.2, Marcel: "Last 7 days, always"): the rows reach past
+ * it, so it is certain. It goes right before that next anchor — a day of the anchor's
+ * period inside that period, before its day; a day of the PREVIOUS anchor's period inside
+ * that one, after its day; a day of a period with no rows (the 1st of a month) under that
+ * period's own band, between the two. The paths before the first anchor (the head: the
+ * days up to today) go before it the same way, unless `head` is false (a later page, whose
+ * head is another page's). With no anchor at all they go before the first row.
+ *
+ * Paths after the last anchor, and a path whose period has rows elsewhere, are not drawn:
  * they come back in `ignored` (`"period/day"`), for the table's development warning.
- * `anchored`: a path had rows here (a page without the anchor draws none).
+ * `anchored`: a path had rows here (a page without one draws none).
  */
 export function withHeadGroups<T>(
   groups: readonly RowGroup<T>[],
   paths: readonly (readonly string[])[],
   depth: 1 | 2,
+  { head = true }: { head?: boolean } = {},
 ): { groups: RowGroup<T>[]; ignored: string[]; anchored: boolean } {
   const out = groups.slice();
   const ignored: string[] = [];
@@ -251,43 +257,76 @@ export function withHeadGroups<T>(
     const j = out[i].children?.findIndex((c) => real(c) && c.key === p[1]) ?? -1;
     return j < 0 ? null : [i, j];
   };
-  let a = paths.findIndex((p) => find(p) !== null);
-  const at = a < 0 ? null : find(paths[a])!;
-  if (a < 0) a = paths.length;
-  for (const p of paths.slice(a + 1)) ignored.push(name(p));
-  const [i0, j0] = at ?? [0, 0];
-  const first = out[i0];
-  const start = at ? (depth === 2 ? first.children![j0].start : first.start) : 0;
-  const empty = (key: string): RowGroup<T> => ({ key, rows: [], start, children: null, empty: true });
-  const seen = new Set<string>();
-  let before = i0; // where the next new first-level group goes
-  let joined: RowGroup<T>[] | null = null; // the anchor period's children, copied once
-  let into = j0;
-  for (const p of paths.slice(0, a)) {
-    const n = name(p);
-    if (seen.has(n)) continue;
-    seen.add(n);
-    if (depth === 1) {
-      out.splice(before++, 0, empty(p[0]));
-      continue;
-    }
-    if (first && p[0] === first.key) {
-      if (!joined) {
-        joined = first.children ? first.children.slice() : [];
-        out[out.indexOf(first)] = { ...first, children: joined };
+  const anchors: number[] = [];
+  paths.forEach((p, k) => {
+    if (find(p)) anchors.push(k);
+  });
+  const anchored = anchors.length > 0;
+  const last = anchored ? anchors[anchors.length - 1] : paths.length;
+  for (const p of paths.slice(last + 1)) ignored.push(name(p));
+
+  const seen = new Set<string>(paths.filter((_, k) => anchors.includes(k)).map(name));
+  // A first-level group's children, copied once before the first insertion into them.
+  const copied = new Set<RowGroup<T>>();
+  const own = (g: RowGroup<T>): RowGroup<T>[] => {
+    if (copied.has(g)) return g.children!;
+    const copy: RowGroup<T> = { ...g, children: g.children ? g.children.slice() : [] };
+    out[out.indexOf(g)] = copy;
+    copied.add(copy);
+    return copy.children!;
+  };
+
+  /** Draw `run` (paths with no rows, in order) before the anchor at `next` (or the first
+   *  row, with none), after the anchor at `prev` (none for the head). */
+  const place = (run: readonly (readonly string[])[], next: [number, number] | null, prev: [number, number] | null) => {
+    const [i0, j0] = next ?? [0, 0];
+    let nextGroup: RowGroup<T> | undefined = out[i0];
+    let prevGroup: RowGroup<T> | undefined = prev ? out[prev[0]] : undefined;
+    const start = next ? (depth === 2 ? nextGroup.children![j0].start : nextGroup.start) : 0;
+    const empty = (key: string): RowGroup<T> => ({ key, rows: [], start, children: null, empty: true });
+    let before = i0; // where the next new first-level group goes
+    let intoNext = j0;
+    let intoPrev = prev ? prev[1] + 1 : 0;
+    for (const p of run) {
+      const n = name(p);
+      if (seen.has(n)) continue;
+      seen.add(n);
+      if (depth === 1) {
+        if (out.some((g) => real(g) && g.key === p[0])) ignored.push(n);
+        else out.splice(before++, 0, empty(p[0]));
+        continue;
       }
-      joined.splice(into++, 0, empty(p[1]));
-      continue;
+      if (nextGroup && p[0] === nextGroup.key) {
+        const kids = own(nextGroup);
+        nextGroup = out.find((g) => g.children === kids)!;
+        kids.splice(intoNext++, 0, empty(p[1]));
+        continue;
+      }
+      if (prevGroup && p[0] === prevGroup.key) {
+        const kids = own(prevGroup);
+        prevGroup = out.find((g) => g.children === kids)!;
+        kids.splice(intoPrev++, 0, empty(p[1]));
+        continue;
+      }
+      if (out.some((g) => real(g) && g.key === p[0])) {
+        ignored.push(n);
+        continue;
+      }
+      const at = out[before - 1];
+      if (at && at.key === p[0] && at.rows.length === 0 && !at.empty) at.children!.push(empty(p[1]));
+      else out.splice(before++, 0, { key: p[0], rows: [], start, children: [empty(p[1])] });
     }
-    if (out.some((g) => real(g) && g.key === p[0])) {
-      ignored.push(n);
-      continue;
-    }
-    const prev = out[before - 1];
-    if (prev && prev.key === p[0] && prev.rows.length === 0 && !prev.empty) prev.children!.push(empty(p[1]));
-    else out.splice(before++, 0, { key: p[0], rows: [], start, children: [empty(p[1])] });
+  };
+
+  // From the bottom up, so a run placed lower moves nothing a higher one finds.
+  for (let a = anchors.length - 1; a >= 1; a--) {
+    const run = paths.slice(anchors[a - 1] + 1, anchors[a]);
+    if (run.length > 0) place(run, find(paths[anchors[a]]), find(paths[anchors[a - 1]]));
   }
-  return { groups: out, ignored, anchored: at !== null };
+  const headRun = paths.slice(0, anchored ? anchors[0] : paths.length);
+  if (head) place(headRun, anchored ? find(paths[anchors[0]]) : null, null);
+  else for (const p of headRun) ignored.push(name(p));
+  return { groups: out, ignored, anchored };
 }
 
 /**

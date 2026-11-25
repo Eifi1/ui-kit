@@ -21,6 +21,12 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.66.2](https://github.com/Eifi1/ui-kit/compare/v0.66.1...v0.66.2) (2026-11-25)
+
+### Added
+
+* **data-table:** headGroups draws the empty days between booked ones ([3a05581](https://github.com/Eifi1/ui-kit/commit/3a05581ca3194e1c437030961c52ee65000b731a))
+
 ## [0.66.1](https://github.com/Eifi1/ui-kit/compare/v0.66.0...v0.66.1) (2026-11-25)
 
 ### Fixed
