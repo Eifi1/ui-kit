@@ -48,6 +48,13 @@ before ":" (DOC-5). Move the page's `updated` date in the French text.
   links do not fit beside the actions, all of them move into a menu. `renderLink` takes NavPills' link props.
   Words: namespace `topBarNav`.
 - **`StatStrip`** — a quiet row of three to six `StatTile`s between hairlines.
+- **DataTable `headGroups`** — groups drawn with no rows at the head of the list: the days between the newest
+  booked one and today, each day band with its `action` "+" (keksdose live #536). Paths through `groupBy`'s
+  levels (`[period, day]`), from today back to the newest booked day, which has rows and anchors the rest: they go
+  before it, inside its period (a new month gets its own band), so an "Upcoming" block above stays above. Unlike a
+  level's `keys`, drawn on the second level, under `virtualize` and with `loadMore.hasMore`; not under a column
+  filter or `keyFilter` (pass none while your own search is on). Under `virtualize` the band stands alone; pass
+  `empty: () => null` for the same everywhere. On a phone, at `mobileGroupBy`'s level.
 - **`PageContents variant="bar"`** — the page's sections as one row held under the header at every width
   (Staunlabor's exhibit pages): the current one underlined in brand colour (`aria-current="location"`), the row
   scrolling sideways on a phone with that entry kept in its middle. A click scrolls to the section and focuses
@@ -103,6 +110,9 @@ before ":" (DOC-5). Move the page's `updated` date in the French text.
   `swipeable-row.test.tsx`, `calculator.test.tsx`, `mini-calendar.test.tsx`, `modal.test.tsx`,
   `dropdown.test.tsx`, `multi-select.test.tsx` and `number-input.test.tsx` from
   `frontend/src/shared/components/__tests__/`.
+- #536 (empty days up to today): `headGroups={unfiltered && !search ? daysFromTodayTo(newestBooked).slice(0, 8)
+  .map((d) => [periodKeyOf(d, unit, todayIso), d]) : undefined}` on the register's DataTable, the day level's
+  `empty: () => null`.
 - Persistence: nothing (see "Must change"); `shouldDehydrateMutation: () => false` is in (keksdose FS-13,
   2026-11-23).
 
