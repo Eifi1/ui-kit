@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { FieldSuggestion } from "../field-parts";
 import { Input } from "../input";
 import { Combobox } from "../combobox";
+import { InlineEntityCombobox } from "../inline-entity-combobox";
 import { ToggleGroup } from "../toggle-group";
 
 /**
@@ -19,6 +20,11 @@ function Suggested({ field }: { field: (value: string, hint: ReactNode, set: (v:
   const hint = value ? <FieldSuggestion from="Last used" onClear={() => setValue("")} /> : undefined;
   return <>{field(value, hint, setValue)}</>;
 }
+
+const CATEGORIES: { value: string; label: string }[] = [
+  { value: "a", label: "Postage & Shipping" },
+  { value: "b", label: "Groceries" },
+];
 
 function clear() {
   const button = screen.getByRole("button", { name: /^Clear the suggestion/ });
@@ -51,6 +57,31 @@ describe("FieldSuggestion's Clear gives the focus to its field", () => {
     clear();
     expect(document.activeElement).toBe(screen.getByRole("combobox", { name: /Payee/ }));
     expect(screen.queryByRole("listbox")).toBeNull();
+  });
+
+  it("InlineEntityCombobox: Clear empties it, and the blur after does not put the old label back (keksdose 0.66)", () => {
+    render(
+      <Suggested
+        field={(value, hint, set) => (
+          <InlineEntityCombobox
+            label="Category"
+            value={value || null}
+            onChange={(v) => set(v ?? "")}
+            options={CATEGORIES}
+            hint={hint}
+          />
+        )}
+      />,
+    );
+    const input = screen.getByRole("combobox", { name: /Category/ });
+    expect(input).toHaveValue("Postage & Shipping");
+    clear();
+    expect(document.activeElement).toBe(input);
+    expect(screen.queryByRole("listbox")).toBeNull();
+    expect(input).toHaveValue("");
+    act(() => input.blur());
+    expect(input).toHaveValue("");
+    expect(screen.queryByRole("button", { name: /^Clear the suggestion/ })).toBeNull();
   });
 
   it("a group: its first control", () => {

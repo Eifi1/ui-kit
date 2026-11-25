@@ -5,6 +5,10 @@ TopBarNav, StatStrip, the DataTable's name, the transfer dialog's "customer" rem
 honours the scroll), and every wave of the refactor audit of 2026-11-22 ("Alles in 0.66"). The audit
 found no live defect; most of what it fixed is the keyboard focus falling to `<body>`.
 
+**0.66.1** fixes one regression of 0.66.0; no change needed. FieldSuggestion's Clear on an
+`InlineEntityCombobox` (keksdose's category and account pickers) left the old label showing, and the blur
+chose it again, so Clear did not clear. Take 0.66.1 rather than 0.66.0 (keksdose's full check found it).
+
 **From 0.65.1.** Restart the Vite dev server after the bump (`vite --force` if a change still does not show).
 
 **Legal wording: Privacy Policy (fr only).** Two French strings on the privacy page gained a no-break space

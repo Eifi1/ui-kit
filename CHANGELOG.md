@@ -21,6 +21,12 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.66.1](https://github.com/Eifi1/ui-kit/compare/v0.66.0...v0.66.1) (2026-11-25)
+
+### Fixed
+
+* **inline-entity-combobox:** a quiet focus holds no text, so FieldSuggestion's Clear clears ([c9107c3](https://github.com/Eifi1/ui-kit/commit/c9107c3cb21b23f093e7c9b323cdc0c4f6620e29))
+
 ## [0.66.0](https://github.com/Eifi1/ui-kit/compare/v0.65.1...v0.66.0) (2026-11-25)
 
 ### ⚠ BREAKING CHANGES

@@ -591,13 +591,21 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
                 // anything it asked for (live #309 rework). A locked field takes focus to
                 // say why, and opens nothing.
                 if (primaryOnly.fromAuxButton() || locked) return;
-                setText(shown);
                 // The tour's focus on arrival (§11.8) opens nothing: the list would cover
                 // its card (0.50.1). A click, ArrowDown or typing opens it.
+                //
+                // Nor does it freeze the text: a quiet focus is the kit moving the focus
+                // ahead of a value change of its own, and a text held at the label shown
+                // now outlives that change. FieldSuggestion's Clear focuses the field and
+                // then empties it (0.66, INP-2); with the old label held, the field kept
+                // showing it and the blur committed it again, so Clear did not clear
+                // (keksdose's full check on 0.66, 0.66.1). Typing still starts loose text
+                // (`onChange`), and the blur judges only that.
                 if (isQuietFocus(e.currentTarget)) {
                   quietRef.current = true;
                   return;
                 }
+                setText(shown);
                 e.currentTarget.select();
                 setOpen(true);
                 // The sheet has its own input; the field behind it must not also pull up
