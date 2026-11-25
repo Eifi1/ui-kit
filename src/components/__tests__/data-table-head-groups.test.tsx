@@ -152,6 +152,97 @@ describe("withHeadGroups — where the head's empty groups go", () => {
   });
 });
 
+describe('withHeadGroups — empty days between booked ones (0.66.2, Marcel: "Last 7 days, always")', () => {
+  it("draws a path when a later path has rows: the days between two booked ones, in their period", () => {
+    // Today 25 is booked, nothing from 24 to 12, then 11: the week back from today, ended
+    // by the next booked day below it.
+    const groups = [g("2026-11", 0, [1, 2, 3], [g("2026-11-25", 0, [1]), g("2026-11-11", 1, [2, 3])])];
+    const days = ["25", "24", "23", "22", "21", "20", "19"].map((d) => ["2026-11", `2026-11-${d}`] as const);
+    const { groups: out, ignored } = withHeadGroups(groups, [...days, ["2026-11", "2026-11-11"]], 2);
+    expect(ignored).toEqual([]);
+    expect(out[0].children!.map((c) => [c.key, c.empty ?? false, c.start])).toEqual([
+      ["2026-11-25", false, 0],
+      ...["24", "23", "22", "21", "20", "19"].map((d) => [`2026-11-${d}`, true, 1]),
+      ["2026-11-11", false, 1],
+    ]);
+  });
+
+  it("across a month: the old month's days after its booked day, the new month's before its own", () => {
+    const groups = [g("2026-12", 0, [1], [g("2026-12-02", 0, [1])]), g("2026-10", 1, [2], [g("2026-10-30", 1, [2])])];
+    const { groups: out } = withHeadGroups(
+      groups,
+      [
+        ["2026-12", "2026-12-02"],
+        ["2026-12", "2026-12-01"],
+        ["2026-11", "2026-11-30"],
+        ["2026-10", "2026-10-31"],
+        ["2026-10", "2026-10-30"],
+      ],
+      2,
+    );
+    expect(out.map((x) => [x.key, x.rows.length, x.children!.map((c) => [c.key, c.empty ?? false])])).toEqual([
+      [
+        "2026-12",
+        1,
+        [
+          ["2026-12-02", false],
+          ["2026-12-01", true],
+        ],
+      ],
+      ["2026-11", 0, [["2026-11-30", true]]],
+      [
+        "2026-10",
+        1,
+        [
+          ["2026-10-31", true],
+          ["2026-10-30", false],
+        ],
+      ],
+    ]);
+  });
+
+  it("still draws none after the last path with rows: below it, the rows may not be loaded yet", () => {
+    const groups = [g("2026-11", 0, [1], [g("2026-11-25", 0, [1])])];
+    const { groups: out, ignored } = withHeadGroups(
+      groups,
+      [
+        ["2026-11", "2026-11-25"],
+        ["2026-11", "2026-11-24"],
+      ],
+      2,
+    );
+    expect(out[0].children!.map((c) => c.key)).toEqual(["2026-11-25"]);
+    expect(ignored).toEqual(["2026-11/2026-11-24"]);
+  });
+
+  it("with one level, between two groups with rows", () => {
+    const groups = [g("c", 0, [1]), g("f", 1, [2])];
+    const { groups: out } = withHeadGroups(groups, [["c"], ["d"], ["e"], ["f"]], 1);
+    expect(out.map((x) => [x.key, x.empty ?? false, x.start])).toEqual([
+      ["c", false, 0],
+      ["d", true, 1],
+      ["e", true, 1],
+      ["f", false, 1],
+    ]);
+  });
+
+  it("on a later page (`head: false`), none before the page's first path with rows", () => {
+    const groups = [g("2026-11", 0, [1], [g("2026-11-20", 0, [1]), g("2026-11-18", 1, [2])])];
+    const { groups: out } = withHeadGroups(
+      groups,
+      [
+        ["2026-11", "2026-11-21"],
+        ["2026-11", "2026-11-20"],
+        ["2026-11", "2026-11-19"],
+        ["2026-11", "2026-11-18"],
+      ],
+      2,
+      { head: false },
+    );
+    expect(out[0].children!.map((c) => c.key)).toEqual(["2026-11-20", "2026-11-19", "2026-11-18"]);
+  });
+});
+
 describe("planBodies — an empty group under the window", () => {
   it("draws every group with no rows when the row after it is drawn, not only the period's first", () => {
     // One period: two empty days (bands only, 20px each), then a day of two 40px rows.
@@ -186,10 +277,12 @@ function Register({
   virtualize = false,
   filtered = false,
   onAdd,
+  heads = HEAD,
 }: {
   virtualize?: boolean;
   filtered?: boolean;
   onAdd?: (day: string) => void;
+  heads?: readonly (readonly string[])[];
 }) {
   const groupBy = useMemo(() => levels(onAdd), [onAdd]);
   return (
@@ -200,7 +293,7 @@ function Register({
         rowKey={(r) => r.id}
         paginated={false}
         groupBy={groupBy}
-        headGroups={HEAD}
+        headGroups={heads}
         loadMore={{ hasMore: true, onLoadMore: () => {} }}
         virtualize={virtualize ? { estimateRowHeight: 40, overscan: 5 } : false}
         filters={filtered ? { payee: { type: "text", q: "Coop" } } : undefined}
@@ -265,6 +358,49 @@ describe("DataTable headGroups (0.66, keksdose live #536)", () => {
   });
 });
 
+describe("DataTable headGroups between booked days (0.66.2)", () => {
+  // Today 2026-11-22 is booked, 21 is not, 20 is: the week's empty day between the two.
+  const GAP = [
+    ["2026-11", "2026-11-22"],
+    ["2026-11", "2026-11-21"],
+    ["2026-11", "2026-11-20"],
+  ] as const;
+  it("draws the day between as a band with its +, before the older booked day", () => {
+    const onAdd = vi.fn();
+    const groupBy = levels(onAdd);
+    const { container } = render(
+      <MemoryRouter>
+        <DataTable
+          rows={TXS}
+          columns={COLUMNS}
+          rowKey={(r) => r.id}
+          paginated={false}
+          groupBy={groupBy}
+          headGroups={GAP}
+          loadMore={{ hasMore: true, onLoadMore: () => {} }}
+        />
+      </MemoryRouter>,
+    );
+    expect(bands(container)).toEqual([
+      `Period ${UPCOMING}`,
+      "Day 2026-11-28",
+      "Period 2026-11",
+      "Day 2026-11-22",
+      "Day 2026-11-21",
+      "Day 2026-11-20",
+    ]);
+    expect(container.querySelectorAll("tr[data-row-index]")).toHaveLength(4);
+    const day = screen.getByText("Day 2026-11-21").closest("tbody")!;
+    expect(
+      within(day)
+        .queryAllByRole("row")
+        .filter((r) => r.hasAttribute("data-row-index")),
+    ).toHaveLength(0);
+    fireEvent.click(within(day).getByRole("button", { name: "Add on 2026-11-21" }));
+    expect(onAdd).toHaveBeenCalledWith("2026-11-21");
+  });
+});
+
 describe("DataTable headGroups under virtualize", () => {
   const rect = (top: number, height: number) =>
     ({
@@ -294,5 +430,18 @@ describe("DataTable headGroups under virtualize", () => {
     for (const day of ["Day 2026-11-25", "Day 2026-11-24", "Day 2026-11-23"])
       expect(labels.filter((l) => l === day)).toHaveLength(1);
     expect(labels.filter((l) => l === "Period 2026-11")).toHaveLength(1);
+  });
+
+  it("draws a day between two booked ones in the window, once (0.66.2)", () => {
+    const heads = [
+      ["2026-11", "2026-11-22"],
+      ["2026-11", "2026-11-21"],
+      ["2026-11", "2026-11-20"],
+    ] as const;
+    const { container } = render(<Register virtualize heads={heads} />);
+    const labels = bands(container);
+    expect(labels.filter((l) => l === "Day 2026-11-21")).toHaveLength(1);
+    expect(labels.indexOf("Day 2026-11-21")).toBe(labels.indexOf("Day 2026-11-22") + 1);
+    expect(labels.indexOf("Day 2026-11-20")).toBe(labels.indexOf("Day 2026-11-21") + 1);
   });
 });

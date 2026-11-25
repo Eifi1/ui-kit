@@ -785,12 +785,18 @@ export interface DataTableProps<T> {
    * is a path through `groupBy`'s levels, `[period, day]` with two, `[key]` with one, in the
    * order they are shown.
    *
-   * **The anchor.** End the list with the newest group that HAS rows (the newest booked
-   * day): the first path with rows anchors the others, which are drawn before it — a day of
-   * its period inside that period, before its day; a day of a period with no rows yet (the
-   * 1st of a month) under that period's own band, before the anchor's. So rows above the
-   * head (keksdose's "Upcoming" block) stay above it. Without an anchor they go before the
-   * first row; paths after the anchor are not drawn.
+   * **Anchors.** A path whose group HAS rows anchors the paths with none before it, which
+   * are drawn right before it — a day of its period inside that period, before its day; a
+   * day of a period with no rows yet (the 1st of a month) under that period's own band. So
+   * rows above the head (keksdose's "Upcoming" block) stay above it. Without an anchor they
+   * go before the first row.
+   *
+   * **Between booked days** (0.66.2, Marcel: "Last 7 days, always"): a path with no rows
+   * after an anchor is drawn too when another anchor follows it — the rows reach past it,
+   * so it is certain — in its period, between the two booked days. Paths after the LAST
+   * path with rows are not drawn (below it the rows may not be loaded yet). So for "the
+   * last 7 days, always", pass the 7 days and then the newest booked day older than them,
+   * when it is loaded: every group with rows between two paths must itself be a path.
    *
    * **Where `keys` cannot go.** A level's {@link DataTableGroupBy.keys} is read only on the
    * first level and never under `virtualize` or a `loadMore` with more to come, because a
@@ -2020,9 +2026,9 @@ export function DataTable<T>({
   // or the first. Development builds name the paths not drawn.
   const heads = !narrowed && headGroups?.length ? headGroups : null;
   const withHeads = (groups: RowGroup<T>[], paths: readonly (readonly string[])[], depth: 1 | 2) => {
-    const placed = withHeadGroups(groups, paths, depth);
+    const placed = withHeadGroups(groups, paths, depth, { head: pageFrom === 0 });
     if (!placed.anchored && pageFrom > 0) return groups;
-    const warning = `[ui-kit] DataTable headGroups not drawn (after the anchor, or a group with rows elsewhere): ${placed.ignored.join(", ")}`;
+    const warning = `[ui-kit] DataTable headGroups not drawn (after the last path with rows, or a group with rows elsewhere): ${placed.ignored.join(", ")}`;
     if (
       Boolean(import.meta.env?.DEV) &&
       !import.meta.env?.VITEST &&
